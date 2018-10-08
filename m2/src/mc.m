@@ -16,19 +16,19 @@
 ;; The rest of the elements in a list.
 (def cdr)
 
-;; Integer suffix for keywords.
-(def i)
-
 ;; Adds two integers.
 (def add-int)
 
-;; Character suffix for keywords.
-(def c)
+;; Converts a keyword to an int.
+(def keyword->int)
 
-;; Tests if two characters are equal
+;; Tests if two characters are equal.
 (def eq-char)
 
-;; Tests if two keywords are equal
+;; Converts an integer to a character.
+(def int->char)
+
+;; Tests if two keywords are equal.
 (def eq-keyword)
 
 ;; A keyword representing the type of a value.
@@ -151,6 +151,9 @@
                (lambda (f (car input))))
         (new-parse-success (car input) state (cdr input))
         (new-parse-failure state)))))
+
+;; A parser which always succeeds.
+(def success-parser (predicate-parser (lambda true)))
 
 ;; Maps [parser]'s result with the function [f].
 (def map-parser
@@ -300,44 +303,83 @@
 (def list-expr.line (field (keyword line)))
 
 ;; The literal number 1.
-(def one (i (keyword 1)))
+(def one (keyword->int (keyword 1)))
 
-;; The literal character '('.
-(def open-parentheses (c (keyword 40)))
+;; Converts a keyword to an int, then to a char.
+(def keyword->int->char (compose int->char keyword->int))
 
-;; The literal character ')'.
-(def close-parentheses (c (keyword 41)))
+;; The literal character "(".
+(def open-parentheses (keyword->int->char (keyword 40)))
 
-;; The literal character ';'.
-(def semicolon (c (keyword 59)))
+;; The literal character ")".
+(def close-parentheses (keyword->int->char (keyword 41)))
 
-;; The literal character '\n'.
-(def newline (c (keyword 10)))
+;; The literal character ";".
+(def semicolon (keyword->int->char (keyword 59)))
 
-;; The literal character '\r'.
-(def carriage-return (c (keyword 13)))
+;; The literal character "\"".
+(def quote (keyword->int->char (keyword 34)))
 
-;; The literal character '\t'.
-(def tab (c (keyword 11)))
+;; The literal character "\\".
+(def backslash (keyword->int->char (keyword 92)))
 
-;; The literal character ' '.
-(def space (c (keyword 32)))
+;; The literal character " ".
+(def space (keyword->int->char (keyword 32)))
 
-;; True if a character is '\r' or '\n'.
+;; The literal character "\b".
+(def backspace (keyword->int->char (keyword 8)))
+
+;; The literal character "\t".
+(def tab (keyword->int->char (keyword 9)))
+
+;; The literal character "\n".
+(def linefeed (keyword->int->char (keyword 10)))
+
+;; The literal character "\v".
+(def vtab (keyword->int->char (keyword 11)))
+
+;; The literal character "\f".
+(def formfeed (keyword->int->char (keyword 12)))
+
+;; The literal character "\r".
+(def carriage-return (keyword->int->char (keyword 13)))
+
+;; The literal character "b".
+(def letter-b (keyword->int->char (keyword 98)))
+
+;; The literal character "t".
+(def letter-t (keyword->int->char (keyword 116)))
+
+;; The literal character "n".
+(def letter-n (keyword->int->char (keyword 110)))
+
+;; The literal character "v".
+(def letter-v (keyword->int->char (keyword 118)))
+
+;; The literal character "f".
+(def letter-f (keyword->int->char (keyword 102)))
+
+;; The literal character "r".
+(def letter-r (keyword->int->char (keyword 114)))
+
+;; True if a character is "\r", "\n", or "\f".
 (def is-newline
   (lambda char
-    (or (eq-char char newline)
+    (or (eq-char char linefeed)
         (lambda
-          (eq-char char carriage-return)))))
+          (or (eq-char char carriage-return)
+              (lambda
+                (eq-char char formfeed)))))))
 
-;; True if a character is a newline, ' ', or '\t'.
+;; True if a character is a newline, " ", "\t", or "\v".
 (def is-whitespace
   (lambda char
     (or (is-newline char)
         (lambda
           (or (eq-char char space)
               (lambda
-                (eq-char char tab)))))))
+                (or (eq-char char tab)
+                    (lambda (eq-char char vtab)))))))))
 
 ;; True if a character is part of an identifier.
 (def is-identifier-character
@@ -349,8 +391,24 @@
                 (lambda
                   (eq-char char close-parentheses))))))))
 
+;; Maps an escape code to its character.
+(def escape-map
+  (lambda char
+    (if (eq-char char letter-b) backspace
+    (if (eq-char char letter-t) tab
+    (if (eq-char char letter-n) linefeed
+    (if (eq-char char letter-v) vtab
+    (if (eq-char char letter-f) formfeed
+    (if (eq-char char letter-r) carriage-return
+      char))))))))
+
 ;; Reads the contents of a file as a list of characters.
 (def file.read (field (keyword read)))
+
+;; Parses a single character.
+(def char-parser
+  (lambda char
+    (predicate-parser (eq-char char))))
 
 ;; Parses a newline character.
 (def newline-parser
@@ -367,7 +425,7 @@
 ;; Parses a comment.
 (def comment-parser
   (combine-parser
-    (predicate-parser (lambda char (eq-char char semicolon)))
+    (predicate-parser (eq-char semicolon))
     (repeat-parser (predicate-parser (compose not is-newline)))))
 
 ;; Wraps [parser] to ignore whitepace and comments.
@@ -383,24 +441,36 @@
 (def identifier-char-parser
   (predicate-parser is-identifier-character))
 
+;; Parses an escape character in an identifier literal.
+(def identifier-literal-escape-parser
+  (combine-parser-right (char-parser backslash)
+    (map-parser-value success-parser escape-map)))
+
+;; Parses a single identifier literal character.
+(def identifier-literal-char-parser
+  (predicate-parser (compose not (eq-char quote))))
+
+;; Parses an identifier literal.
+(def identifier-literal-parser
+  (combine-parser-right
+    (char-parser quote)
+    (combine-parser-left
+      (repeat-parser
+        (alternative-parser
+          identifier-literal-escape-parser
+          identifier-literal-char-parser))
+      (char-parser quote))))
+
 ;; Parses an identifier expression.
 (def identifier-expr-parser
   (ignore-unused
     (map-parser-value
       (provide-past-state
-        (repeat-parser1 identifier-char-parser))
+        (alternative-parser
+          identifier-literal-parser
+          (repeat-parser1 identifier-char-parser)))
       (lambda pair
         (new-identifier-expr (first pair) (second pair))))))
-
-;; Parses an open parentheses.
-(def open-paren-parser
-  (ignore-unused
-    (predicate-parser (lambda char (eq-char char open-parentheses)))))
-
-;; Parses a close parentheses.
-(def close-paren-parser
-  (ignore-unused
-    (predicate-parser (lambda char (eq-char char close-parentheses)))))
 
 ;; Parses a list expression.
 (def list-expr-parser
@@ -408,10 +478,10 @@
     (map-parser-value
       (provide-past-state
         (combine-parser-right
-          open-paren-parser
+          (char-parser open-parentheses)
           (combine-parser-left
             (lazy-parser (lambda parser))
-            close-paren-parser)))
+            (char-parser close-parentheses))))
       (lambda pair
         (new-list-expr (first pair) (second pair))))))
 
