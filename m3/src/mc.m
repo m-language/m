@@ -19,8 +19,8 @@
 ;; Adds two integers.
 (def add-int)
 
-;; Converts a keyword to an int.
-(def keyword->int)
+;; Converts a symbol to an int.
+(def symbol->int)
 
 ;; Tests if two characters are equal.
 (def eq-char)
@@ -28,13 +28,13 @@
 ;; Converts an integer to a character.
 (def int->char)
 
-;; Converts a keyword to a character.
-(def keyword->char)
+;; Converts a symbol to a character.
+(def symbol->char)
 
-;; Tests if two keywords are equal.
-(def eq-keyword)
+;; Tests if two symbols are equal.
+(def eq-symbol)
 
-;; A keyword representing the type of a value.
+;; A symbol representing the type of a value.
 (def type-name)
 
 ;; Creates data given a type, a list of field names, and a list of field values.
@@ -66,9 +66,9 @@
 
 ;; A pair of two values.
 (def pair
-  (new-data (keyword pair)
-    (cons (keyword first)
-    (cons (keyword second)
+  (new-data (symbol pair)
+    (cons (symbol first)
+    (cons (symbol second)
       nil))))
 
 ;; Creates a pair of two values.
@@ -77,10 +77,10 @@
     (pair (cons first (cons second nil)))))
 
 ;; The first value in a pair.
-(def first (field (keyword first)))
+(def first (field (symbol first)))
 
 ;; The second value in a pair.
-(def second (field (keyword second)))
+(def second (field (symbol second)))
 
 ;; True if [x] and [y] are true.
 (def and
@@ -106,30 +106,30 @@
 ;; Tests if a value is the empty list.
 (def is-nil
   (lambda x
-    (eq-keyword (type-name x) (keyword nil))))
+    (eq-symbol (type-name x) (symbol nil))))
 
 ;; The second element in a list.
 (def cadr (compose car cdr))
 
 ;; A parse result representing failure.
 (def parse-failure
-  (new-data (keyword parse-failure)
-    (cons (keyword state)
+  (new-data (symbol parse-failure)
+    (cons (symbol state)
       nil)))
 
-;; Creates a new parse failure
+;; Creates a new parse failure.
 (def new-parse-failure
   (lambda state
     (parse-failure (cons state nil))))
 
-(def parse-failure.state (field (keyword state)))
+(def parse-failure.state (field (symbol state)))
 
 ;; A parse result representing success.
 (def parse-success
-  (new-data (keyword parse-success)
-    (cons (keyword value)
-    (cons (keyword state)
-    (cons (keyword rest)
+  (new-data (symbol parse-success)
+    (cons (symbol value)
+    (cons (symbol state)
+    (cons (symbol rest)
       nil)))))
 
 ;; Creates a new parse success.
@@ -137,14 +137,14 @@
   (lambda value state rest
     (parse-success (cons value (cons state (cons rest nil))))))
 
-(def parse-success.value (field (keyword value)))
-(def parse-success.state (field (keyword state)))
-(def parse-success.rest (field (keyword rest)))
+(def parse-success.value (field (symbol value)))
+(def parse-success.state (field (symbol state)))
+(def parse-success.rest (field (symbol rest)))
 
 ;; Tests if a value is a parse success.
 (def is-parse-success
   (lambda x
-    (eq-keyword (type-name x) (keyword parse-success))))
+    (eq-symbol (type-name x) (symbol parse-success))))
 
 ;; A parser which succeeds only if [f] of the next element is true.
 (def predicate-parser
@@ -277,9 +277,9 @@
 
 ;; An expression representing an M identifier.
 (def identifier-expr
-  (new-data (keyword identifier-expr)
-    (cons (keyword name)
-    (cons (keyword line)
+  (new-data (symbol identifier-expr)
+    (cons (symbol name)
+    (cons (symbol line)
       nil))))
 
 ;; Creates a new identifier expression.
@@ -287,14 +287,14 @@
   (lambda name line
     (identifier-expr (cons name (cons line nil)))))
 
-(def identifier-expr.name (field (keyword name)))
-(def identifier-expr.line (field (keyword line)))
+(def identifier-expr.name (field (symbol name)))
+(def identifier-expr.line (field (symbol line)))
 
 ;; An expression representing an M list.
 (def list-expr
-  (new-data (keyword list-expr)
-    (cons (keyword exprs)
-    (cons (keyword line)
+  (new-data (symbol list-expr)
+    (cons (symbol exprs)
+    (cons (symbol line)
       nil))))
 
 ;; Creates a new list expression.
@@ -302,65 +302,65 @@
   (lambda exprs line
     (list-expr (cons exprs (cons line nil)))))
 
-(def list-expr.exprs (field (keyword exprs)))
-(def list-expr.line (field (keyword line)))
+(def list-expr.exprs (field (symbol exprs)))
+(def list-expr.line (field (symbol line)))
 
 ;; The literal number 1.
-(def one (keyword->int (keyword 1)))
+(def one (symbol->int (symbol 1)))
 
 ;; The literal character "(".
-(def open-parentheses (keyword->char (keyword "(")))
+(def open-parentheses (symbol->char (symbol "(")))
 
 ;; The literal character ")".
-(def close-parentheses (keyword->char (keyword ")")))
+(def close-parentheses (symbol->char (symbol ")")))
 
 ;; The literal character ";".
-(def semicolon (keyword->char (keyword ";")))
+(def semicolon (symbol->char (symbol ";")))
 
 ;; The literal character "\"".
-(def quote (keyword->char (keyword "\"")))
+(def quote (symbol->char (symbol "\"")))
 
 ;; The literal character "\\".
-(def backslash (keyword->char (keyword "\\")))
+(def backslash (symbol->char (symbol "\\")))
 
 ;; The literal character " ".
-(def space (keyword->char (keyword " ")))
+(def space (symbol->char (symbol " ")))
 
 ;; The literal character "\b".
-(def backspace (keyword->char (keyword "\b")))
+(def backspace (symbol->char (symbol "\b")))
 
 ;; The literal character "\t".
-(def tab (keyword->char (keyword "\t")))
+(def tab (symbol->char (symbol "\t")))
 
 ;; The literal character "\n".
-(def linefeed (keyword->char (keyword "\n")))
+(def linefeed (symbol->char (symbol "\n")))
 
 ;; The literal character "\v".
-(def vtab (keyword->char (keyword "\v")))
+(def vtab (symbol->char (symbol "\v")))
 
 ;; The literal character "\f".
-(def formfeed (keyword->char (keyword "\f")))
+(def formfeed (symbol->char (symbol "\f")))
 
 ;; The literal character "\r".
-(def carriage-return (keyword->char (keyword "\r")))
+(def carriage-return (symbol->char (symbol "\r")))
 
 ;; The literal character "b".
-(def letter-b (keyword->char (keyword "b")))
+(def letter-b (symbol->char (symbol "b")))
 
 ;; The literal character "t".
-(def letter-t (keyword->char (keyword "t")))
+(def letter-t (symbol->char (symbol "t")))
 
 ;; The literal character "n".
-(def letter-n (keyword->char (keyword "n")))
+(def letter-n (symbol->char (symbol "n")))
 
 ;; The literal character "v".
-(def letter-v (keyword->char (keyword "v")))
+(def letter-v (symbol->char (symbol "v")))
 
 ;; The literal character "f".
-(def letter-f (keyword->char (keyword "f")))
+(def letter-f (symbol->char (symbol "f")))
 
 ;; The literal character "r".
-(def letter-r (keyword->char (keyword "r")))
+(def letter-r (symbol->char (symbol "r")))
 
 ;; True if a character is "\r", "\n", or "\f".
 (def is-newline
@@ -403,7 +403,7 @@
       char))))))))
 
 ;; Reads the contents of a file as a list of characters.
-(def file.read (field (keyword read)))
+(def file.read (field (symbol read)))
 
 ;; Parses a single character.
 (def char-parser

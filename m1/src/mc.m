@@ -7,12 +7,12 @@
 (def cdr)
 
 (def add-int)
-(def keyword->int)
+(def symbol->int)
 
 (def eq-char)
 (def int->char)
 
-(def eq-keyword)
+(def eq-symbol)
 
 (def type-name)
 
@@ -31,17 +31,17 @@
 (def generate)
 
 (def pair
-  (new-data (keyword pair)
-    (cons (keyword first)
-    (cons (keyword second)
+  (new-data (symbol pair)
+    (cons (symbol first)
+    (cons (symbol second)
       nil))))
 
 (def new-pair
   (lambda first second
     (pair (cons first (cons second nil)))))
 
-(def first (field (keyword first)))
-(def second (field (keyword second)))
+(def first (field (symbol first)))
+(def second (field (symbol second)))
 
 (def and
   (lambda x y
@@ -62,39 +62,39 @@
 
 (def is-nil
   (lambda x
-    (eq-keyword (type-name x) (keyword nil))))
+    (eq-symbol (type-name x) (symbol nil))))
 
 (def cadr (compose car cdr))
 
 (def parse-failure
-  (new-data (keyword parse-failure)
-    (cons (keyword state)
+  (new-data (symbol parse-failure)
+    (cons (symbol state)
       nil)))
 
 (def new-parse-failure
   (lambda state
     (parse-failure (cons state nil))))
 
-(def parse-failure.state (field (keyword state)))
+(def parse-failure.state (field (symbol state)))
 
 (def parse-success
-  (new-data (keyword parse-success)
-    (cons (keyword value)
-    (cons (keyword state)
-    (cons (keyword rest)
+  (new-data (symbol parse-success)
+    (cons (symbol value)
+    (cons (symbol state)
+    (cons (symbol rest)
       nil)))))
 
 (def new-parse-success
   (lambda value state rest
     (parse-success (cons value (cons state (cons rest nil))))))
 
-(def parse-success.value (field (keyword value)))
-(def parse-success.state (field (keyword state)))
-(def parse-success.rest (field (keyword rest)))
+(def parse-success.value (field (symbol value)))
+(def parse-success.state (field (symbol state)))
+(def parse-success.rest (field (symbol rest)))
 
 (def is-parse-success
   (lambda x
-    (eq-keyword (type-name x) (keyword parse-success))))
+    (eq-symbol (type-name x) (symbol parse-success))))
 
 (def predicate-parser
   (lambda f
@@ -210,45 +210,45 @@
     ((parser nil) input state)))
 
 (def identifier-expr
-  (new-data (keyword identifier-expr)
-    (cons (keyword name)
-    (cons (keyword line)
+  (new-data (symbol identifier-expr)
+    (cons (symbol name)
+    (cons (symbol line)
       nil))))
 
 (def new-identifier-expr
   (lambda name line
     (identifier-expr (cons name (cons line nil)))))
 
-(def identifier-expr.name (field (keyword name)))
-(def identifier-expr.line (field (keyword line)))
+(def identifier-expr.name (field (symbol name)))
+(def identifier-expr.line (field (symbol line)))
 
 (def list-expr
-  (new-data (keyword list-expr)
-    (cons (keyword exprs)
-    (cons (keyword line)
+  (new-data (symbol list-expr)
+    (cons (symbol exprs)
+    (cons (symbol line)
       nil))))
 
 (def new-list-expr
   (lambda exprs line
     (list-expr (cons exprs (cons line nil)))))
 
-(def list-expr.exprs (field (keyword exprs)))
-(def list-expr.line (field (keyword line)))
+(def list-expr.exprs (field (symbol exprs)))
+(def list-expr.line (field (symbol line)))
 
-(def one (keyword->int (keyword 1)))
+(def one (symbol->int (symbol 1)))
 
-(def keyword->int->char (compose int->char keyword->int))
+(def symbol->int->char (compose int->char symbol->int))
 
-(def open-parentheses (keyword->int->char (keyword 40)))
-(def close-parentheses (keyword->int->char (keyword 41)))
-(def semicolon (keyword->int->char (keyword 59)))
-(def space (keyword->int->char (keyword 32)))
+(def open-parentheses (symbol->int->char (symbol 40)))
+(def close-parentheses (symbol->int->char (symbol 41)))
+(def semicolon (symbol->int->char (symbol 59)))
+(def space (symbol->int->char (symbol 32)))
 
-(def tab (keyword->int->char (keyword 9)))
-(def linefeed (keyword->int->char (keyword 10)))
-(def vtab (keyword->int->char (keyword 11)))
-(def formfeed (keyword->int->char (keyword 12)))
-(def carriage-return (keyword->int->char (keyword 13)))
+(def tab (symbol->int->char (symbol 9)))
+(def linefeed (symbol->int->char (symbol 10)))
+(def vtab (symbol->int->char (symbol 11)))
+(def formfeed (symbol->int->char (symbol 12)))
+(def carriage-return (symbol->int->char (symbol 13)))
 
 (def is-newline
   (lambda char
@@ -276,7 +276,7 @@
                 (lambda
                   (eq-char char close-parentheses))))))))
 
-(def file.read (field (keyword read)))
+(def file.read (field (symbol read)))
 
 (def char-parser
   (lambda char
