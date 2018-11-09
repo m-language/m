@@ -307,7 +307,8 @@
     (lambda right
       (lambda key
         (lambda value
-          (tree-map-node (cons left (cons right (cons key (cons value nil))))))))))
+          (tree-map-node
+            (cons left (cons right (cons key (cons value nil))))))))))
 
 (def tree-map-node.left (field (symbol tree-map-node) (symbol left)))
 (def tree-map-node.right (field (symbol tree-map-node) (symbol right)))
@@ -351,9 +352,12 @@
         (if (is-tree-map-node-nil node)
           none
           (fold-compare (compare key (tree-map-node.key node))
-            (lambda < (tree-map-node.get (tree-map-node.left node) compare key))
-            (lambda > (tree-map-node.get (tree-map-node.right node) compare key))
-            (lambda = (new-some (tree-map-node.value node)))))))))
+            (lambda <
+              (tree-map-node.get (tree-map-node.left node) compare key))
+            (lambda >
+              (tree-map-node.get (tree-map-node.right node) compare key))
+            (lambda =
+              (new-some (tree-map-node.value node)))))))))
 
 ;; Gets the value of a key in a tree map.
 (def tree-map.get
@@ -372,14 +376,22 @@
             (fold-compare (compare key (tree-map-node.key node))
               (lambda <
                 (new-tree-map-node
-                  (tree-map-node.put (tree-map-node.left node) compare key value)
+                  (tree-map-node.put
+                    (tree-map-node.left node)
+                    compare
+                    key
+                    value)
                   (tree-map-node.right node)
                   (tree-map-node.key node)
                   (tree-map-node.value node)))
               (lambda >
                 (new-tree-map-node
                   (tree-map-node.left node)
-                  (tree-map-node.put (tree-map-node.right node) compare key value)
+                  (tree-map-node.put
+                    (tree-map-node.right node)
+                    compare
+                    key
+                    value)
                   (tree-map-node.key node)
                   (tree-map-node.value node)))
               (lambda =
@@ -395,7 +407,11 @@
     (lambda key
       (lambda value
         (new-tree-map
-          (tree-map-node.put (tree-map.node map) (tree-map.compare map) key value)
+          (tree-map-node.put
+            (tree-map.node map)
+            (tree-map.compare map)
+            key
+            value)
           (tree-map.compare map))))))
 
 ;; Folds [node] with an accumulator [acc] and function [f].
@@ -928,9 +944,14 @@
       (lambda env
         (generate-result (cons operation (cons declaration (cons env nil))))))))
 
-(def generate-result.operation (field (symbol generate-result) (symbol operation)))
-(def generate-result.declaration (field (symbol generate-result) (symbol declaration)))
-(def generate-result.env (field (symbol generate-result) (symbol env)))
+(def generate-result.operation
+  (field (symbol generate-result) (symbol operation)))
+
+(def generate-result.declaration
+  (field (symbol generate-result) (symbol declaration)))
+
+(def generate-result.env
+  (field (symbol generate-result) (symbol env)))
 
 ;; The location of a local variable.
 (def local-variable
@@ -983,7 +1004,10 @@
           (if (is-none variable)
             (empty-tree-map compare-string)
             (if (is-local-variable (some.value variable))
-              (tree-map.put (empty-tree-map compare-string) (identifier-expr.name expr) true)
+              (tree-map.put
+                (empty-tree-map compare-string)
+                (identifier-expr.name expr)
+                true)
               (empty-tree-map compare-string))))
         (tree-map.get (env.vars env) (identifier-expr.name expr)))
         (fold (list-expr.exprs expr) (empty-tree-map compare-string)
@@ -1120,7 +1144,8 @@
                           (generate-identifier-expr closure env2)))))
                   (combine-declaration
                     (generate-result.declaration expr-result)
-                    (lambda-declaration method-name closures (generate-result.operation expr-result)))
+                    (lambda-declaration method-name closures
+                      (generate-result.operation expr-result)))
                   env2))
               (generate-expr expr
                 (new-env
@@ -1140,7 +1165,11 @@
                   (env.def env2)
                   (env.index env)))))
             (map (tree-map->list (closures expr env2)) first)))
-          (new-env (env.vars env) (env.file env) method-name (add-int one (env.index env)))))
+          (new-env
+            (env.vars env)
+            (env.file env)
+            method-name
+            (add-int one (env.index env)))))
         (mangle-lambda-name (env.def env) (env.index env)))))))
 
 ;; Generates a def expression.
@@ -1153,13 +1182,17 @@
             ((lambda expr-result
               (if (is-none (tree-map.get (env.vars env) name))
                 (new-generate-result
-                  (def-operation name (generate-result.operation expr-result) local-env)
+                  (def-operation
+                    name
+                    (generate-result.operation expr-result)
+                    local-env)
                   (combine-declaration
                     (generate-result.declaration expr-result)
                     (def-declaration name local-env))
                   env2)
                 (new-generate-result
-                  (generate-result.operation (generate-identifier-expr name env))
+                  (generate-result.operation
+                    (generate-identifier-expr name env))
                   no-declaration
                   env)))
             (generate-expr expr local-env)))
@@ -1247,7 +1280,9 @@
     (lambda env
       ((lambda expr-result
         (new-generate-result
-          (line-number-operation (generate-result.operation expr-result) (expr.line expr))
+          (line-number-operation
+            (generate-result.operation expr-result)
+            (expr.line expr))
           (generate-result.declaration expr-result)
           (generate-result.env expr-result)))
       (if (is-identifier-expr expr)
@@ -1264,13 +1299,16 @@
           ((lambda generate-result-cdr
             (new-generate-result
               (combine-operation
-                (ignore-result-operation (generate-result.operation generate-result-car))
+                (ignore-result-operation
+                  (generate-result.operation generate-result-car))
                 (generate-result.operation generate-result-cdr))
               (combine-declaration
                 (generate-result.declaration generate-result-car)
                 (generate-result.declaration generate-result-cdr))
               (generate-result.env generate-result-cdr)))
-          (generate-exprs (cdr exprs) (generate-result.env generate-result-car))))
+          (generate-exprs
+            (cdr exprs)
+            (generate-result.env generate-result-car))))
         (generate-expr (car exprs) env))))))
 
 ;; Generates the output code given a list of M expressions.
