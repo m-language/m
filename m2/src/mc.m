@@ -1,3 +1,5 @@
+;;; Predefs
+
 ;; The singleton undefined value.
 (def undefined ())
 
@@ -19,17 +21,32 @@
 ;; The rest of the elements in a list.
 (def cdr ())
 
+;; Converts a symbol to a list of characters.
+(def symbol->list ())
+
 ;; Adds two integers.
 (def add-int ())
 
+;; True if the first int is greater than the second int.
+(def gt-int ())
+
+;; True if the first int is less than the second int.
+(def lt-int ())
+
 ;; Converts a symbol to an int.
 (def symbol->int ())
+
+;; Converts a character to an int.
+(def char->int ())
 
 ;; Tests if two characters are equal.
 (def eq-char ())
 
 ;; Converts an integer to a character.
 (def int->char ())
+
+;; Converts a symbol to a character.
+(def symbol->char ())
 
 ;; Tests if two symbols are equal.
 (def eq-symbol ())
@@ -61,8 +78,7 @@
 ;; The list of arguments passed to the program.
 (def args ())
 
-;; Generates the output code given an M tree.
-(def ~generate ())
+;;; Utils
 
 ;; A pair of two values.
 (def pair
@@ -115,6 +131,40 @@
 ;; The second element in a list.
 (def cadr (compose car cdr))
 
+;; The rest of the rest of the list.
+(def cddr (compose cdr cdr))
+
+;; The third element in a list.
+(def caddr (compose car cddr))
+
+;; The fourth element in a list.
+(def cadddr (compose car (compose cdr cddr)))
+
+;; Appends [elem] to [list].
+(def append
+  (lambda list
+    (lambda elem
+      (if (is-nil list)
+        (cons elem list)
+        (cons (car list) (append (cdr list) elem))))))
+
+;; Maps [list] with function [f].
+(def map
+  (lambda list
+    (lambda f
+      (if (is-nil list)
+        nil
+        (cons (f (car list)) (map (cdr list) f))))))
+
+;; Folds [list] with an accumulator [acc] function [f].
+(def fold
+  (lambda list
+    (lambda acc
+      (lambda f
+        (if (is-nil list)
+          acc
+          (fold (cdr list) (f acc (car list)) f))))))
+
 ;; Takes elements of [list] while [f] is true.
 (def take-while
   (lambda list
@@ -124,6 +174,286 @@
         (if (f (car list))
           (cons (car list) (take-while (cdr list) f))
           nil)))))
+
+;; Tests if [list1] and [list2] are equal given a function [f].
+(def eq-list
+  (lambda f
+    (lambda list1
+      (lambda list2
+        (if (is-nil list1)
+          (is-nil list2)
+          (if (is-nil list2)
+            false
+            (and (f (car list1) (car list2))
+                 (lambda unused (eq-list f (cdr list1) (cdr list2))))))))))
+
+;;; Maybe
+
+;; A container for something.
+(def some
+  (new-data (symbol some)
+    (cons (symbol value)
+      nil)))
+
+;; Creates a new some.
+(def new-some
+  (lambda value
+    (some (cons value nil))))
+
+;; Tests if a value is a some.
+(def is-some
+  (lambda x
+    (eq-symbol (type-name x) (symbol some))))
+
+(def some.value (field (symbol some) (symbol value)))
+
+;; The lack of something.
+(def none ((new-data (symbol none) nil) nil))
+
+;; Tests if a value is none.
+(def is-none
+  (lambda x
+    (eq-symbol (type-name x) (symbol none))))
+
+;;; Compare
+
+;; Represents that two values are equal.
+(def compare= ((new-data (symbol compare=) nil) nil))
+
+;; Represents that the first value is greater than the second value.
+(def compare< ((new-data (symbol compare<) nil) nil))
+
+;; Represents that the first value is less than the second value.
+(def compare> ((new-data (symbol compare>) nil) nil))
+
+;; Tests if a value is compare=.
+(def is-compare=
+  (lambda x
+    (eq-symbol (type-name x) (symbol compare=))))
+
+;; Tests if a value is compare<.
+(def is-compare<
+  (lambda x
+    (eq-symbol (type-name x) (symbol compare<))))
+
+;; Tests if a value is compare>.
+(def is-compare>
+  (lambda x
+    (eq-symbol (type-name x) (symbol compare>))))
+
+;; Folds over the result of a compare.
+(def fold-compare
+  (lambda compare
+    (lambda <
+      (lambda >
+        (lambda =
+          (if (is-compare< compare)
+            (< compare)
+            (if (is-compare> compare)
+              (> compare)
+              (= compare))))))))
+
+;; Compares lists given [compare].
+(def compare-list
+  (lambda compare
+    (lambda list1
+      (lambda list2
+        (if (and (is-nil list1)
+                 (lambda unused (is-nil list2)))
+          compare=
+        (if (is-nil list1)
+          compare<
+        (if (is-nil list2)
+          compare>
+        ((lambda compare-result
+          (if (is-compare= compare-result)
+            (compare-list compare (cdr list1) (cdr list2))
+            compare-result))
+          (compare (car list1) (car list2))))))))))
+
+;; Compares ints.
+(def compare-int
+  (lambda int1
+    (lambda int2
+      (if (gt-int int1 int2)
+        compare>
+        (if (lt-int int1 int2)
+          compare<
+          compare=)))))
+
+;; Compares chars.
+(def compare-char
+  (lambda char1
+    (lambda char2
+      (compare-int (char->int char1) (char->int char2)))))
+
+;; Compare two strings.
+(def compare-string (compare-list compare-char))
+
+;;; Tree Map
+
+;; A node in a tree map.
+(def tree-map-node
+  (new-data (symbol tree-map-node)
+    (cons (symbol left)
+    (cons (symbol right)
+    (cons (symbol key)
+    (cons (symbol value)
+      nil))))))
+
+;; Creates a new tree map node.
+(def new-tree-map-node
+  (lambda left
+    (lambda right
+      (lambda key
+        (lambda value
+          (tree-map-node
+            (cons left (cons right (cons key (cons value nil))))))))))
+
+(def tree-map-node.left (field (symbol tree-map-node) (symbol left)))
+(def tree-map-node.right (field (symbol tree-map-node) (symbol right)))
+(def tree-map-node.key (field (symbol tree-map-node) (symbol key)))
+(def tree-map-node.value (field (symbol tree-map-node) (symbol value)))
+
+;; The empty tree map node.
+(def tree-map-node-nil ((new-data (symbol tree-map-node-nil) nil) nil))
+
+;; Tests if a value is tree-map-node-nil.
+(def is-tree-map-node-nil
+  (lambda x
+    (eq-symbol (type-name x) (symbol tree-map-node-nil))))
+
+;; A tree map.
+(def tree-map
+  (new-data (symbol tree-map)
+    (cons (symbol node)
+    (cons (symbol compare)
+      nil))))
+
+(def tree-map.node (field (symbol tree-map) (symbol node)))
+(def tree-map.compare (field (symbol tree-map) (symbol compare)))
+
+;; Creates a new tree map.
+(def new-tree-map
+  (lambda node
+    (lambda compare
+      (tree-map (cons node (cons compare nil))))))
+
+;; Creates an empty tree map with a given compare.
+(def empty-tree-map
+  (lambda compare
+    (new-tree-map tree-map-node-nil compare)))
+
+;; Gets the value of a key in a tree map node.
+(def tree-map-node.get
+  (lambda node
+    (lambda compare
+      (lambda key
+        (if (is-tree-map-node-nil node)
+          none
+          (fold-compare (compare key (tree-map-node.key node))
+            (lambda <
+              (tree-map-node.get (tree-map-node.left node) compare key))
+            (lambda >
+              (tree-map-node.get (tree-map-node.right node) compare key))
+            (lambda =
+              (new-some (tree-map-node.value node)))))))))
+
+;; Gets the value of a key in a tree map.
+(def tree-map.get
+  (lambda map
+    (lambda key
+      (tree-map-node.get (tree-map.node map) (tree-map.compare map) key))))
+
+;; Puts the value of a key in a tree map node.
+(def tree-map-node.put
+  (lambda node
+    (lambda compare
+      (lambda key
+        (lambda value
+          (if (is-tree-map-node-nil node)
+            (new-tree-map-node tree-map-node-nil tree-map-node-nil key value)
+            (fold-compare (compare key (tree-map-node.key node))
+              (lambda <
+                (new-tree-map-node
+                  (tree-map-node.put
+                    (tree-map-node.left node)
+                    compare
+                    key
+                    value)
+                  (tree-map-node.right node)
+                  (tree-map-node.key node)
+                  (tree-map-node.value node)))
+              (lambda >
+                (new-tree-map-node
+                  (tree-map-node.left node)
+                  (tree-map-node.put
+                    (tree-map-node.right node)
+                    compare
+                    key
+                    value)
+                  (tree-map-node.key node)
+                  (tree-map-node.value node)))
+              (lambda =
+                (new-tree-map-node
+                  (tree-map-node.left node)
+                  (tree-map-node.right node)
+                  key
+                  value)))))))))
+
+;; Puts the value of a key in a tree map.
+(def tree-map.put
+  (lambda map
+    (lambda key
+      (lambda value
+        (new-tree-map
+          (tree-map-node.put
+            (tree-map.node map)
+            (tree-map.compare map)
+            key
+            value)
+          (tree-map.compare map))))))
+
+;; Folds [node] with an accumulator [acc] and function [f].
+(def tree-map-node.fold
+  (lambda node
+    (lambda acc
+      (lambda f
+        (if (is-tree-map-node-nil node)
+          acc
+          (tree-map-node.fold (tree-map-node.right node)
+            (tree-map-node.fold (tree-map-node.left node)
+              (f acc (tree-map-node.key node) (tree-map-node.value node))
+            f)
+          f))))))
+
+;; Folds [map] with an accumulator [acc] and function [f].
+(def tree-map.fold
+  (lambda map
+    (lambda acc
+      (lambda f
+        (tree-map-node.fold (tree-map.node map) acc f)))))
+
+;; Adds [map1] and [map2].
+(def tree-map.add
+  (lambda map1
+    (lambda map2
+      (tree-map.fold map1 map2
+        (lambda map
+          (lambda key
+            (lambda value
+              (tree-map.put map key value))))))))
+
+;; Converts a tree map to a list.
+(def tree-map->list
+  (lambda map
+    (tree-map.fold map nil
+      (lambda list
+        (lambda key
+          (lambda value
+            (cons (new-pair key value) list)))))))
+
+;;; Parser Combinators
 
 ;; A parse result representing failure.
 (def parse-failure
@@ -155,7 +485,7 @@
 
 (def parse-success.value (field (symbol parse-success) (symbol value)))
 (def parse-success.state (field (symbol parse-success) (symbol state)))
-(def parse-success.rest (field(symbol parse-success)  (symbol rest)))
+(def parse-success.rest (field (symbol parse-success) (symbol rest)))
 
 ;; Tests if a value is a parse success.
 (def is-parse-success
@@ -307,6 +637,8 @@
       (lambda state
         ((parser nil) input state)))))
 
+;;; Tree
+
 ;; An expression representing an M identifier.
 (def identifier-expr
   (new-data (symbol identifier-expr)
@@ -319,6 +651,11 @@
   (lambda name
     (lambda line
       (identifier-expr (cons name (cons line nil))))))
+
+;; True if [x] is an identifier expression.
+(def is-identifier-expr
+  (lambda x
+    (eq-symbol (type-name x) (symbol identifier-expr))))
 
 (def identifier-expr.name (field (symbol identifier-expr) (symbol name)))
 (def identifier-expr.line (field (symbol identifier-expr) (symbol line)))
@@ -336,8 +673,25 @@
     (lambda line
       (list-expr (cons exprs (cons line nil))))))
 
+;; True if [x] is a list expression.
+(def is-list-expr
+  (lambda x
+    (eq-symbol (type-name x) (symbol list-expr))))
+
 (def list-expr.exprs (field (symbol list-expr) (symbol exprs)))
 (def list-expr.line (field (symbol list-expr) (symbol line)))
+
+;; The line of an expression.
+(def expr.line
+  (lambda expr
+    (if (is-identifier-expr expr)
+      (identifier-expr.line expr)
+      (list-expr.line expr))))
+
+;;; Char utils
+
+;; The literal number 0
+(def zero (symbol->int (symbol 0)))
 
 ;; The literal number 1.
 (def one (symbol->int (symbol 1)))
@@ -419,7 +773,7 @@
           (or (eq-char char space)
               (lambda unused
                 (or (eq-char char tab)
-                    (lambda unused (eq-char char vtab)))))))))
+                    (lambda unusedd (eq-char char vtab)))))))))
 
 ;; True if a character is part of an identifier.
 (def is-identifier-character
@@ -457,6 +811,8 @@
           (lambda char
             (not (eq-char char dot))))))))
 
+;;; Parser
+
 ;; Parses a single character.
 (def char-parser
   (lambda char
@@ -486,6 +842,7 @@
     (combine-parser-right
       (repeat-parser (alternative-parser whitespace-parser comment-parser))
       parser)))
+
 
 ;; Parses a single identifier character.
 (def identifier-char-parser
@@ -551,6 +908,436 @@
     (parse-success.value
       (parser input one))))
 
+;;; Generator
+
+;; The environment of a variable.
+(def env
+  (new-data (symbol env)
+    (cons (symbol vars)
+    (cons (symbol file)
+    (cons (symbol def)
+    (cons (symbol index)
+      nil))))))
+
+(def env.vars (field (symbol env) (symbol vars)))
+(def env.file (field (symbol env) (symbol file)))
+(def env.def (field (symbol env) (symbol def)))
+(def env.index (field (symbol env) (symbol index)))
+
+;; Creates a new environment.
+(def new-env
+  (lambda vars
+    (lambda file
+      (lambda defs
+        (lambda index
+          (env (cons vars (cons file (cons defs (cons index nil))))))))))
+
+;; The result of generating an expr.
+(def generate-result
+  (new-data (symbol generate-result)
+    (cons (symbol operation)
+    (cons (symbol declaration)
+    (cons (symbol env)
+      nil)))))
+
+;; Creates a new generate result.
+(def new-generate-result
+  (lambda operation
+    (lambda declaration
+      (lambda env
+        (generate-result (cons operation (cons declaration (cons env nil))))))))
+
+(def generate-result.operation
+  (field (symbol generate-result) (symbol operation)))
+
+(def generate-result.declaration
+  (field (symbol generate-result) (symbol declaration)))
+
+(def generate-result.env
+  (field (symbol generate-result) (symbol env)))
+
+;; The location of a local variable.
+(def local-variable
+  (new-data (symbol local-variable)
+    (cons (symbol name)
+    (cons (symbol index)
+      nil))))
+
+;; Creates a new local variable.
+(def new-local-variable
+  (lambda name
+    (lambda index
+      (local-variable (cons name (cons index nil))))))
+
+(def local-variable.name (field (symbol local-variable) (symbol name)))
+(def local-variable.index (field (symbol local-variable) (symbol index)))
+
+;; Tests if a value is a local variable.
+(def is-local-variable
+  (lambda x
+    (eq-symbol (type-name x) (symbol local-variable))))
+
+;; The location of a global variable
+(def global-variable
+  (new-data (symbol global-variable)
+    (cons (symbol name)
+    (cons (symbol file)
+      nil))))
+
+;; Creates a new global variable.
+(def new-global-variable
+  (lambda name
+    (lambda file
+      (global-variable (cons name (cons file nil))))))
+
+(def global-variable.name (field (symbol global-variable) (symbol name)))
+(def global-variable.file (field (symbol global-variable) (symbol file)))
+
+;; Tests if a value is a global variable.
+(def is-global-variable
+  (lambda x
+    (eq-symbol (type-name x) (symbol global-variable))))
+
+;; A set of closures in an expression.
+(def closures
+  (lambda expr
+    (lambda env
+      (if (is-identifier-expr expr)
+        ((lambda variable
+          (if (is-none variable)
+            (empty-tree-map compare-string)
+            (if (is-local-variable (some.value variable))
+              (tree-map.put
+                (empty-tree-map compare-string)
+                (identifier-expr.name expr)
+                true)
+              (empty-tree-map compare-string))))
+        (tree-map.get (env.vars env) (identifier-expr.name expr)))
+        (fold (list-expr.exprs expr) (empty-tree-map compare-string)
+          (lambda map
+            (lambda expr
+              (tree-map.add map (closures expr env)))))))))
+
+;; Creates a local variable operation.
+(def local-variable-operation ())
+
+;; Creates a global variable operation.
+(def global-variable-operation ())
+
+;; Creates a reflective variable operation.
+(def reflective-variable-operation ())
+
+;; Creates an if operation.
+(def if-operation ())
+
+;; Creates a def operation.
+(def def-operation ())
+
+;; Creates a def declaration.
+(def def-declaration ())
+
+;; Creates a lambda operation.
+(def lambda-operation ())
+
+;; Creates a lambda declaration.
+(def lambda-declaration ())
+
+;; Creates a symbol operation.
+(def symbol-operation ())
+
+;; Creates an apply operation.
+(def apply-operation ())
+
+;; The nil operation.
+(def nil-operation ())
+
+;; Operation which does nothing.
+(def no-operation ())
+
+;; Declaration which does nothing.
+(def no-declaration ())
+
+;; Combines two operations.
+(def combine-operation ())
+
+;; Ignores the result of an operation.
+(def ignore-result-operation ())
+
+;; Marks an operation with a line number.
+(def line-number-operation ())
+
+;; Combines two declarations.
+(def combine-declaration ())
+
+;; Mangles the name of a lambda given an index.
+(def mangle-lambda-name ())
+
+;; Generates a file.
+(def generate-file ())
+
+;; List containing all internal variables.
+(def internal-variable ())
+
+;; Generates an identifier expression.
+(def generate-identifier-expr
+  (lambda name
+    (lambda env
+      (new-generate-result
+        ((lambda maybe
+          (if (is-some maybe)
+            ((lambda variable
+              (if (is-global-variable variable)
+                (global-variable-operation
+                  (global-variable.name variable)
+                  (global-variable.file variable))
+                (local-variable-operation
+                  (local-variable.name variable)
+                  (local-variable.index variable))))
+            (some.value maybe))
+            (reflective-variable-operation name (env.file env))))
+          (tree-map.get (env.vars env) name))
+        no-declaration
+        env))))
+
+;; Generates a nil expression.
+(def generate-nil
+  (lambda env
+    (new-generate-result nil-operation no-declaration env)))
+
+;; Generates an if expression.
+(def generate-if-expr
+  (lambda cond-expr
+    (lambda true-expr
+      (lambda false-expr
+        (lambda env
+          ((lambda cond-result
+            ((lambda true-result
+              ((lambda false-result
+                (new-generate-result
+                  (if-operation
+                    (generate-result.operation cond-result)
+                    (generate-result.operation true-result)
+                    (generate-result.operation false-result))
+                  (combine-declaration
+                    (generate-result.declaration cond-result)
+                    (combine-declaration
+                      (generate-result.declaration true-result)
+                      (generate-result.declaration false-result)))
+                  (generate-result.env false-result)))
+              (generate-expr false-expr (generate-result.env true-result))))
+            (generate-expr true-expr (generate-result.env cond-result))))
+          (generate-expr cond-expr env)))))))
+
+;; Generates a lambda expression.
+(def generate-lambda-expr
+  (lambda name
+    (lambda expr
+      (lambda env
+        ((lambda method-name
+          ((lambda env2
+            ((lambda closures
+              ((lambda expr-result
+                (new-generate-result
+                  (lambda-operation
+                    (env.file env2)
+                    method-name
+                    (map closures
+                      (lambda closure
+                        (generate-result.operation
+                          (generate-identifier-expr closure env2)))))
+                  (combine-declaration
+                    (generate-result.declaration expr-result)
+                    (lambda-declaration method-name closures
+                      (generate-result.operation expr-result)))
+                  env2))
+              (generate-expr expr
+                (new-env
+                  (second
+                    (fold
+                      (append closures name)
+                      (new-pair zero (env.vars env2))
+                      (lambda vars
+                        (lambda closure
+                          (new-pair
+                            (add-int one (first vars))
+                            (tree-map.put
+                              (second vars)
+                              closure
+                              (new-local-variable closure (first vars))))))))
+                  (env.file env2)
+                  (env.def env2)
+                  (env.index env)))))
+            (map (tree-map->list (closures expr env2)) first)))
+          (new-env
+            (env.vars env)
+            (env.file env)
+            method-name
+            (add-int one (env.index env)))))
+        (mangle-lambda-name (env.def env) (env.index env)))))))
+
+;; Generates a def expression.
+(def generate-def-expr
+  (lambda name
+    (lambda expr
+      (lambda env
+        ((lambda env2
+          ((lambda local-env
+            ((lambda expr-result
+              (if (is-none (tree-map.get (env.vars env) name))
+                (new-generate-result
+                  (def-operation
+                    name
+                    (generate-result.operation expr-result)
+                    local-env)
+                  (combine-declaration
+                    (generate-result.declaration expr-result)
+                    (def-declaration name local-env))
+                  env2)
+                (new-generate-result
+                  (generate-result.operation
+                    (generate-identifier-expr name env))
+                  no-declaration
+                  env)))
+            (generate-expr expr local-env)))
+          (new-env (env.vars env2) (env.file env2) name (env.index env2))))
+        (new-env
+          (tree-map.put
+            (env.vars env)
+            name
+            (new-global-variable name (env.file env)))
+          (env.file env)
+          (env.def env)
+          (env.index env)))))))
+
+;; Generates a symbol expression.
+(def generate-symbol-expr
+  (lambda name
+    (lambda env
+      (new-generate-result (symbol-operation name) no-declaration env))))
+
+;; Generates an apply expression.
+(def generate-apply-expr
+  (lambda fn
+    (lambda args
+      (lambda env
+        (if (is-nil args)
+          (generate-apply-expr fn (cons (list-expr nil (expr.line fn)) nil) env)
+        (if (is-nil (cdr args))
+          ((lambda fn-result
+            ((lambda arg-result
+              (new-generate-result
+                (apply-operation
+                  (generate-result.operation fn-result)
+                  (generate-result.operation arg-result))
+                (combine-declaration
+                  (generate-result.declaration fn-result)
+                  (generate-result.declaration arg-result))
+                (generate-result.env arg-result)))
+            (generate-expr (car args) (generate-result.env fn-result))))
+          (generate-expr fn env))
+          (generate-apply-expr
+            (new-list-expr (cons fn (cons (car args) nil)) (expr.line fn))
+            (cdr args)
+            env)))))))
+
+;; Generates a list expression.
+(def generate-list-expr
+  (lambda expr
+    (lambda env
+      ((lambda exprs
+        (if (is-nil exprs)
+          (generate-nil env)
+          ((lambda name
+            (if (eq-list eq-char name (symbol->list (symbol if)))
+              (generate-if-expr
+                (cadr exprs)
+                (caddr exprs)
+                (cadddr exprs)
+                env)
+            (if (eq-list eq-char name (symbol->list (symbol lambda)))
+              (generate-lambda-expr
+                (identifier-expr.name (cadr exprs))
+                (caddr exprs)
+                env)
+            (if (eq-list eq-char name (symbol->list (symbol def)))
+              (generate-def-expr
+                (identifier-expr.name (cadr exprs))
+                (caddr exprs)
+                env)
+            (if (eq-list eq-char name (symbol->list (symbol symbol)))
+              (generate-symbol-expr
+                (identifier-expr.name (cadr exprs))
+                env)
+              (generate-apply-expr
+                (car exprs)
+                (cdr exprs)
+                env))))))
+          (if (is-identifier-expr (car exprs))
+            (identifier-expr.name (car exprs))
+            nil))))
+      (list-expr.exprs expr)))))
+
+;; Generates a single expression.
+(def generate-expr
+  (lambda expr
+    (lambda env
+      ((lambda expr-result
+        (new-generate-result
+          (line-number-operation
+            (generate-result.operation expr-result)
+            (expr.line expr))
+          (generate-result.declaration expr-result)
+          (generate-result.env expr-result)))
+      (if (is-identifier-expr expr)
+        (generate-identifier-expr (identifier-expr.name expr) env)
+        (generate-list-expr expr env))))))
+
+;; Generates a list of expressions.
+(def generate-exprs
+  (lambda exprs
+    (lambda env
+      (if (is-nil exprs)
+        (new-generate-result no-operation no-declaration env)
+        ((lambda generate-result-car
+          ((lambda generate-result-cdr
+            (new-generate-result
+              (combine-operation
+                (ignore-result-operation
+                  (generate-result.operation generate-result-car))
+                (generate-result.operation generate-result-cdr))
+              (combine-declaration
+                (generate-result.declaration generate-result-car)
+                (generate-result.declaration generate-result-cdr))
+              (generate-result.env generate-result-cdr)))
+          (generate-exprs
+            (cdr exprs)
+            (generate-result.env generate-result-car))))
+        (generate-expr (car exprs) env))))))
+
+;; Generates the output code given a list of M expressions.
+(def generate
+  (lambda name
+    (lambda out-file
+      (lambda exprs
+        ((lambda result
+          (generate-file
+            name
+            out-file
+            (generate-result.operation result)
+            (generate-result.declaration result)))
+        (generate-exprs
+          exprs
+          (new-env
+            (fold internal-variables (empty-tree-map compare-string)
+              (lambda map
+                (lambda variable
+                  (tree-map.put map (first variable) (second variable)))))
+            (cons name nil)
+            nil
+            zero)))))))
+
+;;; Compiler
+
 ;; Compiles [in-file], writing the generated code to [out-file].
 (def compile
   (lambda in-file
@@ -559,7 +1346,7 @@
         (lambda char-stream
           (then-run-with (file.name-without-extension in-file)
             (lambda name
-              (~generate name out-file
+              (generate name out-file
                 (parse char-stream)))))))))
 
 (run-unsafe
