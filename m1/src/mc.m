@@ -16,7 +16,8 @@
 (def symbol->char ())
 (def eq-symbol ())
 (def type-name ())
-(def new-data ())
+(def object ())
+(def derive ())
 (def field ())
 (def then-run ())
 (def run-with ())
@@ -26,18 +27,13 @@
 (def args ())
 
 (def pair
-  (new-data (symbol pair)
-    (cons (symbol first)
-    (cons (symbol second)
-      nil))))
-
-(def new-pair
   (lambda first
     (lambda second
-      (pair (cons first (cons second nil))))))
+      (derive (symbol pair) (symbol first) first
+      (derive (symbol pair) (symbol second) second
+        (object (symbol pair)))))))
 
 (def first (field (symbol pair) (symbol first)))
-
 (def second (field (symbol pair) (symbol second)))
 
 (def and
@@ -65,11 +61,8 @@
     (eq-symbol (type-name x) (symbol nil))))
 
 (def cadr (compose car cdr))
-
 (def cddr (compose cdr cdr))
-
 (def caddr (compose car cddr))
-
 (def cadddr (compose car (compose cdr cddr)))
 
 (def append
@@ -115,13 +108,9 @@
                  (lambda unused (eq-list f (cdr list1) (cdr list2))))))))))
 
 (def some
-  (new-data (symbol some)
-    (cons (symbol value)
-      nil)))
-
-(def new-some
   (lambda value
-    (some (cons value nil))))
+    (derive (symbol some) (symbol value) value
+      (object (symbol some)))))
 
 (def is-some
   (lambda x
@@ -129,15 +118,15 @@
 
 (def some.value (field (symbol some) (symbol value)))
 
-(def none ((new-data (symbol none) nil) nil))
+(def none (object (symbol none)))
 
 (def is-none
   (lambda x
     (eq-symbol (type-name x) (symbol none))))
 
-(def compare= ((new-data (symbol compare=) nil) nil))
-(def compare< ((new-data (symbol compare<) nil) nil))
-(def compare> ((new-data (symbol compare>) nil) nil))
+(def compare= (object (symbol compare=)))
+(def compare< (object (symbol compare<)))
+(def compare> (object (symbol compare>)))
 
 (def is-compare=
   (lambda x
@@ -196,49 +185,45 @@
 (def compare-string (compare-list compare-char))
 
 (def tree-map-node
-  (new-data (symbol tree-map-node)
-    (cons (symbol left)
-    (cons (symbol right)
-    (cons (symbol key)
-    (cons (symbol value)
-      nil))))))
-
-(def new-tree-map-node
   (lambda left
     (lambda right
       (lambda key
         (lambda value
-          (tree-map-node
-            (cons left (cons right (cons key (cons value nil))))))))))
+          (derive (symbol tree-map-node) (symbol left) left
+          (derive (symbol tree-map-node) (symbol right) right
+          (derive (symbol tree-map-node) (symbol key) key
+          (derive (symbol tree-map-node) (symbol value) value
+            (object (symbol tree-map-node)))))))))))
 
 (def tree-map-node.left (field (symbol tree-map-node) (symbol left)))
 (def tree-map-node.right (field (symbol tree-map-node) (symbol right)))
 (def tree-map-node.key (field (symbol tree-map-node) (symbol key)))
 (def tree-map-node.value (field (symbol tree-map-node) (symbol value)))
 
-(def tree-map-node-nil ((new-data (symbol tree-map-node-nil) nil) nil))
+(def tree-map-node-nil (object (symbol tree-map-node-nil)))
 
 (def is-tree-map-node-nil
   (lambda x
     (eq-symbol (type-name x) (symbol tree-map-node-nil))))
 
 (def tree-map
-  (new-data (symbol tree-map)
-    (cons (symbol node)
-    (cons (symbol compare)
-      nil))))
+  (lambda node
+    (lambda compare
+      (derive (symbol tree-map) (symbol node) node
+      (derive (symbol tree-map) (symbol compare) compare
+        (object (symbol tree-map)))))))
 
 (def tree-map.node (field (symbol tree-map) (symbol node)))
 (def tree-map.compare (field (symbol tree-map) (symbol compare)))
 
-(def new-tree-map
+(def tree-map
   (lambda node
     (lambda compare
       (tree-map (cons node (cons compare nil))))))
 
 (def empty-tree-map
   (lambda compare
-    (new-tree-map tree-map-node-nil compare)))
+    (tree-map tree-map-node-nil compare)))
 
 (def tree-map-node.get
   (lambda node
@@ -252,7 +237,7 @@
             (lambda >
               (tree-map-node.get (tree-map-node.right node) compare key))
             (lambda =
-              (new-some (tree-map-node.value node)))))))))
+              (some (tree-map-node.value node)))))))))
 
 (def tree-map.get
   (lambda map
@@ -265,10 +250,10 @@
       (lambda key
         (lambda value
           (if (is-tree-map-node-nil node)
-            (new-tree-map-node tree-map-node-nil tree-map-node-nil key value)
+            (tree-map-node tree-map-node-nil tree-map-node-nil key value)
             (fold-compare (compare key (tree-map-node.key node))
               (lambda <
-                (new-tree-map-node
+                (tree-map-node
                   (tree-map-node.put
                     (tree-map-node.left node)
                     compare
@@ -278,7 +263,7 @@
                   (tree-map-node.key node)
                   (tree-map-node.value node)))
               (lambda >
-                (new-tree-map-node
+                (tree-map-node
                   (tree-map-node.left node)
                   (tree-map-node.put
                     (tree-map-node.right node)
@@ -288,7 +273,7 @@
                   (tree-map-node.key node)
                   (tree-map-node.value node)))
               (lambda =
-                (new-tree-map-node
+                (tree-map-node
                   (tree-map-node.left node)
                   (tree-map-node.right node)
                   key
@@ -298,7 +283,7 @@
   (lambda map
     (lambda key
       (lambda value
-        (new-tree-map
+        (tree-map
           (tree-map-node.put
             (tree-map.node map)
             (tree-map.compare map)
@@ -339,31 +324,23 @@
       (lambda list
         (lambda key
           (lambda value
-            (cons (new-pair key value) list)))))))
+            (cons (pair key value) list)))))))
 
 (def parse-failure
-  (new-data (symbol parse-failure)
-    (cons (symbol state)
-      nil)))
-
-(def new-parse-failure
   (lambda state
-    (parse-failure (cons state nil))))
+    (derive (symbol parse-failure) (symbol state) state
+      (object (symbol parse-failure)))))
 
 (def parse-failure.state (field (symbol parse-failure) (symbol state)))
 
 (def parse-success
-  (new-data (symbol parse-success)
-    (cons (symbol value)
-    (cons (symbol state)
-    (cons (symbol rest)
-      nil)))))
-
-(def new-parse-success
   (lambda value
     (lambda state
       (lambda rest
-        (parse-success (cons value (cons state (cons rest nil))))))))
+        (derive (symbol parse-success) (symbol value) value
+        (derive (symbol parse-success) (symbol state) state
+        (derive (symbol parse-success) (symbol rest) rest
+          (object (symbol parse-success)))))))))
 
 (def parse-success.value (field (symbol parse-success) (symbol value)))
 (def parse-success.state (field (symbol parse-success) (symbol state)))
@@ -379,8 +356,8 @@
       (lambda state
         (if (and (not (is-nil input))
                  (lambda unused (f (car input))))
-          (new-parse-success (car input) state (cdr input))
-          (new-parse-failure state))))))
+          (parse-success (car input) state (cdr input))
+          (parse-failure state))))))
 
 (def success-parser (predicate-parser (lambda unused true)))
 
@@ -405,7 +382,7 @@
     (lambda f
       (map-parser-success parser
         (lambda success
-          (new-parse-success
+          (parse-success
             (f (parse-success.value success))
             (parse-success.state success)
             (parse-success.rest success)))))))
@@ -415,7 +392,7 @@
     (lambda f
       (map-parser-success parser
         (lambda success
-          (new-parse-success
+          (parse-success
             (parse-success.value success)
             (f (parse-success.state success))
             (parse-success.rest success)))))))
@@ -426,7 +403,7 @@
       (lambda state
         ((map-parser-value parser
           (lambda value
-            (new-pair value state)))
+            (pair value state)))
         input state)))))
 
 (def combine-parser
@@ -438,8 +415,8 @@
             (if (is-parse-success parser1-result)
               ((lambda parser2-result
                 (if (is-parse-success parser2-result)
-                  (new-parse-success
-                    (new-pair
+                  (parse-success
+                    (pair
                       (parse-success.value parser1-result)
                       (parse-success.value parser2-result))
                     (parse-success.state parser2-result)
@@ -468,7 +445,7 @@
         ((lambda result
           (if (is-parse-success result)
             ((lambda rest-result
-              (new-parse-success
+              (parse-success
                 (cons
                   (parse-success.value result)
                   (parse-success.value rest-result))
@@ -477,7 +454,7 @@
             (repeat-parser parser
               (parse-success.rest result)
               (parse-success.state result)))
-            (new-parse-success nil state input)))
+            (parse-success nil state input)))
         (parser input state))))))
 
 (def repeat-parser1
@@ -505,15 +482,11 @@
         ((parser nil) input state)))))
 
 (def identifier-expr
-  (new-data (symbol identifier-expr)
-    (cons (symbol name)
-    (cons (symbol line)
-      nil))))
-
-(def new-identifier-expr
   (lambda name
     (lambda line
-      (identifier-expr (cons name (cons line nil))))))
+      (derive (symbol identifier-expr) (symbol name) name
+      (derive (symbol identifier-expr) (symbol line) line
+        (object (symbol identifier-expr)))))))
 
 (def is-identifier-expr
   (lambda x
@@ -523,15 +496,11 @@
 (def identifier-expr.line (field (symbol identifier-expr) (symbol line)))
 
 (def list-expr
-  (new-data (symbol list-expr)
-    (cons (symbol exprs)
-    (cons (symbol line)
-      nil))))
-
-(def new-list-expr
   (lambda exprs
     (lambda line
-      (list-expr (cons exprs (cons line nil))))))
+      (derive (symbol list-expr) (symbol exprs) exprs
+      (derive (symbol list-expr) (symbol line) line
+        (object (symbol list-expr)))))))
 
 (def is-list-expr
   (lambda x
@@ -550,6 +519,7 @@
 (def one (symbol->int (symbol 1)))
 
 (def symbol->int->char (compose int->char symbol->int))
+
 (def open-parentheses (symbol->int->char (symbol 40)))
 (def close-parentheses (symbol->int->char (symbol 41)))
 (def semicolon (symbol->int->char (symbol 59)))
@@ -670,7 +640,7 @@
           identifier-literal-parser
           (repeat-parser1 identifier-char-parser)))
       (lambda pair
-        (new-identifier-expr (first pair) (second pair))))))
+        (identifier-expr (first pair) (second pair))))))
 
 (def list-expr-parser
   (ignore-unused
@@ -682,7 +652,7 @@
             (lazy-parser (lambda unused parser))
             (char-parser close-parentheses))))
       (lambda pair
-        (new-list-expr (first pair) (second pair))))))
+        (list-expr (first pair) (second pair))))))
 
 (def expr-parser
   (alternative-parser
@@ -698,37 +668,29 @@
       (parser input one))))
 
 (def env
-  (new-data (symbol env)
-    (cons (symbol vars)
-    (cons (symbol file)
-    (cons (symbol def)
-    (cons (symbol index)
-      nil))))))
+  (lambda vars
+    (lambda file
+      (lambda def
+        (lambda index
+          (derive (symbol env) (symbol vars) vars
+          (derive (symbol env) (symbol file) file
+          (derive (symbol env) (symbol def) def
+          (derive (symbol env) (symbol index) index
+            (object (symbol env)))))))))))
 
 (def env.vars (field (symbol env) (symbol vars)))
 (def env.file (field (symbol env) (symbol file)))
 (def env.def (field (symbol env) (symbol def)))
 (def env.index (field (symbol env) (symbol index)))
 
-(def new-env
-  (lambda vars
-    (lambda file
-      (lambda defs
-        (lambda index
-          (env (cons vars (cons file (cons defs (cons index nil))))))))))
-
 (def generate-result
-  (new-data (symbol generate-result)
-    (cons (symbol operation)
-    (cons (symbol declaration)
-    (cons (symbol env)
-      nil)))))
-
-(def new-generate-result
   (lambda operation
     (lambda declaration
       (lambda env
-        (generate-result (cons operation (cons declaration (cons env nil))))))))
+        (derive (symbol generate-result) (symbol operation) operation
+        (derive (symbol generate-result) (symbol declaration) declaration
+        (derive (symbol generate-result) (symbol env) env
+          (object (symbol generate-result)))))))))
 
 (def generate-result.operation
   (field (symbol generate-result) (symbol operation)))
@@ -740,15 +702,11 @@
   (field (symbol generate-result) (symbol env)))
 
 (def local-variable
-  (new-data (symbol local-variable)
-    (cons (symbol name)
-    (cons (symbol index)
-      nil))))
-
-(def new-local-variable
   (lambda name
     (lambda index
-      (local-variable (cons name (cons index nil))))))
+      (derive (symbol local-variable) (symbol name) name
+      (derive (symbol local-variable) (symbol index) index
+        (object (symbol local-variable)))))))
 
 (def local-variable.name (field (symbol local-variable) (symbol name)))
 (def local-variable.index (field (symbol local-variable) (symbol index)))
@@ -758,15 +716,11 @@
     (eq-symbol (type-name x) (symbol local-variable))))
 
 (def global-variable
-  (new-data (symbol global-variable)
-    (cons (symbol name)
-    (cons (symbol file)
-      nil))))
-
-(def new-global-variable
   (lambda name
     (lambda file
-      (global-variable (cons name (cons file nil))))))
+      (derive (symbol global-variable) (symbol name) name
+      (derive (symbol global-variable) (symbol file) file
+        (object (symbol global-variable)))))))
 
 (def global-variable.name (field (symbol global-variable) (symbol name)))
 (def global-variable.file (field (symbol global-variable) (symbol file)))
@@ -777,7 +731,7 @@
 
 (def closures
   (lambda expr
-    (lambda env
+    (lambda env1
       (if (is-identifier-expr expr)
         ((lambda variable
           (if (is-none variable)
@@ -788,11 +742,11 @@
                 (identifier-expr.name expr)
                 true)
               (empty-tree-map compare-string))))
-        (tree-map.get (env.vars env) (identifier-expr.name expr)))
+        (tree-map.get (env.vars env1) (identifier-expr.name expr)))
         (fold (list-expr.exprs expr) (empty-tree-map compare-string)
           (lambda map
             (lambda expr
-              (tree-map.add map (closures expr env)))))))))
+              (tree-map.add map (closures expr env1)))))))))
 
 (def local-variable-operation ())
 (def global-variable-operation ())
@@ -817,8 +771,8 @@
 
 (def generate-identifier-expr
   (lambda name
-    (lambda env
-      (new-generate-result
+    (lambda env1
+      (generate-result
         ((lambda maybe
           (if (is-some maybe)
             ((lambda variable
@@ -830,24 +784,24 @@
                   (local-variable.name variable)
                   (local-variable.index variable))))
             (some.value maybe))
-            (reflective-variable-operation name (env.file env))))
-          (tree-map.get (env.vars env) name))
+            (reflective-variable-operation name (env.file env1))))
+          (tree-map.get (env.vars env1) name))
         no-declaration
-        env))))
+        env1))))
 
 (def generate-nil
-  (lambda env
-    (new-generate-result nil-operation no-declaration env)))
+  (lambda env1
+    (generate-result nil-operation no-declaration env1)))
 
 (def generate-if-expr
   (lambda cond-expr
     (lambda true-expr
       (lambda false-expr
-        (lambda env
+        (lambda env1
           ((lambda cond-result
             ((lambda true-result
               ((lambda false-result
-                (new-generate-result
+                (generate-result
                   (if-operation
                     (generate-result.operation cond-result)
                     (generate-result.operation true-result)
@@ -860,17 +814,17 @@
                   (generate-result.env false-result)))
               (generate-expr false-expr (generate-result.env true-result))))
             (generate-expr true-expr (generate-result.env cond-result))))
-          (generate-expr cond-expr env)))))))
+          (generate-expr cond-expr env1)))))))
 
 (def generate-lambda-expr
   (lambda name
     (lambda expr
-      (lambda env
+      (lambda env1
         ((lambda method-name
           ((lambda env2
             ((lambda closures
               ((lambda expr-result
-                (new-generate-result
+                (generate-result
                   (lambda-operation
                     (env.file env2)
                     method-name
@@ -884,39 +838,39 @@
                       (generate-result.operation expr-result)))
                   env2))
               (generate-expr expr
-                (new-env
+                (env
                   (second
                     (fold
                       (append closures name)
-                      (new-pair zero (env.vars env2))
+                      (pair zero (env.vars env2))
                       (lambda vars
                         (lambda closure
-                          (new-pair
+                          (pair
                             (add-int one (first vars))
                             (tree-map.put
                               (second vars)
                               closure
-                              (new-local-variable closure (first vars))))))))
+                              (local-variable closure (first vars))))))))
                   (env.file env2)
                   (env.def env2)
-                  (env.index env)))))
+                  (env.index env1)))))
             (map (tree-map->list (closures expr env2)) first)))
-          (new-env
-            (env.vars env)
-            (env.file env)
+          (env
+            (env.vars env1)
+            (env.file env1)
             method-name
-            (add-int one (env.index env)))))
-        (mangle-lambda-name (env.def env) (env.index env)))))))
+            (add-int one (env.index env1)))))
+        (mangle-lambda-name (env.def env1) (env.index env1)))))))
 
 (def generate-def-expr
   (lambda name
     (lambda expr
-      (lambda env
+      (lambda env1
         ((lambda env2
           ((lambda local-env
             ((lambda expr-result
-              (if (is-none (tree-map.get (env.vars env) name))
-                (new-generate-result
+              (if (is-none (tree-map.get (env.vars env1) name))
+                (generate-result
                   (def-operation
                     name
                     (generate-result.operation expr-result)
@@ -925,37 +879,37 @@
                     (generate-result.declaration expr-result)
                     (def-declaration name (env.file local-env)))
                   env2)
-                (new-generate-result
+                (generate-result
                   (generate-result.operation
-                    (generate-identifier-expr name env))
+                    (generate-identifier-expr name env1))
                   no-declaration
-                  env)))
+                  env1)))
             (generate-expr expr local-env)))
-          (new-env (env.vars env2) (env.file env2) name (env.index env2))))
-        (new-env
+          (env (env.vars env2) (env.file env2) name (env.index env2))))
+        (env
           (tree-map.put
-            (env.vars env)
+            (env.vars env1)
             name
-            (new-global-variable name (env.file env)))
-          (env.file env)
-          (env.def env)
-          (env.index env)))))))
+            (global-variable name (env.file env1)))
+          (env.file env1)
+          (env.def env1)
+          (env.index env1)))))))
 
 (def generate-symbol-expr
   (lambda name
-    (lambda env
-      (new-generate-result (symbol-operation name) no-declaration env))))
+    (lambda env1
+      (generate-result (symbol-operation name) no-declaration env1))))
 
 (def generate-apply-expr
   (lambda fn
     (lambda args
-      (lambda env
+      (lambda env1
         (if (is-nil args)
-          (generate-apply-expr fn (cons (list-expr nil (expr.line fn)) nil) env)
+          (generate-apply-expr fn (cons (list-expr nil (expr.line fn)) nil) env1)
         (if (is-nil (cdr args))
           ((lambda fn-result
             ((lambda arg-result
-              (new-generate-result
+              (generate-result
                 (apply-operation
                   (generate-result.operation fn-result)
                   (generate-result.operation arg-result))
@@ -964,43 +918,43 @@
                   (generate-result.declaration arg-result))
                 (generate-result.env arg-result)))
             (generate-expr (car args) (generate-result.env fn-result))))
-          (generate-expr fn env))
+          (generate-expr fn env1))
           (generate-apply-expr
-            (new-list-expr (cons fn (cons (car args) nil)) (expr.line fn))
+            (list-expr (cons fn (cons (car args) nil)) (expr.line fn))
             (cdr args)
-            env)))))))
+            env1)))))))
 
 (def generate-list-expr
   (lambda expr
-    (lambda env
+    (lambda env1
       ((lambda exprs
         (if (is-nil exprs)
-          (generate-nil env)
+          (generate-nil env1)
           ((lambda name
             (if (eq-list eq-char name (symbol->list (symbol if)))
               (generate-if-expr
                 (cadr exprs)
                 (caddr exprs)
                 (cadddr exprs)
-                env)
+                env1)
             (if (eq-list eq-char name (symbol->list (symbol lambda)))
               (generate-lambda-expr
                 (identifier-expr.name (cadr exprs))
                 (caddr exprs)
-                env)
+                env1)
             (if (eq-list eq-char name (symbol->list (symbol def)))
               (generate-def-expr
                 (identifier-expr.name (cadr exprs))
                 (caddr exprs)
-                env)
+                env1)
             (if (eq-list eq-char name (symbol->list (symbol symbol)))
               (generate-symbol-expr
                 (identifier-expr.name (cadr exprs))
-                env)
+                env1)
               (generate-apply-expr
                 (car exprs)
                 (cdr exprs)
-                env))))))
+                env1))))))
           (if (is-identifier-expr (car exprs))
             (identifier-expr.name (car exprs))
             nil))))
@@ -1008,26 +962,26 @@
 
 (def generate-expr
   (lambda expr
-    (lambda env
+    (lambda env1
       ((lambda expr-result
-        (new-generate-result
+        (generate-result
           (line-number-operation
             (generate-result.operation expr-result)
             (expr.line expr))
           (generate-result.declaration expr-result)
           (generate-result.env expr-result)))
       (if (is-identifier-expr expr)
-        (generate-identifier-expr (identifier-expr.name expr) env)
-        (generate-list-expr expr env))))))
+        (generate-identifier-expr (identifier-expr.name expr) env1)
+        (generate-list-expr expr env1))))))
 
 (def generate-exprs
   (lambda exprs
-    (lambda env
+    (lambda env1
       (if (is-nil exprs)
-        (new-generate-result no-operation no-declaration env)
+        (generate-result no-operation no-declaration env1)
         ((lambda generate-result-car
           ((lambda generate-result-cdr
-            (new-generate-result
+            (generate-result
               (combine-operation
                 (ignore-result-operation
                   (generate-result.operation generate-result-car))
@@ -1039,7 +993,7 @@
           (generate-exprs
             (cdr exprs)
             (generate-result.env generate-result-car))))
-        (generate-expr (car exprs) env))))))
+        (generate-expr (car exprs) env1))))))
 
 (def generate
   (lambda name
@@ -1053,7 +1007,7 @@
             (generate-result.declaration result)))
         (generate-exprs
           exprs
-          (new-env
+          (env
             (fold internal-variables (empty-tree-map compare-string)
               (lambda map
                 (lambda variable
@@ -1061,6 +1015,7 @@
             (cons name nil)
             nil
             zero)))))))
+
 
 (def compile
   (lambda in-file
