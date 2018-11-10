@@ -23,7 +23,7 @@
 (def run-with ())
 (def then-run-with ())
 (def run-unsafe ())
-(def file ())
+(def local-file ())
 (def args ())
 
 (def pair
@@ -516,6 +516,7 @@
       (list-expr.line expr))))
 
 (def zero (symbol->int (symbol 0)))
+
 (def one (symbol->int (symbol 1)))
 
 (def symbol->int->char (compose int->char symbol->int))
@@ -577,6 +578,7 @@
       char))))))))
 
 (def file.read (field (symbol file) (symbol read)))
+(def file.child (field (symbol file) (symbol child)))
 (def file.name (field (symbol file) (symbol name)))
 
 (def file.name-without-extension
@@ -669,17 +671,17 @@
 
 (def env
   (lambda vars
-    (lambda file
+    (lambda path
       (lambda def
         (lambda index
           (derive (symbol env) (symbol vars) vars
-          (derive (symbol env) (symbol file) file
+          (derive (symbol env) (symbol path) path
           (derive (symbol env) (symbol def) def
           (derive (symbol env) (symbol index) index
             (object (symbol env)))))))))))
 
 (def env.vars (field (symbol env) (symbol vars)))
-(def env.file (field (symbol env) (symbol file)))
+(def env.path (field (symbol env) (symbol path)))
 (def env.def (field (symbol env) (symbol def)))
 (def env.index (field (symbol env) (symbol index)))
 
@@ -717,13 +719,13 @@
 
 (def global-variable
   (lambda name
-    (lambda file
+    (lambda path
       (derive (symbol global-variable) (symbol name) name
-      (derive (symbol global-variable) (symbol file) file
+      (derive (symbol global-variable) (symbol path) path
         (object (symbol global-variable)))))))
 
 (def global-variable.name (field (symbol global-variable) (symbol name)))
-(def global-variable.file (field (symbol global-variable) (symbol file)))
+(def global-variable.path (field (symbol global-variable) (symbol path)))
 
 (def is-global-variable
   (lambda x
@@ -766,7 +768,7 @@
 (def line-number-operation ())
 (def combine-declaration ())
 (def mangle-lambda-name ())
-(def generate-file ())
+(def generate-program ())
 (def internal-variable ())
 
 (def generate-identifier-expr
@@ -779,12 +781,12 @@
               (if (is-global-variable variable)
                 (global-variable-operation
                   (global-variable.name variable)
-                  (global-variable.file variable))
+                  (global-variable.path variable))
                 (local-variable-operation
                   (local-variable.name variable)
                   (local-variable.index variable))))
             (some.value maybe))
-            (reflective-variable-operation name (env.file env1))))
+            (reflective-variable-operation name (env.path env1))))
           (tree-map.get (env.vars env1) name))
         no-declaration
         env1))))
@@ -826,7 +828,7 @@
               ((lambda expr-result
                 (generate-result
                   (lambda-operation
-                    (env.file env2)
+                    (env.path env2)
                     method-name
                     (map closures
                       (lambda closure
@@ -851,13 +853,13 @@
                               (second vars)
                               closure
                               (local-variable closure (first vars))))))))
-                  (env.file env2)
+                  (env.path env2)
                   (env.def env2)
                   (env.index env1)))))
             (map (tree-map->list (closures expr env2)) first)))
           (env
             (env.vars env1)
-            (env.file env1)
+            (env.path env1)
             method-name
             (add-int one (env.index env1)))))
         (mangle-lambda-name (env.def env1) (env.index env1)))))))
@@ -874,10 +876,10 @@
                   (def-operation
                     name
                     (generate-result.operation expr-result)
-                    (env.file local-env))
+                    (env.path local-env))
                   (combine-declaration
                     (generate-result.declaration expr-result)
-                    (def-declaration name (env.file local-env)))
+                    (def-declaration name (env.path local-env)))
                   env2)
                 (generate-result
                   (generate-result.operation
@@ -885,13 +887,13 @@
                   no-declaration
                   env1)))
             (generate-expr expr local-env)))
-          (env (env.vars env2) (env.file env2) name (env.index env2))))
+          (env (env.vars env2) (env.path env2) name (env.index env2))))
         (env
           (tree-map.put
             (env.vars env1)
             name
-            (global-variable name (env.file env1)))
-          (env.file env1)
+            (global-variable name (env.path env1)))
+          (env.path env1)
           (env.def env1)
           (env.index env1)))))))
 
@@ -1000,7 +1002,7 @@
     (lambda out-file
       (lambda exprs
         ((lambda result
-          (generate-file
+          (generate-program
             name
             out-file
             (generate-result.operation result)
@@ -1016,7 +1018,6 @@
             nil
             zero)))))))
 
-
 (def compile
   (lambda in-file
     (lambda out-file
@@ -1028,6 +1029,8 @@
                 (parse char-stream)))))))))
 
 (run-unsafe
-  (compile
-    (file (car args))
-    (file (cadr args))))
+  (then-run-with (file.child local-file (car args))
+    (lambda in-file
+      (then-run-with (file.child local-file (cadr args))
+        (lambda out-file
+          (compile in-file out-file))))))
