@@ -287,7 +287,7 @@
     (lambda char2
       (compare-int (char->int char1) (char->int char2)))))
 
-;; Compare two strings.
+;; Compare strings.
 (def compare-string (compare-list compare-char))
 
 ;;; Tree Map
@@ -840,7 +840,6 @@
       (repeat-parser (alternative-parser whitespace-parser comment-parser))
       parser)))
 
-
 ;; Parses a single identifier character.
 (def identifier-char-parser
   (predicate-parser is-identifier-character))
@@ -1185,10 +1184,10 @@
                   (def-operation
                     name
                     (generate-result.operation expr-result)
-                    local-env)
+                    (env.file local-env))
                   (combine-declaration
                     (generate-result.declaration expr-result)
-                    (def-declaration name local-env))
+                    (def-declaration name (env.file local-env)))
                   env2)
                 (new-generate-result
                   (generate-result.operation

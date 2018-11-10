@@ -1188,10 +1188,10 @@
                   (def-operation
                     name
                     (generate-result.operation expr-result)
-                    local-env)
+                    (env.file local-env))
                   (combine-declaration
                     (generate-result.declaration expr-result)
-                    (def-declaration name local-env))
+                    (def-declaration name (env.file local-env)))
                   env2)
                 (new-generate-result
                   (generate-result.operation
