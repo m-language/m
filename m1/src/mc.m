@@ -23,6 +23,7 @@
 (def run-with ())
 (def then-run-with ())
 (def run-unsafe ())
+(def function->process ())
 (def local-file ())
 (def args ())
 
@@ -71,6 +72,13 @@
       (if (is-nil list)
         (cons elem list)
         (cons (car list) (append (cdr list) elem))))))
+
+(def add-list
+  (lambda list1
+    (lambda list2
+      (if (is-nil list1)
+        list2
+        (cons (car list1) (add-list (cdr list1) list2))))))
 
 (def map
   (lambda list
@@ -577,9 +585,11 @@
     (if (eq-char char letter-r) carriage-return
       char))))))))
 
-(def file.read (field (symbol file) (symbol read)))
 (def file.child (field (symbol file) (symbol child)))
+(def file.child-files (field (symbol file) (symbol child-files)))
+(def file.directory? (field (symbol file) (symbol directory?)))
 (def file.name (field (symbol file) (symbol name)))
+(def file.read (field (symbol file) (symbol read)))
 
 (def file.name-without-extension
   (lambda file
@@ -674,16 +684,19 @@
     (lambda path
       (lambda def
         (lambda index
-          (derive (symbol env) (symbol vars) vars
-          (derive (symbol env) (symbol path) path
-          (derive (symbol env) (symbol def) def
-          (derive (symbol env) (symbol index) index
-            (object (symbol env)))))))))))
+          (lambda includes
+            (derive (symbol env) (symbol vars) vars
+            (derive (symbol env) (symbol path) path
+            (derive (symbol env) (symbol def) def
+            (derive (symbol env) (symbol index) index
+            (derive (symbol env) (symbol includes) includes
+              (object (symbol env)))))))))))))
 
 (def env.vars (field (symbol env) (symbol vars)))
 (def env.path (field (symbol env) (symbol path)))
 (def env.def (field (symbol env) (symbol def)))
 (def env.index (field (symbol env) (symbol index)))
+(def env.includes (field (symbol env) (symbol includes)))
 
 (def generate-result
   (lambda operation
@@ -759,6 +772,8 @@
 (def lambda-operation ())
 (def lambda-declaration ())
 (def symbol-operation ())
+(def include-operation ())
+(def include-declaration ())
 (def apply-operation ())
 (def nil-operation ())
 (def no-operation ())
@@ -855,13 +870,15 @@
                               (local-variable closure (first vars))))))))
                   (env.path env2)
                   (env.def env2)
-                  (env.index env1)))))
+                  (env.index env1)
+                  (env.includes env2)))))
             (map (tree-map->list (closures expr env2)) first)))
           (env
             (env.vars env1)
             (env.path env1)
             method-name
-            (add-int one (env.index env1)))))
+            (add-int one (env.index env1))
+            (env.includes env1))))
         (mangle-lambda-name (env.def env1) (env.index env1)))))))
 
 (def generate-def-expr
@@ -887,7 +904,12 @@
                   no-declaration
                   env1)))
             (generate-expr expr local-env)))
-          (env (env.vars env2) (env.path env2) name (env.index env2))))
+          (env
+            (env.vars env2)
+            (env.path env2)
+            name
+            (env.index env2)
+            (env.includes env2))))
         (env
           (tree-map.put
             (env.vars env1)
@@ -895,19 +917,49 @@
             (global-variable name (env.path env1)))
           (env.path env1)
           (env.def env1)
-          (env.index env1)))))))
+          (env.index env1)
+          (env.includes env1)))))))
 
 (def generate-symbol-expr
   (lambda name
     (lambda env1
       (generate-result (symbol-operation name) no-declaration env1))))
 
+(def generate-include-expr
+  (lambda name
+    (lambda env1
+      (if (is-some (tree-map.get (env.includes env1) name))
+        (generate-result nil-operation no-declaration env1)
+        ((lambda exprs-result
+          (generate-result
+            (include-operation name)
+            (include-declaration name)
+            ((lambda env2
+              (env
+                (env.vars env2)
+                (env.path env1)
+                (env.def env2)
+                (env.index env2)
+                (env.includes env2)))
+            (generate-result.env exprs-result))))
+        (generate-exprs
+          (some.value (tree-map.get local-files name))
+          (env
+            (env.vars env1)
+            name
+            (env.def env1)
+            (env.index env1)
+            (tree-map.put (env.includes env1) name ()))))))))
+
 (def generate-apply-expr
   (lambda fn
     (lambda args
       (lambda env1
         (if (is-nil args)
-          (generate-apply-expr fn (cons (list-expr nil (expr.line fn)) nil) env1)
+          (generate-apply-expr
+            fn
+            (cons (list-expr nil (expr.line fn)) nil)
+            env1)
         (if (is-nil (cdr args))
           ((lambda fn-result
             ((lambda arg-result
@@ -953,10 +1005,14 @@
               (generate-symbol-expr
                 (identifier-expr.name (cadr exprs))
                 env1)
+            (if (eq-list eq-char name (symbol->list (symbol include)))
+              (generate-include-expr
+                (identifier-expr.name (cadr exprs))
+                env1)
               (generate-apply-expr
                 (car exprs)
                 (cdr exprs)
-                env1))))))
+                env1)))))))
           (if (is-identifier-expr (car exprs))
             (identifier-expr.name (car exprs))
             nil))))
@@ -1014,23 +1070,51 @@
               (lambda map
                 (lambda variable
                   (tree-map.put map (first variable) (second variable)))))
-            (cons name nil)
+            name
             nil
-            zero)))))))
+            zero
+            (tree-map.put (empty-tree-map compare-string) name ()))))))))
+
+(def load-files
+  (lambda file
+    (lambda path
+      (then-run-with (file.directory? file)
+        (lambda directory?
+          (if directory?
+            (then-run-with (file.child-files file)
+              (lambda child-files
+                (fold child-files
+                  (function->process
+                    (lambda unused (empty-tree-map compare-string)))
+                  (lambda map-process
+                    (lambda file
+                      (then-run-with map-process
+                        (lambda map
+                          (then-run-with (file.name-without-extension file)
+                            (lambda name
+                              (run-with (load-files file
+                                          (add-list path (cons dot name)))
+                                (lambda load-files
+                                  (tree-map.add map load-files))))))))))))
+            (run-with (file.read file)
+              (lambda chars
+                (tree-map.put (empty-tree-map compare-string)
+                  (cdr path)
+                  (parse chars))))))))))
+
+(def in-file (run-unsafe (file.child local-file (car args))))
+
+(def out-file (run-unsafe (file.child local-file (cadr args))))
+
+(def local-files (run-unsafe (load-files in-file nil)))
 
 (def compile
-  (lambda in-file
-    (lambda out-file
-      (then-run-with (file.read in-file)
-        (lambda char-stream
-          (then-run-with (file.name-without-extension in-file)
-            (lambda name
-              (generate name out-file
-                (parse char-stream)))))))))
+  (lambda files
+    (tree-map.fold local-files
+      (function->process (lambda unused true))
+      (lambda process
+        (lambda name
+          (lambda expr
+            (then-run process (generate name out-file expr))))))))
 
-(run-unsafe
-  (then-run-with (file.child local-file (car args))
-    (lambda in-file
-      (then-run-with (file.child local-file (cadr args))
-        (lambda out-file
-          (compile in-file out-file))))))
+(run-unsafe (compile local-files))
