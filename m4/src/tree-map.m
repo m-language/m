@@ -1,5 +1,5 @@
-(include symbol)
-(include data)
+(import symbol)
+(import data)
 
 ;; A node in a tree map.
 (def tree-map-node
@@ -48,9 +48,9 @@
   (lambda compare
     (tree-map tree-map-node-nil compare)))
 
-(include compare)
-(include maybe)
-(include list)
+(import compare)
+(import maybe)
+(import list)
 
 ;; Gets the value of a key in a tree map node.
 (def tree-map-node.get

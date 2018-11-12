@@ -1,5 +1,5 @@
-(include data)
-(include symbol)
+(import data)
+(import symbol)
 
 ;; An expression representing an M identifier.
 (def identifier-expr

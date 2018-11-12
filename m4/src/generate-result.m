@@ -1,5 +1,5 @@
-(include data)
-(include symbol)
+(import data)
+(import symbol)
 
 ;; The result of generating an expr.
 (def generate-result

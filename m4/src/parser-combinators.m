@@ -1,4 +1,4 @@
-(include predef)
+(import predef)
 
 ;; A parse result representing failure.
 (def parse-failure

@@ -8,3 +8,4 @@ The compiler for the M programming language.
 - [M2](m2) Adds comments.
 - [M3](m3) Adds symbol literals.
 - [M4](m4) Adds include.
+- [M5](m5) Adds macro.

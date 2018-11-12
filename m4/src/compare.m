@@ -1,5 +1,5 @@
-(include data)
-(include symbol)
+(import data)
+(import symbol)
 
 ;; Represents that two values are equal.
 (def compare= (object (symbol compare=)))
@@ -37,8 +37,8 @@
               (> compare)
               (= compare))))))))
 
-(include bool)
-(include list)
+(import bool)
+(import list)
 
 ;; Compares lists given [compare].
 (def compare-list
@@ -58,7 +58,7 @@
             compare-result))
           (compare (car list1) (car list2))))))))))
 
-(include int)
+(import int)
 
 ;; Compares ints.
 (def compare-int
@@ -70,7 +70,7 @@
           compare<
           compare=)))))
 
-(include char)
+(import char)
 
 ;; Compares chars.
 (def compare-char

@@ -684,19 +684,19 @@
     (lambda path
       (lambda def
         (lambda index
-          (lambda includes
+          (lambda imports
             (derive (symbol env) (symbol vars) vars
             (derive (symbol env) (symbol path) path
             (derive (symbol env) (symbol def) def
             (derive (symbol env) (symbol index) index
-            (derive (symbol env) (symbol includes) includes
+            (derive (symbol env) (symbol imports) imports
               (object (symbol env)))))))))))))
 
 (def env.vars (field (symbol env) (symbol vars)))
 (def env.path (field (symbol env) (symbol path)))
 (def env.def (field (symbol env) (symbol def)))
 (def env.index (field (symbol env) (symbol index)))
-(def env.includes (field (symbol env) (symbol includes)))
+(def env.imports (field (symbol env) (symbol imports)))
 
 (def generate-result
   (lambda operation
@@ -772,8 +772,8 @@
 (def lambda-operation ())
 (def lambda-declaration ())
 (def symbol-operation ())
-(def include-operation ())
-(def include-declaration ())
+(def import-operation ())
+(def import-declaration ())
 (def apply-operation ())
 (def nil-operation ())
 (def no-operation ())
@@ -871,14 +871,14 @@
                   (env.path env2)
                   (env.def env2)
                   (env.index env1)
-                  (env.includes env2)))))
+                  (env.imports env2)))))
             (map (tree-map->list (closures expr env2)) first)))
           (env
             (env.vars env1)
             (env.path env1)
             method-name
             (add-int one (env.index env1))
-            (env.includes env1))))
+            (env.imports env1))))
         (mangle-lambda-name (env.def env1) (env.index env1)))))))
 
 (def generate-def-expr
@@ -909,7 +909,7 @@
             (env.path env2)
             name
             (env.index env2)
-            (env.includes env2))))
+            (env.imports env2))))
         (env
           (tree-map.put
             (env.vars env1)
@@ -918,29 +918,29 @@
           (env.path env1)
           (env.def env1)
           (env.index env1)
-          (env.includes env1)))))))
+          (env.imports env1)))))))
 
 (def generate-symbol-expr
   (lambda name
     (lambda env1
       (generate-result (symbol-operation name) no-declaration env1))))
 
-(def generate-include-expr
+(def generate-import-expr
   (lambda name
     (lambda env1
-      (if (is-some (tree-map.get (env.includes env1) name))
+      (if (is-some (tree-map.get (env.imports env1) name))
         (generate-result nil-operation no-declaration env1)
         ((lambda exprs-result
           (generate-result
-            (include-operation name)
-            (include-declaration name)
+            (import-operation name)
+            (import-declaration name)
             ((lambda env2
               (env
                 (env.vars env2)
                 (env.path env1)
                 (env.def env2)
                 (env.index env2)
-                (env.includes env2)))
+                (env.imports env2)))
             (generate-result.env exprs-result))))
         (generate-exprs
           (some.value (tree-map.get local-files name))
@@ -949,7 +949,7 @@
             name
             (env.def env1)
             (env.index env1)
-            (tree-map.put (env.includes env1) name ()))))))))
+            (tree-map.put (env.imports env1) name ()))))))))
 
 (def generate-apply-expr
   (lambda fn
@@ -1005,8 +1005,8 @@
               (generate-symbol-expr
                 (identifier-expr.name (cadr exprs))
                 env1)
-            (if (eq-list eq-char name (symbol->list (symbol include)))
-              (generate-include-expr
+            (if (eq-list eq-char name (symbol->list (symbol import)))
+              (generate-import-expr
                 (identifier-expr.name (cadr exprs))
                 env1)
               (generate-apply-expr

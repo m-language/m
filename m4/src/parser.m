@@ -1,6 +1,6 @@
-(include predef)
-(include parser-combinators)
-(include expr)
+(import predef)
+(import parser-combinators)
+(import expr)
 
 ;; Parses a single character.
 (def char-parser

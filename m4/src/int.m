@@ -10,7 +10,7 @@
 ;; Converts an integer to a character.
 (def int->char ())
 
-(include symbol)
+(import symbol)
 
 ;; The literal number 0
 (def zero (symbol->int (symbol 0)))

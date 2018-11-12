@@ -1,5 +1,5 @@
-(include data)
-(include symbol)
+(import data)
+(import symbol)
 
 ;; A pair of two values.
 (def pair

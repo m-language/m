@@ -1,5 +1,5 @@
-(include predef)
-(include generator)
+(import predef)
+(import generator)
 
 ;; Compiles a map of names to files.
 (def compile
