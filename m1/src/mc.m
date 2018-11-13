@@ -6,13 +6,13 @@
 (def car ())
 (def cdr ())
 (def symbol->list ())
-(def add-int ())
-(def gt-int ())
-(def lt-int ())
-(def symbol->int ())
-(def char->int ())
+(def add-nat ())
+(def gt-nat ())
+(def lt-nat ())
+(def symbol->nat ())
+(def char->nat ())
 (def eq-char ())
-(def int->char ())
+(def nat->char ())
 (def symbol->char ())
 (def eq-symbol ())
 (def type-name ())
@@ -176,19 +176,19 @@
             compare-result))
           (compare (car list1) (car list2))))))))))
 
-(def compare-int
-  (lambda int1
-    (lambda int2
-      (if (gt-int int1 int2)
+(def compare-nat
+  (lambda nat1
+    (lambda nat2
+      (if (gt-nat nat1 nat2)
         compare>
-        (if (lt-int int1 int2)
+        (if (lt-nat nat1 nat2)
           compare<
           compare=)))))
 
 (def compare-char
   (lambda char1
     (lambda char2
-      (compare-int (char->int char1) (char->int char2)))))
+      (compare-nat (char->nat char1) (char->nat char2)))))
 
 (def compare-string (compare-list compare-char))
 
@@ -523,31 +523,31 @@
       (identifier-expr.line expr)
       (list-expr.line expr))))
 
-(def zero (symbol->int (symbol 0)))
+(def zero (symbol->nat (symbol 0)))
 
-(def one (symbol->int (symbol 1)))
+(def one (symbol->nat (symbol 1)))
 
-(def symbol->int->char (compose int->char symbol->int))
+(def symbol->nat->char (compose nat->char symbol->nat))
 
-(def open-parentheses (symbol->int->char (symbol 40)))
-(def close-parentheses (symbol->int->char (symbol 41)))
-(def semicolon (symbol->int->char (symbol 59)))
-(def dot (symbol->int->char (symbol 46)))
-(def quote (symbol->int->char (symbol 34)))
-(def backslash (symbol->int->char (symbol 92)))
-(def space (symbol->int->char (symbol 32)))
-(def backspace (symbol->int->char (symbol 8)))
-(def tab (symbol->int->char (symbol 9)))
-(def linefeed (symbol->int->char (symbol 10)))
-(def vtab (symbol->int->char (symbol 11)))
-(def formfeed (symbol->int->char (symbol 12)))
-(def carriage-return (symbol->int->char (symbol 13)))
-(def letter-b (symbol->int->char (symbol 98)))
-(def letter-t (symbol->int->char (symbol 116)))
-(def letter-n (symbol->int->char (symbol 110)))
-(def letter-v (symbol->int->char (symbol 118)))
-(def letter-f (symbol->int->char (symbol 102)))
-(def letter-r (symbol->int->char (symbol 114)))
+(def open-parentheses (symbol->nat->char (symbol 40)))
+(def close-parentheses (symbol->nat->char (symbol 41)))
+(def semicolon (symbol->nat->char (symbol 59)))
+(def dot (symbol->nat->char (symbol 46)))
+(def quote (symbol->nat->char (symbol 34)))
+(def backslash (symbol->nat->char (symbol 92)))
+(def space (symbol->nat->char (symbol 32)))
+(def backspace (symbol->nat->char (symbol 8)))
+(def tab (symbol->nat->char (symbol 9)))
+(def linefeed (symbol->nat->char (symbol 10)))
+(def vtab (symbol->nat->char (symbol 11)))
+(def formfeed (symbol->nat->char (symbol 12)))
+(def carriage-return (symbol->nat->char (symbol 13)))
+(def letter-b (symbol->nat->char (symbol 98)))
+(def letter-t (symbol->nat->char (symbol 116)))
+(def letter-n (symbol->nat->char (symbol 110)))
+(def letter-v (symbol->nat->char (symbol 118)))
+(def letter-f (symbol->nat->char (symbol 102)))
+(def letter-r (symbol->nat->char (symbol 114)))
 
 (def is-newline
   (lambda char
@@ -606,7 +606,7 @@
 (def newline-parser
   (map-parser-state
     (predicate-parser is-newline)
-    (add-int one)))
+    (add-nat one)))
 
 (def whitespace-parser
   (alternative-parser
@@ -863,7 +863,7 @@
                       (lambda vars
                         (lambda closure
                           (pair
-                            (add-int one (first vars))
+                            (add-nat one (first vars))
                             (tree-map.put
                               (second vars)
                               closure
@@ -877,7 +877,7 @@
             (env.vars env1)
             (env.path env1)
             method-name
-            (add-int one (env.index env1))
+            (add-nat one (env.index env1))
             (env.imports env1))))
         (mangle-lambda-name (env.def env1) (env.index env1)))))))
 

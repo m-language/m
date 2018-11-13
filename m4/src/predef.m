@@ -4,7 +4,7 @@
 (import data)
 (import file)
 (import function)
-(import int)
+(import nat)
 (import list)
 (import maybe)
 (import pair)

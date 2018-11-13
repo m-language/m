@@ -11,7 +11,7 @@
 (def newline-parser
   (map-parser-state
     (predicate-parser is-newline)
-    (add-int one)))
+    (add-nat one)))
 
 ;; Parses a whitespace character.
 (def whitespace-parser

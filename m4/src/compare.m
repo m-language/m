@@ -58,15 +58,15 @@
             compare-result))
           (compare (car list1) (car list2))))))))))
 
-(import int)
+(import nat)
 
-;; Compares ints.
-(def compare-int
-  (lambda int1
-    (lambda int2
-      (if (gt-int int1 int2)
+;; Compares nats.
+(def compare-nat
+  (lambda nat1
+    (lambda nat2
+      (if (gt-nat nat1 nat2)
         compare>
-        (if (lt-int int1 int2)
+        (if (lt-nat nat1 nat2)
           compare<
           compare=)))))
 
@@ -76,7 +76,7 @@
 (def compare-char
   (lambda char1
     (lambda char2
-      (compare-int (char->int char1) (char->int char2)))))
+      (compare-nat (char->nat char1) (char->nat char2)))))
 
 ;; Compare strings.
 (def compare-string (compare-list compare-char))

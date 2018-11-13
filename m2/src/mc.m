@@ -24,26 +24,26 @@
 ;; Converts a symbol to a list of characters.
 (def symbol->list ())
 
-;; Adds two integers.
-(def add-int ())
+;; Adds two nats.
+(def add-nat ())
 
-;; True if the first int is greater than the second int.
-(def gt-int ())
+;; True if the first nat is greater than the second nat.
+(def gt-nat ())
 
-;; True if the first int is less than the second int.
-(def lt-int ())
+;; True if the first nat is less than the second nat.
+(def lt-nat ())
 
-;; Converts a symbol to an int.
-(def symbol->int ())
+;; Converts a symbol to a nat.
+(def symbol->nat ())
 
-;; Converts a character to an int.
-(def char->int ())
+;; Converts a character to a nat.
+(def char->nat ())
 
 ;; Tests if two characters are equal.
 (def eq-char ())
 
-;; Converts an integer to a character.
-(def int->char ())
+;; Converts a nat to a character.
+(def nat->char ())
 
 ;; Converts a symbol to a character.
 (def symbol->char ())
@@ -275,13 +275,13 @@
             compare-result))
           (compare (car list1) (car list2))))))))))
 
-;; Compares ints.
-(def compare-int
-  (lambda int1
-    (lambda int2
-      (if (gt-int int1 int2)
+;; Compares nats.
+(def compare-nat
+  (lambda nat1
+    (lambda nat2
+      (if (gt-nat nat1 nat2)
         compare>
-        (if (lt-int int1 int2)
+        (if (lt-nat nat1 nat2)
           compare<
           compare=)))))
 
@@ -289,7 +289,7 @@
 (def compare-char
   (lambda char1
     (lambda char2
-      (compare-int (char->int char1) (char->int char2)))))
+      (compare-nat (char->nat char1) (char->nat char2)))))
 
 ;; Compare strings.
 (def compare-string (compare-list compare-char))
@@ -670,70 +670,70 @@
 ;;; Char utils
 
 ;; The literal number 0
-(def zero (symbol->int (symbol 0)))
+(def zero (symbol->nat (symbol 0)))
 
 ;; The literal number 1.
-(def one (symbol->int (symbol 1)))
+(def one (symbol->nat (symbol 1)))
 
-;; Converts a symbol to an int, then to a char.
-(def symbol->int->char (compose int->char symbol->int))
+;; Converts a symbol to an nat, then to a char.
+(def symbol->nat->char (compose nat->char symbol->nat))
 
 ;; The literal character "(".
-(def open-parentheses (symbol->int->char (symbol 40)))
+(def open-parentheses (symbol->nat->char (symbol 40)))
 
 ;; The literal character ")".
-(def close-parentheses (symbol->int->char (symbol 41)))
+(def close-parentheses (symbol->nat->char (symbol 41)))
 
 ;; The literal character ";".
-(def semicolon (symbol->int->char (symbol 59)))
+(def semicolon (symbol->nat->char (symbol 59)))
 
 ;; The literal character ".".
-(def dot (symbol->int->char (symbol 46)))
+(def dot (symbol->nat->char (symbol 46)))
 
 ;; The literal character "\"".
-(def quote (symbol->int->char (symbol 34)))
+(def quote (symbol->nat->char (symbol 34)))
 
 ;; The literal character "\\".
-(def backslash (symbol->int->char (symbol 92)))
+(def backslash (symbol->nat->char (symbol 92)))
 
 ;; The literal character " ".
-(def space (symbol->int->char (symbol 32)))
+(def space (symbol->nat->char (symbol 32)))
 
 ;; The literal character "\b".
-(def backspace (symbol->int->char (symbol 8)))
+(def backspace (symbol->nat->char (symbol 8)))
 
 ;; The literal character "\t".
-(def tab (symbol->int->char (symbol 9)))
+(def tab (symbol->nat->char (symbol 9)))
 
 ;; The literal character "\n".
-(def linefeed (symbol->int->char (symbol 10)))
+(def linefeed (symbol->nat->char (symbol 10)))
 
 ;; The literal character "\v".
-(def vtab (symbol->int->char (symbol 11)))
+(def vtab (symbol->nat->char (symbol 11)))
 
 ;; The literal character "\f".
-(def formfeed (symbol->int->char (symbol 12)))
+(def formfeed (symbol->nat->char (symbol 12)))
 
 ;; The literal character "\r".
-(def carriage-return (symbol->int->char (symbol 13)))
+(def carriage-return (symbol->nat->char (symbol 13)))
 
 ;; The literal character "b".
-(def letter-b (symbol->int->char (symbol 98)))
+(def letter-b (symbol->nat->char (symbol 98)))
 
 ;; The literal character "t".
-(def letter-t (symbol->int->char (symbol 116)))
+(def letter-t (symbol->nat->char (symbol 116)))
 
 ;; The literal character "n".
-(def letter-n (symbol->int->char (symbol 110)))
+(def letter-n (symbol->nat->char (symbol 110)))
 
 ;; The literal character "v".
-(def letter-v (symbol->int->char (symbol 118)))
+(def letter-v (symbol->nat->char (symbol 118)))
 
 ;; The literal character "f".
-(def letter-f (symbol->int->char (symbol 102)))
+(def letter-f (symbol->nat->char (symbol 102)))
 
 ;; The literal character "r".
-(def letter-r (symbol->int->char (symbol 114)))
+(def letter-r (symbol->nat->char (symbol 114)))
 
 ;; True if a character is "\r", "\n", or "\f".
 (def is-newline
@@ -810,7 +810,7 @@
 (def newline-parser
   (map-parser-state
     (predicate-parser is-newline)
-    (add-int one)))
+    (add-nat one)))
 
 ;; Parses a whitespace character.
 (def whitespace-parser
@@ -1135,7 +1135,7 @@
                       (lambda vars
                         (lambda closure
                           (pair
-                            (add-int one (first vars))
+                            (add-nat one (first vars))
                             (tree-map.put
                               (second vars)
                               closure
@@ -1149,7 +1149,7 @@
             (env.vars env1)
             (env.path env1)
             method-name
-            (add-int one (env.index env1))
+            (add-nat one (env.index env1))
             (env.imports env1))))
         (mangle-lambda-name (env.def env1) (env.index env1)))))))
 

@@ -171,7 +171,7 @@
                       (lambda vars
                         (lambda closure
                           (pair
-                            (add-int one (first vars))
+                            (add-nat one (first vars))
                             (tree-map.put
                               (second vars)
                               closure
@@ -185,7 +185,7 @@
             (env.vars env1)
             (env.path env1)
             method-name
-            (add-int one (env.index env1))
+            (add-nat one (env.index env1))
             (env.imports env1))))
         (mangle-lambda-name (env.def env1) (env.index env1)))))))
 

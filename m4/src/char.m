@@ -1,5 +1,5 @@
-;; Converts a character to an int.
-(def char->int ())
+;; Converts a character to a nat.
+(def char->nat ())
 
 ;; Tests if two characters are equal.
 (def eq-char ())

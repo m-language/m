@@ -24,26 +24,26 @@
 ;; Converts a symbol to a list of characters.
 (def symbol->list ())
 
-;; Adds two integers.
-(def add-int ())
+;; Adds two nats.
+(def add-nat ())
 
-;; True if the first int is greater than the second int.
-(def gt-int ())
+;; True if the first nat is greater than the second nat.
+(def gt-nat ())
 
-;; True if the first int is less than the second int.
-(def lt-int ())
+;; True if the first nat is less than the second nat.
+(def lt-nat ())
 
-;; Converts a symbol to an int.
-(def symbol->int ())
+;; Converts a symbol to a nat.
+(def symbol->nat ())
 
-;; Converts a character to an int.
-(def char->int ())
+;; Converts a character to a nat.
+(def char->nat ())
 
 ;; Tests if two characters are equal.
 (def eq-char ())
 
-;; Converts an integer to a character.
-(def int->char ())
+;; Converts a nat to a character.
+(def nat->char ())
 
 ;; Converts a symbol to a character.
 (def symbol->char ())
@@ -275,13 +275,13 @@
             compare-result))
           (compare (car list1) (car list2))))))))))
 
-;; Compares ints.
-(def compare-int
-  (lambda int1
-    (lambda int2
-      (if (gt-int int1 int2)
+;; Compares nats.
+(def compare-nat
+  (lambda nat1
+    (lambda nat2
+      (if (gt-nat nat1 nat2)
         compare>
-        (if (lt-int int1 int2)
+        (if (lt-nat nat1 nat2)
           compare<
           compare=)))))
 
@@ -289,7 +289,7 @@
 (def compare-char
   (lambda char1
     (lambda char2
-      (compare-int (char->int char1) (char->int char2)))))
+      (compare-nat (char->nat char1) (char->nat char2)))))
 
 ;; Compare strings.
 (def compare-string (compare-list compare-char))
@@ -670,10 +670,10 @@
 ;;; Char utils
 
 ;; The literal number 0
-(def zero (symbol->int (symbol 0)))
+(def zero (symbol->nat (symbol 0)))
 
 ;; The literal number 1.
-(def one (symbol->int (symbol 1)))
+(def one (symbol->nat (symbol 1)))
 
 ;; The literal character "(".
 (def open-parentheses (symbol->char (symbol "(")))
@@ -807,7 +807,7 @@
 (def newline-parser
   (map-parser-state
     (predicate-parser is-newline)
-    (add-int one)))
+    (add-nat one)))
 
 ;; Parses a whitespace character.
 (def whitespace-parser
@@ -1132,7 +1132,7 @@
                       (lambda vars
                         (lambda closure
                           (pair
-                            (add-int one (first vars))
+                            (add-nat one (first vars))
                             (tree-map.put
                               (second vars)
                               closure
@@ -1146,7 +1146,7 @@
             (env.vars env1)
             (env.path env1)
             method-name
-            (add-int one (env.index env1))
+            (add-nat one (env.index env1))
             (env.imports env1))))
         (mangle-lambda-name (env.def env1) (env.index env1)))))))
 
