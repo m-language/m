@@ -1,5 +1,4 @@
-(import data)
-(import symbol)
+(import predef)
 
 ;; The environment of a variable.
 (def env

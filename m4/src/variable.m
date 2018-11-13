@@ -1,5 +1,4 @@
-(import data)
-(import symbol)
+(import predef)
 
 ;; The location of a local variable.
 (def local-variable

@@ -1,5 +1,5 @@
-(import data)
-(import symbol)
+(import predef.data)
+(import predef.symbol)
 
 ;; A pair of two values.
 (def pair

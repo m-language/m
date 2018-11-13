@@ -10,14 +10,14 @@
 ;; The rest of the elements in a list.
 (def cdr ())
 
-(import symbol)
+(import predef.symbol)
 
 ;; Tests if a value is the empty list.
 (def is-nil
   (lambda x
     (eq-symbol (type-name x) (symbol nil))))
 
-(import function)
+(import predef.function)
 
 ;; The second element in a list.
 (def cadr (compose car cdr))
@@ -74,7 +74,7 @@
           (cons (car list) (take-while (cdr list) f))
           nil)))))
 
-(import bool)
+(import predef.bool)
 
 ;; Tests if [list1] and [list2] are equal given a function [f].
 (def eq-list

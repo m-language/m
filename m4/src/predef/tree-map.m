@@ -1,5 +1,5 @@
-(import symbol)
-(import data)
+(import predef.symbol)
+(import predef.data)
 
 ;; A node in a tree map.
 (def tree-map-node
@@ -48,9 +48,9 @@
   (lambda compare
     (tree-map tree-map-node-nil compare)))
 
-(import compare)
-(import maybe)
-(import list)
+(import predef.compare)
+(import predef.maybe)
+(import predef.list)
 
 ;; Gets the value of a key in a tree map node.
 (def tree-map-node.get

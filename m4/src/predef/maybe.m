@@ -1,5 +1,5 @@
-(import data)
-(import symbol)
+(import predef.data)
+(import predef.symbol)
 
 ;; A container for something.
 (def some

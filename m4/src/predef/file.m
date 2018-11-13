@@ -1,7 +1,7 @@
 ;; The root file for this program.
 (def local-file ())
 
-(import data)
+(import predef.data)
 
 ;; The child of a file given a name.
 (def file.child (field (symbol file) (symbol child)))
@@ -18,9 +18,9 @@
 ;; Reads the contents of a file as a list of characters.
 (def file.read (field (symbol file) (symbol read)))
 
-(import list)
-(import bool)
-(import char)
+(import predef.list)
+(import predef.bool)
+(import predef.char)
 
 ;; The name of a file without its extension.
 (def file.name-without-extension

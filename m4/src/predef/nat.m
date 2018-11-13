@@ -10,7 +10,7 @@
 ;; Converts a nat to a character.
 (def nat->char ())
 
-(import symbol)
+(import predef.symbol)
 
 ;; The literal number 0
 (def zero (symbol->nat (symbol 0)))

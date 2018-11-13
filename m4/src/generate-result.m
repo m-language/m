@@ -1,5 +1,4 @@
-(import data)
-(import symbol)
+(import predef)
 
 ;; The result of generating an expr.
 (def generate-result

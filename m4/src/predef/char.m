@@ -4,7 +4,7 @@
 ;; Tests if two characters are equal.
 (def eq-char ())
 
-(import symbol)
+(import predef.symbol)
 
 ;; The literal character "(".
 (def open-parentheses (symbol->char (symbol "(")))
@@ -63,7 +63,7 @@
 ;; The literal character "r".
 (def letter-r (symbol->char (symbol "r")))
 
-(import bool)
+(import predef.bool)
 
 ;; True if a character is "\r", "\n", or "\f".
 (def is-newline
