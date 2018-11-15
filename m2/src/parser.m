@@ -2,6 +2,31 @@
 (import parser-combinators)
 (import expr)
 
+;; Maps an escape code to its character.
+(def escape-map
+  (lambda char
+    (if (eq-char char letter-b) backspace
+    (if (eq-char char letter-t) tab
+    (if (eq-char char letter-n) linefeed
+    (if (eq-char char letter-v) vtab
+    (if (eq-char char letter-f) formfeed
+    (if (eq-char char letter-r) carriage-return
+      char))))))))
+
+;; True if a character is part of an identifier.
+(def is-identifier-character
+  (lambda char
+    (not
+      (or (is-whitespace char)
+          (lambda unused
+            (or (eq-char char open-parentheses)
+                (lambda unused
+                  (or (eq-char char close-parentheses)
+                      (lambda unused
+                      (or (eq-char char semicolon)
+                          (lambda unused
+                            (eq-char char quote))))))))))))
+
 ;; Parses a single character.
 (def char-parser
   (lambda char
@@ -58,33 +83,32 @@
 
 ;; Parses an identifier expression.
 (def identifier-expr-parser
-  (ignore-unused
-    (map-parser-value
-      (provide-past-state
-        (alternative-parser
-          identifier-literal-parser
-          (repeat-parser1 identifier-char-parser)))
-      (lambda pair
-        (identifier-expr (first pair) (second pair))))))
+  (map-parser-value
+    (provide-past-state
+      (alternative-parser
+        identifier-literal-parser
+        (repeat-parser1 identifier-char-parser)))
+    (lambda pair
+      (identifier-expr (first pair) (second pair)))))
 
 ;; Parses a list expression.
 (def list-expr-parser
-  (ignore-unused
-    (map-parser-value
-      (provide-past-state
-        (combine-parser-right
-          (char-parser open-parentheses)
-          (combine-parser-left
-            (lazy-parser (lambda unused parser))
-            (char-parser close-parentheses))))
-      (lambda pair
-        (list-expr (first pair) (second pair))))))
+  (map-parser-value
+    (provide-past-state
+      (combine-parser-right
+        (char-parser open-parentheses)
+        (combine-parser-left
+          (lazy-parser (lambda unused parser))
+          (ignore-unused (char-parser close-parentheses)))))
+    (lambda pair
+      (list-expr (first pair) (second pair)))))
 
 ;; Parses an M expression.
 (def expr-parser
-  (alternative-parser
-    identifier-expr-parser
-    list-expr-parser))
+  (ignore-unused
+    (alternative-parser
+      identifier-expr-parser
+      list-expr-parser)))
 
 ;; Parses an M program.
 (def parser

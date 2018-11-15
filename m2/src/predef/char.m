@@ -83,24 +83,3 @@
               (lambda unused
                 (or (eq-char char tab)
                     (lambda unusedd (eq-char char vtab)))))))))
-
-;; True if a character is part of an identifier.
-(def is-identifier-character
-  (lambda char
-    (not
-      (or (is-whitespace char)
-          (lambda unused
-            (or (eq-char char open-parentheses)
-                (lambda unused
-                  (eq-char char close-parentheses))))))))
-
-;; Maps an escape code to its character.
-(def escape-map
-  (lambda char
-    (if (eq-char char letter-b) backspace
-    (if (eq-char char letter-t) tab
-    (if (eq-char char letter-n) linefeed
-    (if (eq-char char letter-v) vtab
-    (if (eq-char char letter-f) formfeed
-    (if (eq-char char letter-r) carriage-return
-      char))))))))
