@@ -1,13 +1,86 @@
-;;; Predefs
+;;; Data
 
-;; The singleton undefined value.
-(def undefined ())
+;; Creates an empty data object given a type.
+(def object ())
+
+;; Derives a data object with a field given its name and value.
+(def derive ())
+
+;; Accesses a field of data given its name.
+(def field ())
+
+;;; Symbol
+
+;; Converts a symbol to a list of characters.
+(def symbol->list ())
+
+;; Converts a symbol to a nat.
+(def symbol->nat ())
+
+;; Converts a symbol to a character.
+(def symbol->char ())
+
+;; Tests if two symbols are equal.
+(def eq-symbol ())
+
+;; A symbol representing the type of a value.
+(def type-name ())
+
+;;; Nat
+
+;; Adds two nats.
+(def add-nat ())
+
+;; True if the first nat is greater than the second nat.
+(def gt-nat ())
+
+;; True if the first nat is less than the second nat.
+(def lt-nat ())
+
+;; Converts a nat to a character.
+(def nat->char ())
+
+;; The literal number 0
+(def zero (symbol->nat (symbol 0)))
+
+;; The literal number 1.
+(def one (symbol->nat (symbol 1)))
+
+;;; Function
+
+;; Composes two functions [f] and [g].
+(def compose
+  (lambda f
+    (lambda g
+      (lambda x
+        (f (g x))))))
+
+;;; Bool
 
 ;; The singleton truthy value, for which `(if true x y)` evaluates to x.
 (def true ())
 
 ;; The singleton falsy value, for which `(if false x y)` evaluates to y.
 (def false ())
+
+;; True if [x] and [y] are true.
+(def and
+  (lambda x
+    (lambda y
+      (if x (y ()) false))))
+
+;; True if [x] or [y] is true.
+(def or
+  (lambda x
+    (lambda y
+      (if x true (y ())))))
+
+;; True if [x] is false.
+(def not
+  (lambda x
+    (if x false true)))
+
+;;; List
 
 ;; The singleton empty list.
 (def nil ())
@@ -20,109 +93,6 @@
 
 ;; The rest of the elements in a list.
 (def cdr ())
-
-;; Converts a symbol to a list of characters.
-(def symbol->list ())
-
-;; Adds two nats.
-(def add-nat ())
-
-;; True if the first nat is greater than the second nat.
-(def gt-nat ())
-
-;; True if the first nat is less than the second nat.
-(def lt-nat ())
-
-;; Converts a symbol to a nat.
-(def symbol->nat ())
-
-;; Converts a character to a nat.
-(def char->nat ())
-
-;; Tests if two characters are equal.
-(def eq-char ())
-
-;; Converts a nat to a character.
-(def nat->char ())
-
-;; Converts a symbol to a character.
-(def symbol->char ())
-
-;; Tests if two symbols are equal.
-(def eq-symbol ())
-
-;; A symbol representing the type of a value.
-(def type-name ())
-
-;; Creates an empty data object given a type.
-(def object ())
-
-;; Derives a data object with a field given its name and value.
-(def derive ())
-
-;; Accesses a field of data given its name.
-(def field ())
-
-;; Combines two processes, running them one after another.
-(def then-run ())
-
-;; Runs a function in a process.
-(def run-with ())
-
-;; Runs a function which produces a process in a process, then combines them.
-(def then-run-with ())
-
-;; Runs a process at top level.
-(def run-unsafe ())
-
-;; Converts a function to a process.
-(def function->process ())
-
-;; The root file for this program.
-(def local-file ())
-
-;; The list of arguments passed to the program.
-(def args ())
-
-;;; Utils
-
-;; A pair of two values.
-(def pair
-  (lambda first
-    (lambda second
-      (derive (symbol pair) (symbol first) first
-      (derive (symbol pair) (symbol second) second
-        (object (symbol pair)))))))
-
-;; The first value in a pair.
-(def first (field (symbol pair) (symbol first)))
-
-;; The second value in a pair.
-(def second (field (symbol pair) (symbol second)))
-
-;; True if [x] and [y] are true.
-(def and
-  (lambda x
-    (lambda y
-      (if x (y nil) false))))
-
-;; True if [x] or [y] is true.
-(def or
-  (lambda x
-    (lambda y
-      (if x true (y nil)))))
-
-;; True if [x] is false.
-(def not
-  (lambda x
-    (if x false true)))
-
-;; Composes two functions [f] and [g].
-(def compose
-  (lambda f
-    (lambda g
-      (lambda x
-        (f (g x))))))
 
 ;; Tests if a value is the empty list.
 (def is-nil
@@ -196,6 +166,106 @@
             (and (f (car list1) (car list2))
                  (lambda unused (eq-list f (cdr list1) (cdr list2))))))))))
 
+;;; Char
+
+;; Converts a character to a nat.
+(def char->nat ())
+
+;; Tests if two characters are equal.
+(def eq-char ())
+
+;; The literal character "(".
+(def open-parentheses (symbol->char (symbol "(")))
+
+;; The literal character ")".
+(def close-parentheses (symbol->char (symbol ")")))
+
+;; The literal character ";".
+(def semicolon (symbol->char (symbol ";")))
+
+;; The literal character ".".
+(def dot (symbol->char (symbol ".")))
+
+;; The literal character "\"".
+(def quote (symbol->char (symbol "\"")))
+
+;; The literal character "\\".
+(def backslash (symbol->char (symbol "\\")))
+
+;; The literal character " ".
+(def space (symbol->char (symbol " ")))
+
+;; The literal character "\b".
+(def backspace (symbol->char (symbol "\b")))
+
+;; The literal character "\t".
+(def tab (symbol->char (symbol "\t")))
+
+;; The literal character "\n".
+(def linefeed (symbol->char (symbol "\n")))
+
+;; The literal character "\v".
+(def vtab (symbol->char (symbol "\v")))
+
+;; The literal character "\f".
+(def formfeed (symbol->char (symbol "\f")))
+
+;; The literal character "\r".
+(def carriage-return (symbol->char (symbol "\r")))
+
+;; The literal character "b".
+(def letter-b (symbol->char (symbol "b")))
+
+;; The literal character "t".
+(def letter-t (symbol->char (symbol "t")))
+
+;; The literal character "n".
+(def letter-n (symbol->char (symbol "n")))
+
+;; The literal character "v".
+(def letter-v (symbol->char (symbol "v")))
+
+;; The literal character "f".
+(def letter-f (symbol->char (symbol "f")))
+
+;; The literal character "r".
+(def letter-r (symbol->char (symbol "r")))
+
+;; True if a character is "\r", "\n", or "\f".
+(def is-newline
+  (lambda char
+    (or (eq-char char linefeed)
+        (lambda unused
+          (or (eq-char char carriage-return)
+              (lambda unused
+                (eq-char char formfeed)))))))
+
+;; True if a character is a newline, " ", "\t", or "\v".
+(def is-whitespace
+  (lambda char
+    (or (is-newline char)
+        (lambda unused
+          (or (eq-char char space)
+              (lambda unused
+                (or (eq-char char tab)
+                    (lambda unusedd (eq-char char vtab)))))))))
+
+;;; Pair
+
+;; A pair of two values.
+(def pair
+  (lambda first
+    (lambda second
+      (derive (symbol pair) (symbol first) first
+      (derive (symbol pair) (symbol second) second
+        (object (symbol pair)))))))
+
+;; The first value in a pair.
+(def first (field (symbol pair) (symbol first)))
+
+;; The second value in a pair.
+(def second (field (symbol pair) (symbol second)))
+
 ;;; Maybe
 
 ;; A container for something.
@@ -218,6 +288,52 @@
 (def is-none
   (lambda x
     (eq-symbol (type-name x) (symbol none))))
+
+;;; Process
+
+;; Combines two processes, running them one after another.
+(def then-run ())
+
+;; Runs a function in a process.
+(def run-with ())
+
+;; Runs a function which produces a process in a process, then combines them.
+(def then-run-with ())
+
+;; Runs a process at top level.
+(def run-unsafe ())
+
+;; Converts a function to a process.
+(def function->process ())
+
+;;; File
+
+;; The root file for this program.
+(def local-file ())
+
+;; The child of a file given a name.
+(def file.child (field (symbol file) (symbol child)))
+
+;; A list of child files.
+(def file.child-files (field (symbol file) (symbol child-files)))
+
+;; True if a file is a directory.
+(def file.directory? (field (symbol file) (symbol directory?)))
+
+;; The name of a file.
+(def file.name (field (symbol file) (symbol name)))
+
+;; Reads the contents of a file as a list of characters.
+(def file.read (field (symbol file) (symbol read)))
+
+;; The name of a file without its extension.
+(def file.name-without-extension
+  (lambda file
+    (run-with (file.name file)
+      (lambda name
+        (take-while name
+          (lambda char
+            (not (eq-char char dot))))))))
 
 ;;; Compare
 
@@ -294,7 +410,7 @@
 ;; Compare strings.
 (def compare-string (compare-list compare-char))
 
-;;; Tree Map
+;;; Tree map
 
 ;; A node in a tree map.
 (def tree-map-node
@@ -626,7 +742,7 @@
       (lambda state
         ((parser nil) input state)))))
 
-;;; Tree
+;;; Expr
 
 ;; An expression representing an M identifier.
 (def identifier-expr
@@ -666,114 +782,6 @@
     (if (is-identifier-expr expr)
       (identifier-expr.line expr)
       (list-expr.line expr))))
-
-;;; Char utils
-
-;; The literal number 0
-(def zero (symbol->nat (symbol 0)))
-
-;; The literal number 1.
-(def one (symbol->nat (symbol 1)))
-
-;; The literal character "(".
-(def open-parentheses (symbol->char (symbol "(")))
-
-;; The literal character ")".
-(def close-parentheses (symbol->char (symbol ")")))
-
-;; The literal character ";".
-(def semicolon (symbol->char (symbol ";")))
-
-;; The literal character ".".
-(def dot (symbol->char (symbol ".")))
-
-;; The literal character "\"".
-(def quote (symbol->char (symbol "\"")))
-
-;; The literal character "\\".
-(def backslash (symbol->char (symbol "\\")))
-
-;; The literal character " ".
-(def space (symbol->char (symbol " ")))
-
-;; The literal character "\b".
-(def backspace (symbol->char (symbol "\b")))
-
-;; The literal character "\t".
-(def tab (symbol->char (symbol "\t")))
-
-;; The literal character "\n".
-(def linefeed (symbol->char (symbol "\n")))
-
-;; The literal character "\v".
-(def vtab (symbol->char (symbol "\v")))
-
-;; The literal character "\f".
-(def formfeed (symbol->char (symbol "\f")))
-
-;; The literal character "\r".
-(def carriage-return (symbol->char (symbol "\r")))
-
-;; The literal character "b".
-(def letter-b (symbol->char (symbol "b")))
-
-;; The literal character "t".
-(def letter-t (symbol->char (symbol "t")))
-
-;; The literal character "n".
-(def letter-n (symbol->char (symbol "n")))
-
-;; The literal character "v".
-(def letter-v (symbol->char (symbol "v")))
-
-;; The literal character "f".
-(def letter-f (symbol->char (symbol "f")))
-
-;; The literal character "r".
-(def letter-r (symbol->char (symbol "r")))
-
-;; True if a character is "\r", "\n", or "\f".
-(def is-newline
-  (lambda char
-    (or (eq-char char linefeed)
-        (lambda unused
-          (or (eq-char char carriage-return)
-              (lambda unused
-                (eq-char char formfeed)))))))
-
-;; True if a character is a newline, " ", "\t", or "\v".
-(def is-whitespace
-  (lambda char
-    (or (is-newline char)
-        (lambda unused
-          (or (eq-char char space)
-              (lambda unused
-                (or (eq-char char tab)
-                    (lambda unusedd (eq-char char vtab)))))))))
-
-;; The child of a file given a name.
-(def file.child (field (symbol file) (symbol child)))
-
-;; A list of child files.
-(def file.child-files (field (symbol file) (symbol child-files)))
-
-;; True if a file is a directory.
-(def file.directory? (field (symbol file) (symbol directory?)))
-
-;; The name of a file.
-(def file.name (field (symbol file) (symbol name)))
-
-;; Reads the contents of a file as a list of characters.
-(def file.read (field (symbol file) (symbol read)))
-
-;; The name of a file without its extension.
-(def file.name-without-extension
-  (lambda file
-    (run-with (file.name file)
-      (lambda name
-        (take-while name
-          (lambda char
-            (not (eq-char char dot))))))))
 
 ;;; Parser
 
@@ -895,27 +903,7 @@
     (parse-success.value
       (parser input one))))
 
-;;; Generator
-
-;; The environment of a variable.
-(def env
-  (lambda vars
-    (lambda path
-      (lambda def
-        (lambda index
-          (lambda imports
-            (derive (symbol env) (symbol vars) vars
-            (derive (symbol env) (symbol path) path
-            (derive (symbol env) (symbol def) def
-            (derive (symbol env) (symbol index) index
-            (derive (symbol env) (symbol imports) imports
-              (object (symbol env)))))))))))))
-
-(def env.vars (field (symbol env) (symbol vars)))
-(def env.path (field (symbol env) (symbol path)))
-(def env.def (field (symbol env) (symbol def)))
-(def env.index (field (symbol env) (symbol index)))
-(def env.imports (field (symbol env) (symbol imports)))
+;;; Generate Result
 
 ;; The result of generating an expr.
 (def generate-result
@@ -935,6 +923,8 @@
 
 (def generate-result.env
   (field (symbol generate-result) (symbol env)))
+
+;;; Variables
 
 ;; The location of a local variable.
 (def local-variable
@@ -968,6 +958,171 @@
   (lambda x
     (eq-symbol (type-name x) (symbol global-variable))))
 
+;;; Env
+
+;; The environment of a variable.
+(def env
+  (lambda vars
+    (lambda path
+      (lambda def
+        (lambda index
+          (lambda imports
+            (derive (symbol env) (symbol vars) vars
+            (derive (symbol env) (symbol path) path
+            (derive (symbol env) (symbol def) def
+            (derive (symbol env) (symbol index) index
+            (derive (symbol env) (symbol imports) imports
+              (object (symbol env)))))))))))))
+
+(def env.vars (field (symbol env) (symbol vars)))
+(def env.path (field (symbol env) (symbol path)))
+(def env.def (field (symbol env) (symbol def)))
+(def env.index (field (symbol env) (symbol index)))
+(def env.imports (field (symbol env) (symbol imports)))
+
+;;; Operations
+
+;; Operation which pushes a local variable.
+(def local-variable-operation
+  (lambda name
+    (lambda index
+      (derive (symbol local-variable-operation) (symbol name) name
+      (derive (symbol local-variable-operation) (symbol index) index
+        (object (symbol local-variable-operation)))))))
+
+;; Operation which pushes a global variable.
+(def global-variable-operation
+  (lambda name
+    (lambda path
+      (derive (symbol global-variable-operation) (symbol name) name
+      (derive (symbol global-variable-operation) (symbol path) path
+        (object (symbol global-variable-operation)))))))
+
+;; Operation which pushes a reflective variable.
+(def reflective-variable-operation
+  (lambda name
+    (lambda path
+      (derive (symbol reflective-variable-operation) (symbol name) name
+      (derive (symbol reflective-variable-operation) (symbol path) path
+        (object (symbol reflective-variable-operation)))))))
+
+;; An if operation.
+(def if-operation
+  (lambda cond
+    (lambda true
+      (lambda false
+        (derive (symbol if-operation) (symbol cond) cond
+        (derive (symbol if-operation) (symbol true) true
+        (derive (symbol if-operation) (symbol false) false
+          (object (symbol if-operation)))))))))
+
+;; A def operation.
+(def def-operation
+  (lambda name
+    (lambda value
+      (lambda path
+        (derive (symbol def-operation) (symbol name) name
+        (derive (symbol def-operation) (symbol value) value
+        (derive (symbol def-operation) (symbol path) path
+          (object (symbol def-operation)))))))))
+
+;; A lambda operation.
+(def lambda-operation
+  (lambda path
+    (lambda name
+      (lambda closures
+        (derive (symbol lambda-operation) (symbol path) path
+        (derive (symbol lambda-operation) (symbol name) name
+        (derive (symbol lambda-operation) (symbol closures) closures
+          (object (symbol lambda-operation)))))))))
+
+;; A symbol operation.
+(def symbol-operation
+  (lambda name
+    (derive (symbol symbol-operation) (symbol name) name
+      (object (symbol symbol-operation)))))
+
+;; An import operation.
+(def import-operation
+  (lambda name
+    (derive (symbol symbol-operation) (symbol name) name
+      (object (symbol symbol-operation)))))
+
+;; An apply operation.
+(def apply-operation
+  (lambda fn
+    (lambda arg
+      (derive (symbol apply-operation) (symbol fn) fn
+      (derive (symbol apply-operation) (symbol arg) arg
+        (object (symbol apply-operation)))))))
+
+;; Combines two operations.
+(def combine-operation
+  (lambda first
+    (lambda second
+      (derive (symbol combine-operation) (symbol first) first
+      (derive (symbol combine-operatoin) (symbol second) second
+        (object (symbol combine-operation)))))))
+
+;; Marks an operation with a line number.
+(def line-number-operation
+  (lambda operation
+    (lambda line
+      (derive (symbol line-number-operation) (symbol operation) operation
+      (derive (symbol line-number-operation) (symbol line) line
+        (object (symbol line-number-operation)))))))
+
+;; The nil operation.
+(def nil-operation (object (symbol nil-operation)))
+
+;;; Declarations
+
+;; A def declaration.
+(def def-declaration
+  (lambda name
+    (lambda path
+      (derive (symbol def-declaration) (symbol name) name
+      (derive (symbol def-declaration) (symbol path) path
+        (object (symbol def-declaration)))))))
+
+;; A lambda declaration.
+(def lambda-declaration
+  (lambda name
+    (lambda closures
+      (lambda value
+        (derive (symbol lambda-declaration) (symbol name) name
+        (derive (symbol lambda-declaration) (symbol closures) closures
+        (derive (symbol lambda-declaration) (symbol value) value
+          (object (symbol lambda-declaration)))))))))
+
+;; An import declaration
+(def import-declaration
+  (lambda name
+    (derive (symbol import-declaration) (symbol name) name
+      (object (symbol import-declaration)))))
+
+;; Combines two declarations.
+(def combine-declaration
+  (lambda first
+    (lambda second
+      (derive (symbol combine-declaration) (symbol first) first
+      (derive (symbol combine-declaration) (symbol second) second
+        (object (symbol combine-declaration)))))))
+
+;; Declaration which does nothing.
+(def no-declaration (object (symbol no-declaration)))
+
+;;; Generator
+
+;; Mangles the name of a lambda given an index.
+(def mangle-lambda-name ())
+
+;; Generates a program.
+(def generate-program ())
+
+;; List containing all internal variables.
+(def internal-variable ())
+
 ;; A set of closures in an expression.
 (def closures
   (lambda expr
@@ -987,72 +1142,6 @@
           (lambda map
             (lambda expr
               (tree-map.add map (closures expr env1)))))))))
-
-;; Creates a local variable operation.
-(def local-variable-operation ())
-
-;; Creates a global variable operation.
-(def global-variable-operation ())
-
-;; Creates a reflective variable operation.
-(def reflective-variable-operation ())
-
-;; Creates an if operation.
-(def if-operation ())
-
-;; Creates a def operation.
-(def def-operation ())
-
-;; Creates a def declaration.
-(def def-declaration ())
-
-;; Creates a lambda operation.
-(def lambda-operation ())
-
-;; Creates a lambda declaration.
-(def lambda-declaration ())
-
-;; Creates a symbol operation.
-(def symbol-operation ())
-
-;; Creates an import operation.
-(def import-operation ())
-
-;; Creates an import declaration
-(def import-declaration ())
-
-;; Creates an apply operation.
-(def apply-operation ())
-
-;; The nil operation.
-(def nil-operation ())
-
-;; Operation which does nothing.
-(def no-operation ())
-
-;; Declaration which does nothing.
-(def no-declaration ())
-
-;; Combines two operations.
-(def combine-operation ())
-
-;; Ignores the result of an operation.
-(def ignore-result-operation ())
-
-;; Marks an operation with a line number.
-(def line-number-operation ())
-
-;; Combines two declarations.
-(def combine-declaration ())
-
-;; Mangles the name of a lambda given an index.
-(def mangle-lambda-name ())
-
-;; Generates a program.
-(def generate-program ())
-
-;; List containing all internal variables.
-(def internal-variable ())
 
 ;; Generates an identifier expression.
 (def generate-identifier-expr
@@ -1204,7 +1293,7 @@
   (lambda name
     (lambda env1
       (if (is-some (tree-map.get (env.imports env1) name))
-        (generate-result nil-operation no-declaration env1)
+        (generate-result (import-operation name) no-declaration env1)
         ((lambda exprs-result
           (generate-result
             (import-operation name)
@@ -1315,13 +1404,12 @@
   (lambda exprs
     (lambda env1
       (if (is-nil exprs)
-        (generate-result no-operation no-declaration env1)
+        (generate-result nil-operation no-declaration env1)
         ((lambda generate-result-car
           ((lambda generate-result-cdr
             (generate-result
               (combine-operation
-                (ignore-result-operation
-                  (generate-result.operation generate-result-car))
+                (generate-result.operation generate-result-car)
                 (generate-result.operation generate-result-cdr))
               (combine-declaration
                 (generate-result.declaration generate-result-car)
@@ -1355,8 +1443,6 @@
             zero
             (tree-map.put (empty-tree-map compare-string) name ()))))))))
 
-;;; Compiler
-
 ;; Reads files from a directory into a map.
 (def load-files
   (lambda file
@@ -1385,6 +1471,9 @@
                   (cdr path)
                   (parse chars))))))))))
 
+;; The list of arguments passed to the program.
+(def args ())
+
 ;; The input file for the compiler.
 (def in-file (run-unsafe (file.child local-file (car args))))
 
@@ -1393,6 +1482,8 @@
 
 ;; The tree of local files.
 (def local-files (run-unsafe (load-files in-file nil)))
+
+;;; MC
 
 ;; Compiles a map of names to files.
 (def compile

@@ -2,64 +2,9 @@
 (import generate-result)
 (import env)
 (import expr)
-(import variable)
-
-;; Creates a local variable operation.
-(def local-variable-operation ())
-
-;; Creates a global variable operation.
-(def global-variable-operation ())
-
-;; Creates a reflective variable operation.
-(def reflective-variable-operation ())
-
-;; Creates an if operation.
-(def if-operation ())
-
-;; Creates a def operation.
-(def def-operation ())
-
-;; Creates a def declaration.
-(def def-declaration ())
-
-;; Creates a lambda operation.
-(def lambda-operation ())
-
-;; Creates a lambda declaration.
-(def lambda-declaration ())
-
-;; Creates a symbol operation.
-(def symbol-operation ())
-
-;; Creates an import operation.
-(def import-operation ())
-
-;; Creates an import declaration
-(def import-declaration ())
-
-;; Creates an apply operation.
-(def apply-operation ())
-
-;; The nil operation.
-(def nil-operation ())
-
-;; Operation which does nothing.
-(def no-operation ())
-
-;; Declaration which does nothing.
-(def no-declaration ())
-
-;; Combines two operations.
-(def combine-operation ())
-
-;; Ignores the result of an operation.
-(def ignore-result-operation ())
-
-;; Marks an operation with a line number.
-(def line-number-operation ())
-
-;; Combines two declarations.
-(def combine-declaration ())
+(import variables)
+(import operations)
+(import declarations)
 
 ;; Mangles the name of a lambda given an index.
 (def mangle-lambda-name ())
@@ -351,13 +296,12 @@
   (lambda exprs
     (lambda env1
       (if (is-nil exprs)
-        (generate-result no-operation no-declaration env1)
+        (generate-result nil-operation no-declaration env1)
         ((lambda generate-result-car
           ((lambda generate-result-cdr
             (generate-result
               (combine-operation
-                (ignore-result-operation
-                  (generate-result.operation generate-result-car))
+                (generate-result.operation generate-result-car)
                 (generate-result.operation generate-result-cdr))
               (combine-declaration
                 (generate-result.declaration generate-result-car)
