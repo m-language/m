@@ -966,19 +966,16 @@
     (lambda path
       (lambda def
         (lambda index
-          (lambda imports
-            (derive (symbol env) (symbol vars) vars
-            (derive (symbol env) (symbol path) path
-            (derive (symbol env) (symbol def) def
-            (derive (symbol env) (symbol index) index
-            (derive (symbol env) (symbol imports) imports
-              (object (symbol env)))))))))))))
+          (derive (symbol env) (symbol vars) vars
+          (derive (symbol env) (symbol path) path
+          (derive (symbol env) (symbol def) def
+          (derive (symbol env) (symbol index) index
+            (object (symbol env)))))))))))
 
 (def env.vars (field (symbol env) (symbol vars)))
 (def env.path (field (symbol env) (symbol path)))
 (def env.def (field (symbol env) (symbol def)))
 (def env.index (field (symbol env) (symbol index)))
-(def env.imports (field (symbol env) (symbol imports)))
 
 ;;; Operations
 
@@ -1042,12 +1039,6 @@
     (derive (symbol symbol-operation) (symbol name) name
       (object (symbol symbol-operation)))))
 
-;; An import operation.
-(def import-operation
-  (lambda name
-    (derive (symbol symbol-operation) (symbol name) name
-      (object (symbol symbol-operation)))))
-
 ;; An apply operation.
 (def apply-operation
   (lambda fn
@@ -1094,12 +1085,6 @@
         (derive (symbol lambda-declaration) (symbol closures) closures
         (derive (symbol lambda-declaration) (symbol value) value
           (object (symbol lambda-declaration)))))))))
-
-;; An import declaration
-(def import-declaration
-  (lambda name
-    (derive (symbol import-declaration) (symbol name) name
-      (object (symbol import-declaration)))))
 
 ;; Combines two declarations.
 (def combine-declaration
@@ -1231,15 +1216,13 @@
                               (local-variable closure (first vars))))))))
                   (env.path env2)
                   (env.def env2)
-                  (env.index env1)
-                  (env.imports env2)))))
+                  (env.index env1)))))
             (map (tree-map->list (closures expr env2)) first)))
           (env
             (env.vars env1)
             (env.path env1)
             method-name
-            (add-nat one (env.index env1))
-            (env.imports env1))))
+            (add-nat one (env.index env1)))))
         (mangle-lambda-name (env.def env1) (env.index env1)))))))
 
 ;; Generates a def expression.
@@ -1270,8 +1253,7 @@
             (env.vars env2)
             (env.path env2)
             name
-            (env.index env2)
-            (env.imports env2))))
+            (env.index env2))))
         (env
           (tree-map.put
             (env.vars env1)
@@ -1279,41 +1261,13 @@
             (global-variable name (env.path env1)))
           (env.path env1)
           (env.def env1)
-          (env.index env1)
-          (env.imports env1)))))))
+          (env.index env1)))))))
 
 ;; Generates a symbol expression.
 (def generate-symbol-expr
   (lambda name
     (lambda env1
       (generate-result (symbol-operation name) no-declaration env1))))
-
-;; Generates an import expression.
-(def generate-import-expr
-  (lambda name
-    (lambda env1
-      (if (is-some (tree-map.get (env.imports env1) name))
-        (generate-result (import-operation name) no-declaration env1)
-        ((lambda exprs-result
-          (generate-result
-            (import-operation name)
-            (import-declaration name)
-            ((lambda env2
-              (env
-                (env.vars env2)
-                (env.path env1)
-                (env.def env2)
-                (env.index env2)
-                (env.imports env2)))
-            (generate-result.env exprs-result))))
-        (generate-exprs
-          (some.value (tree-map.get local-files name))
-          (env
-            (env.vars env1)
-            name
-            (env.def env1)
-            (env.index env1)
-            (tree-map.put (env.imports env1) name ()))))))))
 
 ;; Generates an apply expression.
 (def generate-apply-expr
@@ -1371,14 +1325,10 @@
               (generate-symbol-expr
                 (identifier-expr.name (cadr exprs))
                 env1)
-            (if (eq-list eq-char name (symbol->list (symbol import)))
-              (generate-import-expr
-                (identifier-expr.name (cadr exprs))
-                env1)
               (generate-apply-expr
                 (car exprs)
                 (cdr exprs)
-                env1)))))))
+                env1))))))
           (if (is-identifier-expr (car exprs))
             (identifier-expr.name (car exprs))
             nil))))
@@ -1440,36 +1390,9 @@
                   (tree-map.put map (first variable) (second variable)))))
             name
             nil
-            zero
-            (tree-map.put (empty-tree-map compare-string) name ()))))))))
+            zero)))))))
 
-;; Reads files from a directory into a map.
-(def load-files
-  (lambda file
-    (lambda path
-      (then-run-with (file.directory? file)
-        (lambda directory?
-          (if directory?
-            (then-run-with (file.child-files file)
-              (lambda child-files
-                (fold child-files
-                  (function->process
-                    (lambda unused (empty-tree-map compare-string)))
-                  (lambda map-process
-                    (lambda file
-                      (then-run-with map-process
-                        (lambda map
-                          (then-run-with (file.name-without-extension file)
-                            (lambda name
-                              (run-with (load-files file
-                                          (add-list path (cons dot name)))
-                                (lambda load-files
-                                  (tree-map.add map load-files))))))))))))
-            (run-with (file.read file)
-              (lambda chars
-                (tree-map.put (empty-tree-map compare-string)
-                  (cdr path)
-                  (parse chars))))))))))
+;;; MC
 
 ;; The list of arguments passed to the program.
 (def args ())
@@ -1480,19 +1403,9 @@
 ;; The output file for the compiler.
 (def out-file (run-unsafe (file.child local-file (cadr args))))
 
-;; The tree of local files.
-(def local-files (run-unsafe (load-files in-file nil)))
-
-;;; MC
-
-;; Compiles a map of names to files.
-(def compile
-  (lambda files
-    (tree-map.fold local-files
-      (function->process (lambda unused true))
-      (lambda process
+(run-unsafe
+  (then-run-with (file.read in-file)
+    (lambda chars
+      (then-run-with (file.name-without-extension in-file)
         (lambda name
-          (lambda expr
-            (then-run process (generate name out-file expr))))))))
-
-(run-unsafe (compile local-files))
+          (generate name out-file (parse chars)))))))
