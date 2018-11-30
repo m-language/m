@@ -1,59 +1,20 @@
-;;; Data
+;;; Error
 
-;; Creates an empty data object given a type.
-(def object ())
+;; Exits the M program given an error.
+(def error ())
 
-;; Derives a data object with a field given its name and value.
-(def derive ())
+(def debug ())
 
-;; Accesses a field of data given its name.
-(def field ())
+;;; Pair
 
-;;; Symbol
+;; Creates a pair of two values.
+(def pair ())
 
-;; Converts a symbol to a list of characters.
-(def symbol->list ())
+;; The left value of a pair.
+(def left ())
 
-;; Converts a symbol to a nat.
-(def symbol->nat ())
-
-;; Converts a symbol to a character.
-(def symbol->char ())
-
-;; Tests if two symbols are equal.
-(def eq-symbol ())
-
-;; A symbol representing the type of a value.
-(def type-name ())
-
-;;; Nat
-
-;; Adds two nats.
-(def add-nat ())
-
-;; True if the first nat is greater than the second nat.
-(def gt-nat ())
-
-;; True if the first nat is less than the second nat.
-(def lt-nat ())
-
-;; Converts a nat to a character.
-(def nat->char ())
-
-;; The literal number 0
-(def zero (symbol->nat (symbol 0)))
-
-;; The literal number 1.
-(def one (symbol->nat (symbol 1)))
-
-;;; Function
-
-;; Composes two functions [f] and [g].
-(def compose
-  (lambda f
-    (lambda g
-      (lambda x
-        (f (g x))))))
+;; The right value of a pair.
+(def right ())
 
 ;;; Bool
 
@@ -80,91 +41,22 @@
   (lambda x
     (if x false true)))
 
-;;; List
+;;; Symbol
 
-;; The singleton empty list.
-(def nil ())
+;; Converts a symbol to a list of characters.
+(def symbol->list ())
 
-;; Prepends an element to a list.
-(def cons ())
+;; Converts a symbol to a nat.
+(def symbol->nat ())
 
-;; The first element in a list.
-(def car ())
+;; Converts a symbol to a character.
+(def symbol->char ())
 
-;; The rest of the elements in a list.
-(def cdr ())
+;; Tests if two symbols are equal.
+(def symbol.= ())
 
-;; Tests if a value is the empty list.
-(def is-nil
-  (lambda x
-    (eq-symbol (type-name x) (symbol nil))))
-
-;; The second element in a list.
-(def cadr (compose car cdr))
-
-;; The rest of the rest of the list.
-(def cddr (compose cdr cdr))
-
-;; The third element in a list.
-(def caddr (compose car cddr))
-
-;; The fourth element in a list.
-(def cadddr (compose car (compose cdr cddr)))
-
-;; Appends [elem] to [list].
-(def append
-  (lambda list
-    (lambda elem
-      (if (is-nil list)
-        (cons elem list)
-        (cons (car list) (append (cdr list) elem))))))
-
-;; Adds [list1] and [list2].
-(def add-list
-  (lambda list1
-    (lambda list2
-      (if (is-nil list1)
-        list2
-        (cons (car list1) (add-list (cdr list1) list2))))))
-
-;; Maps [list] with function [f].
-(def map
-  (lambda list
-    (lambda f
-      (if (is-nil list)
-        nil
-        (cons (f (car list)) (map (cdr list) f))))))
-
-;; Folds [list] with an accumulator [acc] function [f].
-(def fold
-  (lambda list
-    (lambda acc
-      (lambda f
-        (if (is-nil list)
-          acc
-          (fold (cdr list) (f acc (car list)) f))))))
-
-;; Takes elements of [list] while [f] is true.
-(def take-while
-  (lambda list
-    (lambda f
-      (if (is-nil list)
-        nil
-        (if (f (car list))
-          (cons (car list) (take-while (cdr list) f))
-          nil)))))
-
-;; Tests if [list1] and [list2] are equal given a function [f].
-(def eq-list
-  (lambda f
-    (lambda list1
-      (lambda list2
-        (if (is-nil list1)
-          (is-nil list2)
-          (if (is-nil list2)
-            false
-            (and (f (car list1) (car list2))
-                 (lambda unused (eq-list f (cdr list1) (cdr list2))))))))))
+;; Adds two symbols
+(def symbol.+ ())
 
 ;;; Char
 
@@ -172,7 +64,7 @@
 (def char->nat ())
 
 ;; Tests if two characters are equal.
-(def eq-char ())
+(def char.= ())
 
 ;; The literal character "(".
 (def open-parentheses (symbol->char (symbol "(")))
@@ -232,39 +124,198 @@
 (def letter-r (symbol->char (symbol "r")))
 
 ;; True if a character is "\r", "\n", or "\f".
-(def is-newline
+(def newline?
   (lambda char
-    (or (eq-char char linefeed)
-        (lambda unused
-          (or (eq-char char carriage-return)
-              (lambda unused
-                (eq-char char formfeed)))))))
+    (or (char.= char linefeed)
+        (lambda ""
+          (or (char.= char carriage-return)
+              (lambda ""
+                (char.= char formfeed)))))))
 
 ;; True if a character is a newline, " ", "\t", or "\v".
-(def is-whitespace
+(def whitespace?
   (lambda char
-    (or (is-newline char)
-        (lambda unused
-          (or (eq-char char space)
-              (lambda unused
-                (or (eq-char char tab)
-                    (lambda unusedd (eq-char char vtab)))))))))
+    (or (newline? char)
+        (lambda ""
+          (or (char.= char space)
+              (lambda ""
+                (or (char.= char tab)
+                    (lambda "" (char.= char vtab)))))))))
 
-;;; Pair
+;;; Nat
 
-;; A pair of two values.
-(def pair
-  (lambda first
-    (lambda second
-      (derive (symbol pair) (symbol first) first
-      (derive (symbol pair) (symbol second) second
-        (object (symbol pair)))))))
+;; Adds two nats.
+(def nat.+ ())
 
-;; The first value in a pair.
-(def first (field (symbol pair) (symbol first)))
+;; True if the first nat is greater than the second nat.
+(def nat.> ())
 
-;; The second value in a pair.
-(def second (field (symbol pair) (symbol second)))
+;; True if the first nat is less than the second nat.
+(def nat.< ())
+
+;; True if two nats are equal.
+(def nat.= ())
+
+;; Converts a nat to a character.
+(def nat->char ())
+
+;; The literal number 0.
+(def zero (symbol->nat (symbol 0)))
+
+;; The literal number 1.
+(def one (symbol->nat (symbol 1)))
+
+;;; Function
+
+;; Composes two functions [f] and [g].
+(def compose
+  (lambda f
+    (lambda g
+      (lambda x
+        (f (g x))))))
+
+;; A function which always returns [value].
+(def const
+  (lambda value
+    (lambda "" value)))
+
+;;; List
+
+;; The singleton empty list.
+(def nil ())
+
+;; Tests if a value is the empty list.
+(def nil? ())
+
+;; Prepends an element to a list.
+(def cons pair)
+
+;; The first element in a list.
+(def car left)
+
+;; The rest of the elements in a list.
+(def cdr right)
+
+;; The rest of the rest of the list.
+(def cddr (compose cdr cdr))
+
+;; The second element in a list.
+(def cadr (compose car cdr))
+
+;; The third element in a list.
+(def caddr (compose car cddr))
+
+;; The fourth element in a list.
+(def cadddr (compose car (compose cdr cddr)))
+
+;; Gets element [i] from [list].
+(def get
+  (lambda list
+    (lambda i
+      (if (nat.= i zero)
+        (car list)
+        (get (cdr list) (sub-int i one))))))
+
+;; Appends [elem] to [list].
+(def append
+  (lambda list
+    (lambda elem
+      (if (nil? list)
+        (cons elem list)
+        (cons (car list) (append (cdr list) elem))))))
+
+;; Adds [list1] and [list2].
+(def list.+
+  (lambda list1
+    (lambda list2
+      (if (nil? list1)
+        list2
+        (cons (car list1) (list.+ (cdr list1) list2))))))
+
+;; Maps [list] with function [f].
+(def map
+  (lambda list
+    (lambda f
+      (if (nil? list)
+        nil
+        (cons (f (car list)) (map (cdr list) f))))))
+
+;; Folds [list] with an accumulator [acc] function [f].
+(def fold
+  (lambda list
+    (lambda acc
+      (lambda f
+        (if (nil? list)
+          acc
+          (fold (cdr list) (f acc (car list)) f))))))
+
+;; Takes elements of [list] while [f] is true.
+(def take-while
+  (lambda list
+    (lambda f
+      (if (nil? list)
+        nil
+        (if (f (car list))
+          (cons (car list) (take-while (cdr list) f))
+          nil)))))
+
+;; Tests if [list1] and [list2] are equal given a function [f].
+(def list.=
+  (lambda f
+    (lambda list1
+      (lambda list2
+        (if (nil? list1)
+          (nil? list2)
+          (if (nil? list2)
+            false
+            (and (f (car list1) (car list2))
+                 (lambda unused (list.= f (cdr list1) (cdr list2))))))))))
+
+;;; Data
+
+;; Derives a data object with a field.
+(def derive
+  (lambda type
+    (lambda field
+      (lambda value
+        (lambda data
+          (pair (left (as type data))
+            (lambda name
+              (if (symbol.= name field)
+                value
+                ((right data) name)))))))))
+
+;; Gets a field in a data object.
+(def field
+  (lambda type
+    (lambda name
+      (lambda data
+        ((right (as type data)) name)))))
+
+;; Creates an empty data object with type [type].
+(def object
+  (lambda type
+    (pair type (const ()))))
+
+;; The type of a data object.
+(def type-name left)
+
+;; Tests if [data] is of [type].
+(def is?
+  (lambda type
+    (lambda data
+      (symbol.= type (type-name data)))))
+
+;; Casts [data] to [type].
+(def as
+  (lambda type
+    (lambda data
+      (if (is? type data)
+        data
+        (error (symbol.+ (symbol "Could not cast ")
+               (symbol.+ (type-name data)
+               (symbol.+ (symbol " to ")
+                 type))))))))
 
 ;;; Maybe
 
@@ -275,9 +326,7 @@
       (object (symbol some)))))
 
 ;; Tests if a value is a some.
-(def is-some
-  (lambda x
-    (eq-symbol (type-name x) (symbol some))))
+(def some? (is? (symbol some)))
 
 (def some.value (field (symbol some) (symbol value)))
 
@@ -285,9 +334,7 @@
 (def none (object (symbol none)))
 
 ;; Tests if a value is none.
-(def is-none
-  (lambda x
-    (eq-symbol (type-name x) (symbol none))))
+(def none? (is? (symbol none)))
 
 ;;; Process
 
@@ -309,22 +356,22 @@
 ;;; File
 
 ;; The root file for this program.
-(def local-file ())
+(def file.local-file ())
 
 ;; The child of a file given a name.
-(def file.child (field (symbol file) (symbol child)))
+(def file.child ())
 
 ;; A list of child files.
-(def file.child-files (field (symbol file) (symbol child-files)))
+(def file.child-files ())
 
 ;; True if a file is a directory.
-(def file.directory? (field (symbol file) (symbol directory?)))
+(def file.directory? ())
 
 ;; The name of a file.
-(def file.name (field (symbol file) (symbol name)))
+(def file.name ())
 
 ;; Reads the contents of a file as a list of characters.
-(def file.read (field (symbol file) (symbol read)))
+(def file.read ())
 
 ;; The name of a file without its extension.
 (def file.name-without-extension
@@ -333,7 +380,7 @@
       (lambda name
         (take-while name
           (lambda char
-            (not (eq-char char dot))))))))
+            (not (char.= char dot))))))))
 
 ;;; Compare
 
@@ -347,19 +394,13 @@
 (def compare> (object (symbol compare>)))
 
 ;; Tests if a value is compare=.
-(def is-compare=
-  (lambda x
-    (eq-symbol (type-name x) (symbol compare=))))
+(def compare=? (is? (symbol compare=)))
 
 ;; Tests if a value is compare<.
-(def is-compare<
-  (lambda x
-    (eq-symbol (type-name x) (symbol compare<))))
+(def compare<? (is? (symbol compare<)))
 
 ;; Tests if a value is compare>.
-(def is-compare>
-  (lambda x
-    (eq-symbol (type-name x) (symbol compare>))))
+(def compare>? (is? (symbol compare>)))
 
 ;; Folds over the result of a compare.
 (def fold-compare
@@ -367,9 +408,9 @@
     (lambda <
       (lambda >
         (lambda =
-          (if (is-compare< compare)
+          (if (compare<? compare)
             (< compare)
-            (if (is-compare> compare)
+            (if (compare>? compare)
               (> compare)
               (= compare))))))))
 
@@ -378,15 +419,15 @@
   (lambda compare
     (lambda list1
       (lambda list2
-        (if (and (is-nil list1)
-                 (lambda unused (is-nil list2)))
+        (if (and (nil? list1)
+                 (lambda "" (nil? list2)))
           compare=
-        (if (is-nil list1)
+        (if (nil? list1)
           compare<
-        (if (is-nil list2)
+        (if (nil? list2)
           compare>
         ((lambda compare-result
-          (if (is-compare= compare-result)
+          (if (compare=? compare-result)
             (compare-list compare (cdr list1) (cdr list2))
             compare-result))
           (compare (car list1) (car list2))))))))))
@@ -395,9 +436,9 @@
 (def compare-nat
   (lambda nat1
     (lambda nat2
-      (if (gt-nat nat1 nat2)
+      (if (nat.> nat1 nat2)
         compare>
-        (if (lt-nat nat1 nat2)
+        (if (nat.< nat1 nat2)
           compare<
           compare=)))))
 
@@ -433,9 +474,7 @@
 (def tree-map-node-nil (object (symbol tree-map-node-nil)))
 
 ;; Tests if a value is tree-map-node-nil.
-(def is-tree-map-node-nil
-  (lambda x
-    (eq-symbol (type-name x) (symbol tree-map-node-nil))))
+(def tree-map-node-nil? (is? (symbol tree-map-node-nil)))
 
 ;; A tree map.
 (def tree-map
@@ -464,7 +503,7 @@
   (lambda node
     (lambda compare
       (lambda key
-        (if (is-tree-map-node-nil node)
+        (if (tree-map-node-nil? node)
           none
           (fold-compare (compare key (tree-map-node.key node))
             (lambda <
@@ -486,7 +525,7 @@
     (lambda compare
       (lambda key
         (lambda value
-          (if (is-tree-map-node-nil node)
+          (if (tree-map-node-nil? node)
             (tree-map-node tree-map-node-nil tree-map-node-nil key value)
             (fold-compare (compare key (tree-map-node.key node))
               (lambda <
@@ -534,7 +573,7 @@
   (lambda node
     (lambda acc
       (lambda f
-        (if (is-tree-map-node-nil node)
+        (if (tree-map-node-nil? node)
           acc
           (tree-map-node.fold (tree-map-node.right node)
             (tree-map-node.fold (tree-map-node.left node)
@@ -593,22 +632,20 @@
 (def parse-success.rest (field (symbol parse-success) (symbol rest)))
 
 ;; Tests if a value is a parse success.
-(def is-parse-success
-  (lambda x
-    (eq-symbol (type-name x) (symbol parse-success))))
+(def parse-success? (is? (symbol parse-success)))
 
 ;; A parser which succeeds only if [f] of the next element is true.
 (def predicate-parser
   (lambda f
     (lambda input
       (lambda state
-        (if (and (not (is-nil input))
-                 (lambda unused (f (car input))))
+        (if (and (not (nil? input))
+                 (lambda "" (f (car input))))
           (parse-success (car input) state (cdr input))
           (parse-failure state))))))
 
 ;; A parser which always succeeds.
-(def success-parser (predicate-parser (lambda unused true)))
+(def success-parser (predicate-parser (const true)))
 
 ;; Maps [parser]'s result with the function [f].
 (def map-parser
@@ -624,7 +661,7 @@
     (lambda f
       (map-parser parser
         (lambda result
-          (if (is-parse-success result)
+          (if (parse-success? result)
             (f result)
             result))))))
 
@@ -667,9 +704,9 @@
       (lambda input
         (lambda state
           ((lambda parser1-result
-            (if (is-parse-success parser1-result)
+            (if (parse-success? parser1-result)
               ((lambda parser2-result
-                (if (is-parse-success parser2-result)
+                (if (parse-success? parser2-result)
                   (parse-success
                     (pair
                       (parse-success.value parser1-result)
@@ -687,13 +724,13 @@
 (def combine-parser-left
   (lambda parser1
     (lambda parser2
-      (map-parser-value (combine-parser parser1 parser2) first))))
+      (map-parser-value (combine-parser parser1 parser2) left))))
 
 ;; Combines [parser1] and [parser2], deferring to parser2's result.
 (def combine-parser-right
   (lambda parser1
     (lambda parser2
-      (map-parser-value (combine-parser parser1 parser2) second))))
+      (map-parser-value (combine-parser parser1 parser2) right))))
 
 ;; Parses a list of [parser].
 (def repeat-parser
@@ -701,7 +738,7 @@
     (lambda input
       (lambda state
         ((lambda result
-          (if (is-parse-success result)
+          (if (parse-success? result)
             ((lambda rest-result
               (parse-success
                 (cons
@@ -721,7 +758,7 @@
     (map-parser-value
       (combine-parser parser (repeat-parser parser))
         (lambda pair
-          (cons (first pair) (second pair))))))
+          (cons (left pair) (right pair))))))
 
 ;; Parses [parser2] if [parser1] fails.
 (def alternative-parser
@@ -730,7 +767,7 @@
       (lambda input
         (lambda state
           ((lambda parser1-result
-            (if (is-parse-success parser1-result)
+            (if (parse-success? parser1-result)
               parser1-result
               (parser2 input state)))
           (parser1 input state)))))))
@@ -752,10 +789,7 @@
       (derive (symbol identifier-expr) (symbol line) line
         (object (symbol identifier-expr)))))))
 
-;; True if [x] is an identifier expression.
-(def is-identifier-expr
-  (lambda x
-    (eq-symbol (type-name x) (symbol identifier-expr))))
+(def identifier-expr? (is? (symbol identifier-expr)))
 
 (def identifier-expr.name (field (symbol identifier-expr) (symbol name)))
 (def identifier-expr.line (field (symbol identifier-expr) (symbol line)))
@@ -768,10 +802,7 @@
       (derive (symbol list-expr) (symbol line) line
         (object (symbol list-expr)))))))
 
-;; True if [x] is a list expression.
-(def is-list-expr
-  (lambda x
-    (eq-symbol (type-name x) (symbol list-expr))))
+(def list-expr? (is? (symbol list-expr)))
 
 (def list-expr.exprs (field (symbol list-expr) (symbol exprs)))
 (def list-expr.line (field (symbol list-expr) (symbol line)))
@@ -779,7 +810,7 @@
 ;; The line of an expression.
 (def expr.line
   (lambda expr
-    (if (is-identifier-expr expr)
+    (if (identifier-expr? expr)
       (identifier-expr.line expr)
       (list-expr.line expr))))
 
@@ -788,50 +819,50 @@
 ;; Maps an escape code to its character.
 (def escape-map
   (lambda char
-    (if (eq-char char letter-b) backspace
-    (if (eq-char char letter-t) tab
-    (if (eq-char char letter-n) linefeed
-    (if (eq-char char letter-v) vtab
-    (if (eq-char char letter-f) formfeed
-    (if (eq-char char letter-r) carriage-return
+    (if (char.= char letter-b) backspace
+    (if (char.= char letter-t) tab
+    (if (char.= char letter-n) linefeed
+    (if (char.= char letter-v) vtab
+    (if (char.= char letter-f) formfeed
+    (if (char.= char letter-r) carriage-return
       char))))))))
 
 ;; True if a character is part of an identifier.
-(def is-identifier-character
+(def identifier-character?
   (lambda char
     (not
-      (or (is-whitespace char)
-          (lambda unused
-            (or (eq-char char open-parentheses)
-                (lambda unused
-                  (or (eq-char char close-parentheses)
-                      (lambda unused
-                      (or (eq-char char semicolon)
-                          (lambda unused
-                            (eq-char char quote))))))))))))
+      (or (whitespace? char)
+          (lambda ""
+            (or (char.= char open-parentheses)
+                (lambda ""
+                  (or (char.= char close-parentheses)
+                      (lambda ""
+                      (or (char.= char semicolon)
+                          (lambda ""
+                            (char.= char quote))))))))))))
 
 ;; Parses a single character.
 (def char-parser
   (lambda char
-    (predicate-parser (eq-char char))))
+    (predicate-parser (char.= char))))
 
 ;; Parses a newline character.
 (def newline-parser
   (map-parser-state
-    (predicate-parser is-newline)
-    (add-nat one)))
+    (predicate-parser newline?)
+    (nat.+ one)))
 
 ;; Parses a whitespace character.
 (def whitespace-parser
   (alternative-parser
     newline-parser
-    (predicate-parser is-whitespace)))
+    (predicate-parser whitespace?)))
 
 ;; Parses a comment.
 (def comment-parser
   (combine-parser
-    (predicate-parser (eq-char semicolon))
-    (repeat-parser (predicate-parser (compose not is-newline)))))
+    (predicate-parser (char.= semicolon))
+    (repeat-parser (predicate-parser (compose not newline?)))))
 
 ;; Wraps [parser] to ignore whitepace and comments.
 (def ignore-unused
@@ -842,7 +873,7 @@
 
 ;; Parses a single identifier character.
 (def identifier-char-parser
-  (predicate-parser is-identifier-character))
+  (predicate-parser identifier-character?))
 
 ;; Parses an escape character in an identifier literal.
 (def identifier-literal-escape-parser
@@ -851,7 +882,7 @@
 
 ;; Parses a single identifier literal character.
 (def identifier-literal-char-parser
-  (predicate-parser (compose not (eq-char quote))))
+  (predicate-parser (compose not (char.= quote))))
 
 ;; Parses an identifier literal.
 (def identifier-literal-parser
@@ -872,7 +903,7 @@
         identifier-literal-parser
         (repeat-parser1 identifier-char-parser)))
     (lambda pair
-      (identifier-expr (first pair) (second pair)))))
+      (identifier-expr (left pair) (right pair)))))
 
 ;; Parses a list expression.
 (def list-expr-parser
@@ -881,10 +912,10 @@
       (combine-parser-right
         (char-parser open-parentheses)
         (combine-parser-left
-          (lazy-parser (lambda unused parser))
+          (lazy-parser (lambda "" parser))
           (ignore-unused (char-parser close-parentheses)))))
     (lambda pair
-      (list-expr (first pair) (second pair)))))
+      (list-expr (left pair) (right pair)))))
 
 ;; Parses an M expression.
 (def expr-parser
@@ -938,9 +969,7 @@
 (def local-variable.index (field (symbol local-variable) (symbol index)))
 
 ;; Tests if a value is a local variable.
-(def is-local-variable
-  (lambda x
-    (eq-symbol (type-name x) (symbol local-variable))))
+(def local-variable? (is? (symbol local-variable)))
 
 ;; The location of a global variable
 (def global-variable
@@ -954,9 +983,7 @@
 (def global-variable.path (field (symbol global-variable) (symbol path)))
 
 ;; Tests if a value is a global variable.
-(def is-global-variable
-  (lambda x
-    (eq-symbol (type-name x) (symbol global-variable))))
+(def global-variable? (is? (symbol global-variable)))
 
 ;;; Env
 
@@ -1072,9 +1099,11 @@
 (def def-declaration
   (lambda name
     (lambda path
-      (derive (symbol def-declaration) (symbol name) name
-      (derive (symbol def-declaration) (symbol path) path
-        (object (symbol def-declaration)))))))
+      (lambda value
+        (derive (symbol def-declaration) (symbol name) name
+        (derive (symbol def-declaration) (symbol path) path
+        (derive (symbol def-declaration) (symbol value) value
+          (object (symbol def-declaration)))))))))
 
 ;; A lambda declaration.
 (def lambda-declaration
@@ -1112,11 +1141,11 @@
 (def closures
   (lambda expr
     (lambda env1
-      (if (is-identifier-expr expr)
+      (if (identifier-expr? expr)
         ((lambda variable
-          (if (is-none variable)
+          (if (none? variable)
             (empty-tree-map compare-string)
-            (if (is-local-variable (some.value variable))
+            (if (local-variable? (some.value variable))
               (tree-map.put
                 (empty-tree-map compare-string)
                 (identifier-expr.name expr)
@@ -1134,9 +1163,9 @@
     (lambda env1
       (generate-result
         ((lambda maybe
-          (if (is-some maybe)
+          (if (some? maybe)
             ((lambda variable
-              (if (is-global-variable variable)
+              (if (global-variable? variable)
                 (global-variable-operation
                   (global-variable.name variable)
                   (global-variable.path variable))
@@ -1202,27 +1231,27 @@
                   env2))
               (generate-expr expr
                 (env
-                  (second
+                  (right
                     (fold
                       (append closures name)
                       (pair zero (env.vars env2))
                       (lambda vars
                         (lambda closure
                           (pair
-                            (add-nat one (first vars))
+                            (nat.+ one (left vars))
                             (tree-map.put
-                              (second vars)
+                              (right vars)
                               closure
-                              (local-variable closure (first vars))))))))
+                              (local-variable closure (left vars))))))))
                   (env.path env2)
                   (env.def env2)
                   (env.index env1)))))
-            (map (tree-map->list (closures expr env2)) first)))
+            (map (tree-map->list (closures expr env2)) left)))
           (env
             (env.vars env1)
             (env.path env1)
             method-name
-            (add-nat one (env.index env1)))))
+            (nat.+ one (env.index env1)))))
         (mangle-lambda-name (env.def env1) (env.index env1)))))))
 
 ;; Generates a def expression.
@@ -1233,7 +1262,7 @@
         ((lambda env2
           ((lambda local-env
             ((lambda expr-result
-              (if (is-none (tree-map.get (env.vars env1) name))
+              (if (none? (tree-map.get (env.vars env1) name))
                 (generate-result
                   (def-operation
                     name
@@ -1241,7 +1270,8 @@
                     (env.path local-env))
                   (combine-declaration
                     (generate-result.declaration expr-result)
-                    (def-declaration name (env.path local-env)))
+                    (def-declaration name (env.path local-env)
+                      (generate-result.operation expr-result)))
                   env2)
                 (generate-result
                   (generate-result.operation
@@ -1274,12 +1304,12 @@
   (lambda fn
     (lambda args
       (lambda env1
-        (if (is-nil args)
+        (if (nil? args)
           (generate-apply-expr
             fn
             (cons (list-expr nil (expr.line fn)) nil)
             env1)
-        (if (is-nil (cdr args))
+        (if (nil? (cdr args))
           ((lambda fn-result
             ((lambda arg-result
               (generate-result
@@ -1302,26 +1332,26 @@
   (lambda expr
     (lambda env1
       ((lambda exprs
-        (if (is-nil exprs)
+        (if (nil? exprs)
           (generate-nil env1)
           ((lambda name
-            (if (eq-list eq-char name (symbol->list (symbol if)))
+            (if (list.= char.= name (symbol->list (symbol if)))
               (generate-if-expr
                 (cadr exprs)
                 (caddr exprs)
                 (cadddr exprs)
                 env1)
-            (if (eq-list eq-char name (symbol->list (symbol lambda)))
+            (if (list.= char.= name (symbol->list (symbol lambda)))
               (generate-lambda-expr
                 (identifier-expr.name (cadr exprs))
                 (caddr exprs)
                 env1)
-            (if (eq-list eq-char name (symbol->list (symbol def)))
+            (if (list.= char.= name (symbol->list (symbol def)))
               (generate-def-expr
                 (identifier-expr.name (cadr exprs))
                 (caddr exprs)
                 env1)
-            (if (eq-list eq-char name (symbol->list (symbol symbol)))
+            (if (list.= char.= name (symbol->list (symbol symbol)))
               (generate-symbol-expr
                 (identifier-expr.name (cadr exprs))
                 env1)
@@ -1329,7 +1359,7 @@
                 (car exprs)
                 (cdr exprs)
                 env1))))))
-          (if (is-identifier-expr (car exprs))
+          (if (identifier-expr? (car exprs))
             (identifier-expr.name (car exprs))
             nil))))
       (list-expr.exprs expr)))))
@@ -1345,7 +1375,7 @@
             (expr.line expr))
           (generate-result.declaration expr-result)
           (generate-result.env expr-result)))
-      (if (is-identifier-expr expr)
+      (if (identifier-expr? expr)
         (generate-identifier-expr (identifier-expr.name expr) env1)
         (generate-list-expr expr env1))))))
 
@@ -1353,7 +1383,7 @@
 (def generate-exprs
   (lambda exprs
     (lambda env1
-      (if (is-nil exprs)
+      (if (nil? exprs)
         (generate-result nil-operation no-declaration env1)
         ((lambda generate-result-car
           ((lambda generate-result-cdr
@@ -1387,7 +1417,7 @@
             (fold internal-variables (empty-tree-map compare-string)
               (lambda map
                 (lambda variable
-                  (tree-map.put map (first variable) (second variable)))))
+                  (tree-map.put map (left variable) (right variable)))))
             name
             nil
             zero)))))))
@@ -1397,15 +1427,13 @@
 ;; The list of arguments passed to the program.
 (def args ())
 
-;; The input file for the compiler.
-(def in-file (run-unsafe (file.child local-file (car args))))
-
-;; The output file for the compiler.
-(def out-file (run-unsafe (file.child local-file (cadr args))))
-
 (run-unsafe
-  (then-run-with (file.read in-file)
-    (lambda chars
-      (then-run-with (file.name-without-extension in-file)
-        (lambda name
-          (generate name out-file (parse chars)))))))
+  (then-run-with (file.child file.local-file (car args))
+    (lambda in-file
+      (then-run-with (file.child file.local-file (cadr args))
+        (lambda out-file
+          (then-run-with (file.read in-file)
+            (lambda chars
+              (then-run-with (file.name-without-extension in-file)
+                (lambda name
+                  (generate name out-file (parse chars)))))))))))
