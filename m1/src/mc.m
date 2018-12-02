@@ -179,6 +179,12 @@
   (lambda value
     (lambda "" value)))
 
+;; Applies [f] to [x].
+(def with
+  (lambda x
+    (lambda f
+      (f x))))
+
 ;;; List
 
 ;; The singleton empty list.
@@ -207,14 +213,6 @@
 
 ;; The fourth element in a list.
 (def cadddr (compose car (compose cdr cddr)))
-
-;; Gets element [i] from [list].
-(def get
-  (lambda list
-    (lambda i
-      (if (nat.= i zero)
-        (car list)
-        (get (cdr list) (sub-int i one))))))
 
 ;; Appends [elem] to [list].
 (def append
@@ -249,6 +247,21 @@
           acc
           (fold (cdr list) (f acc (car list)) f))))))
 
+;; Implementation of reverse.
+(def reverse'
+  (lambda list
+    (lambda acc
+      (if (nil? list)
+        acc
+        (reverse'
+          (cdr list)
+          (cons (car list) acc))))))
+
+;; Reverses [list].
+(def reverse
+  (lambda list
+    (reverse' list ())))
+
 ;; Takes elements of [list] while [f] is true.
 (def take-while
   (lambda list
@@ -273,6 +286,26 @@
 
 ;;; Data
 
+;; The type of a data object.
+(def type-name left)
+
+;; Tests if [data] is of [type].
+(def is?
+  (lambda type
+    (lambda data
+      (symbol.= type (type-name data)))))
+
+;; Casts [data] to [type].
+(def as
+  (lambda type
+    (lambda data
+      (if (is? type data)
+        data
+        (error (symbol.+ (symbol "Could not cast ")
+               (symbol.+ (type-name data)
+               (symbol.+ (symbol " to ")
+                 type))))))))
+
 ;; Derives a data object with a field.
 (def derive
   (lambda type
@@ -296,26 +329,6 @@
 (def object
   (lambda type
     (pair type (const ()))))
-
-;; The type of a data object.
-(def type-name left)
-
-;; Tests if [data] is of [type].
-(def is?
-  (lambda type
-    (lambda data
-      (symbol.= type (type-name data)))))
-
-;; Casts [data] to [type].
-(def as
-  (lambda type
-    (lambda data
-      (if (is? type data)
-        data
-        (error (symbol.+ (symbol "Could not cast ")
-               (symbol.+ (type-name data)
-               (symbol.+ (symbol " to ")
-                 type))))))))
 
 ;;; Maybe
 
@@ -607,178 +620,6 @@
           (lambda value
             (cons (pair key value) list)))))))
 
-;;; Parser Combinators
-
-;; A parse result representing failure.
-(def parse-failure
-  (lambda state
-    (derive (symbol parse-failure) (symbol state) state
-      (object (symbol parse-failure)))))
-
-(def parse-failure.state (field (symbol parse-failure) (symbol state)))
-
-;; A parse result representing success.
-(def parse-success
-  (lambda value
-    (lambda state
-      (lambda rest
-        (derive (symbol parse-success) (symbol value) value
-        (derive (symbol parse-success) (symbol state) state
-        (derive (symbol parse-success) (symbol rest) rest
-          (object (symbol parse-success)))))))))
-
-(def parse-success.value (field (symbol parse-success) (symbol value)))
-(def parse-success.state (field (symbol parse-success) (symbol state)))
-(def parse-success.rest (field (symbol parse-success) (symbol rest)))
-
-;; Tests if a value is a parse success.
-(def parse-success? (is? (symbol parse-success)))
-
-;; A parser which succeeds only if [f] of the next element is true.
-(def predicate-parser
-  (lambda f
-    (lambda input
-      (lambda state
-        (if (and (not (nil? input))
-                 (lambda "" (f (car input))))
-          (parse-success (car input) state (cdr input))
-          (parse-failure state))))))
-
-;; A parser which always succeeds.
-(def success-parser (predicate-parser (const true)))
-
-;; Maps [parser]'s result with the function [f].
-(def map-parser
-  (lambda parser
-    (lambda f
-      (lambda input
-        (lambda state
-          (f (parser input state)))))))
-
-;; Maps [parser]'s result with the function [f] if the result is a success.
-(def map-parser-success
-  (lambda parser
-    (lambda f
-      (map-parser parser
-        (lambda result
-          (if (parse-success? result)
-            (f result)
-            result))))))
-
-;; Maps [parser]'s result's value with the function [f].
-(def map-parser-value
-  (lambda parser
-    (lambda f
-      (map-parser-success parser
-        (lambda success
-          (parse-success
-            (f (parse-success.value success))
-            (parse-success.state success)
-            (parse-success.rest success)))))))
-
-;; Maps [parser]'s result's state with the function [f].
-(def map-parser-state
-  (lambda parser
-    (lambda f
-      (map-parser-success parser
-        (lambda success
-          (parse-success
-            (parse-success.value success)
-            (f (parse-success.state success))
-            (parse-success.rest success)))))))
-
-;; Provides the state before [parser] was run.
-(def provide-past-state
-  (lambda parser
-    (lambda input
-      (lambda state
-        ((map-parser-value parser
-          (lambda value
-            (pair value state)))
-        input state)))))
-
-;; Combines [parser1] and [parser2].
-(def combine-parser
-  (lambda parser1
-    (lambda parser2
-      (lambda input
-        (lambda state
-          ((lambda parser1-result
-            (if (parse-success? parser1-result)
-              ((lambda parser2-result
-                (if (parse-success? parser2-result)
-                  (parse-success
-                    (pair
-                      (parse-success.value parser1-result)
-                      (parse-success.value parser2-result))
-                    (parse-success.state parser2-result)
-                    (parse-success.rest parser2-result))
-                  parser2-result))
-              (parser2
-                (parse-success.rest parser1-result)
-                (parse-success.state parser1-result)))
-              parser1-result))
-          (parser1 input state)))))))
-
-;; Combines [parser1] and [parser2], deferring to parser1's result.
-(def combine-parser-left
-  (lambda parser1
-    (lambda parser2
-      (map-parser-value (combine-parser parser1 parser2) left))))
-
-;; Combines [parser1] and [parser2], deferring to parser2's result.
-(def combine-parser-right
-  (lambda parser1
-    (lambda parser2
-      (map-parser-value (combine-parser parser1 parser2) right))))
-
-;; Parses a list of [parser].
-(def repeat-parser
-  (lambda parser
-    (lambda input
-      (lambda state
-        ((lambda result
-          (if (parse-success? result)
-            ((lambda rest-result
-              (parse-success
-                (cons
-                  (parse-success.value result)
-                  (parse-success.value rest-result))
-                (parse-success.state rest-result)
-                (parse-success.rest rest-result)))
-            (repeat-parser parser
-              (parse-success.rest result)
-              (parse-success.state result)))
-            (parse-success nil state input)))
-        (parser input state))))))
-
-;; Parses a non empty list of [parser].
-(def repeat-parser1
-  (lambda parser
-    (map-parser-value
-      (combine-parser parser (repeat-parser parser))
-        (lambda pair
-          (cons (left pair) (right pair))))))
-
-;; Parses [parser2] if [parser1] fails.
-(def alternative-parser
-  (lambda parser1
-    (lambda parser2
-      (lambda input
-        (lambda state
-          ((lambda parser1-result
-            (if (parse-success? parser1-result)
-              parser1-result
-              (parser2 input state)))
-          (parser1 input state)))))))
-
-;; A parser whose implementation is only evaluated once it is called.
-(def lazy-parser
-  (lambda parser
-    (lambda input
-      (lambda state
-        ((parser nil) input state)))))
-
 ;;; Expr
 
 ;; An expression representing an M identifier.
@@ -816,8 +657,8 @@
 
 ;;; Parser
 
-;; Maps an escape code to its character.
-(def escape-map
+;; The escape code of a character.
+(def escape
   (lambda char
     (if (char.= char letter-b) backspace
     (if (char.= char letter-t) tab
@@ -827,112 +668,117 @@
     (if (char.= char letter-r) carriage-return
       char))))))))
 
-;; True if a character is part of an identifier.
-(def identifier-character?
+;; True if a character an identifier separator.
+(def separator?
   (lambda char
-    (not
-      (or (whitespace? char)
-          (lambda ""
-            (or (char.= char open-parentheses)
-                (lambda ""
-                  (or (char.= char close-parentheses)
-                      (lambda ""
+    (or (whitespace? char)
+        (lambda ""
+          (or (char.= char open-parentheses)
+              (lambda ""
+                (or (char.= char close-parentheses)
+                    (lambda ""
                       (or (char.= char semicolon)
                           (lambda ""
-                            (char.= char quote))))))))))))
+                            (char.= char quote)))))))))))
 
-;; Parses a single character.
-(def char-parser
-  (lambda char
-    (predicate-parser (char.= char))))
+;; The result of parsing an expression
+(def parse-result
+  (lambda rest
+    (lambda expr
+      (lambda line
+        (derive (symbol parse-result) (symbol rest) rest
+        (derive (symbol parse-result) (symbol expr) expr
+        (derive (symbol parse-result) (symbol line) line
+          (object (symbol parse-result)))))))))
 
-;; Parses a newline character.
-(def newline-parser
-  (map-parser-state
-    (predicate-parser newline?)
-    (nat.+ one)))
+(def parse-result.rest (field (symbol parse-result) (symbol rest)))
+(def parse-result.expr (field (symbol parse-result) (symbol expr)))
+(def parse-result.line (field (symbol parse-result) (symbol line)))
 
-;; Parses a whitespace character.
-(def whitespace-parser
-  (alternative-parser
-    newline-parser
-    (predicate-parser whitespace?)))
+;; Parses an M commment.
+(def parse-comment
+  (lambda input
+    (lambda line
+      (if (newline? (car input))
+        (parse-expr input line)
+        (parse-comment (cdr input) line)))))
 
-;; Parses a comment.
-(def comment-parser
-  (combine-parser
-    (predicate-parser (char.= semicolon))
-    (repeat-parser (predicate-parser (compose not newline?)))))
+;; Parses an M identifier literal expression given [input].
+(def parse-identifier-literal-expr
+  (lambda input
+    (lambda line
+      (lambda acc
+        (with (car input)
+          (lambda head
+            (if (char.= head quote)
+              (parse-result
+                (cdr input)
+                (identifier-expr (reverse acc) line)
+                line)
+            (if (char.= head backslash)
+              (parse-identifier-literal-expr
+                (cddr input)
+                line
+                (cons (escape (cadr input)) acc))
+              (parse-identifier-literal-expr
+                (cdr input)
+                line
+                (cons (car input) acc))))))))))
 
-;; Wraps [parser] to ignore whitepace and comments.
-(def ignore-unused
-  (lambda parser
-    (combine-parser-right
-      (repeat-parser (alternative-parser whitespace-parser comment-parser))
-      parser)))
+;; Parses an M identifier expression given [input].
+(def parse-identifier-expr
+  (lambda input
+    (lambda line
+      (lambda acc
+        (if (separator? (car input))
+          (parse-result input (identifier-expr (reverse acc) line) line)
+          (parse-identifier-expr (cdr input) line (cons (car input) acc)))))))
 
-;; Parses a single identifier character.
-(def identifier-char-parser
-  (predicate-parser identifier-character?))
+;; Parses an M list expression given [input].
+(def parse-list-expr
+  (lambda input
+    (lambda line
+      (lambda acc
+        (if (char.= (car input) close-parentheses)
+          (parse-result (cdr input) (list-expr (reverse acc) line) line)
+          (with (parse-expr input line)
+            (lambda result
+              (parse-list-expr
+                (parse-result.rest result)
+                (parse-result.line result)
+                (cons (parse-result.expr result) acc)))))))))
 
-;; Parses an escape character in an identifier literal.
-(def identifier-literal-escape-parser
-  (combine-parser-right (char-parser backslash)
-    (map-parser-value success-parser escape-map)))
+;; Parses an M expression given [input].
+(def parse-expr
+  (lambda input
+    (lambda line
+      (with (car input)
+        (lambda head
+          (if (char.= head open-parentheses)
+            (parse-list-expr (cdr input) line ())
+          (if (char.= head quote)
+            (parse-identifier-literal-expr (cdr input) line ())
+          (if (char.= head semicolon)
+            (parse-comment (cdr input) line)
+          (if (newline? head)
+            (parse-expr (cdr input) (nat.+ line one))
+          (if (whitespace? head)
+            (parse-expr (cdr input) line)
+            (parse-identifier-expr input line ())))))))))))
 
-;; Parses a single identifier literal character.
-(def identifier-literal-char-parser
-  (predicate-parser (compose not (char.= quote))))
-
-;; Parses an identifier literal.
-(def identifier-literal-parser
-  (combine-parser-right
-    (char-parser quote)
-    (combine-parser-left
-      (repeat-parser
-        (alternative-parser
-          identifier-literal-escape-parser
-          identifier-literal-char-parser))
-      (char-parser quote))))
-
-;; Parses an identifier expression.
-(def identifier-expr-parser
-  (map-parser-value
-    (provide-past-state
-      (alternative-parser
-        identifier-literal-parser
-        (repeat-parser1 identifier-char-parser)))
-    (lambda pair
-      (identifier-expr (left pair) (right pair)))))
-
-;; Parses a list expression.
-(def list-expr-parser
-  (map-parser-value
-    (provide-past-state
-      (combine-parser-right
-        (char-parser open-parentheses)
-        (combine-parser-left
-          (lazy-parser (lambda "" parser))
-          (ignore-unused (char-parser close-parentheses)))))
-    (lambda pair
-      (list-expr (left pair) (right pair)))))
-
-;; Parses an M expression.
-(def expr-parser
-  (ignore-unused
-    (alternative-parser
-      identifier-expr-parser
-      list-expr-parser)))
-
-;; Parses an M program.
-(def parser
-  (repeat-parser expr-parser))
-
-;; The result of parsing an M program.
+;; Parses an M program given [input].
 (def parse
   (lambda input
-    (parse-success.value
-      (parser input one))))
+    (lambda line
+      (lambda acc
+        (if (nil? input)
+          (reverse acc)
+          (with (parse-expr input line)
+            (lambda result
+              (parse
+                (parse-result.rest result)
+                (parse-result.line result)
+                (cons (parse-result.expr result) acc)))))))))
 
 ;;; Generate Result
 
@@ -1436,4 +1282,4 @@
             (lambda chars
               (then-run-with (file.name-without-extension in-file)
                 (lambda name
-                  (generate name out-file (parse chars)))))))))))
+                  (generate name out-file (parse chars one ())))))))))))
