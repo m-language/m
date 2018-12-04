@@ -625,35 +625,46 @@
 ;; An expression representing an M identifier.
 (def identifier-expr
   (lambda name
-    (lambda line
-      (derive (symbol identifier-expr) (symbol name) name
-      (derive (symbol identifier-expr) (symbol line) line
-        (object (symbol identifier-expr)))))))
+    (lambda start
+      (lambda end
+        (derive (symbol identifier-expr) (symbol name) name
+        (derive (symbol identifier-expr) (symbol start) start
+        (derive (symbol identifier-expr) (symbol end) end
+          (object (symbol identifier-expr)))))))))
 
 (def identifier-expr? (is? (symbol identifier-expr)))
 
 (def identifier-expr.name (field (symbol identifier-expr) (symbol name)))
-(def identifier-expr.line (field (symbol identifier-expr) (symbol line)))
+(def identifier-expr.start (field (symbol identifier-expr) (symbol start)))
+(def identifier-expr.end (field (symbol identifier-expr) (symbol end)))
 
 ;; An expression representing an M list.
 (def list-expr
   (lambda exprs
-    (lambda line
-      (derive (symbol list-expr) (symbol exprs) exprs
-      (derive (symbol list-expr) (symbol line) line
-        (object (symbol list-expr)))))))
+    (lambda start
+      (lambda end
+        (derive (symbol list-expr) (symbol exprs) exprs
+        (derive (symbol list-expr) (symbol start) start
+        (derive (symbol list-expr) (symbol end) end
+          (object (symbol list-expr)))))))))
 
 (def list-expr? (is? (symbol list-expr)))
 
 (def list-expr.exprs (field (symbol list-expr) (symbol exprs)))
-(def list-expr.line (field (symbol list-expr) (symbol line)))
+(def list-expr.start (field (symbol list-expr) (symbol start)))
+(def list-expr.end (field (symbol list-expr) (symbol end)))
 
-;; The line of an expression.
-(def expr.line
+(def expr.start
   (lambda expr
-    (if (identifier-expr? expr)
-      (identifier-expr.line expr)
-      (list-expr.line expr))))
+    (if (list-expr? expr)
+      (list-expr.start expr)
+      (identifier-expr.start expr))))
+
+(def expr.end
+  (lambda expr
+    (if (list-expr? expr)
+      (list-expr.end expr)
+      (identifier-expr.end expr))))
 
 ;;; Parser
 
@@ -681,103 +692,140 @@
                           (lambda ""
                             (char.= char quote)))))))))))
 
-;; The result of parsing an expression
+;; A position in a file.
+(def position
+  (lambda line
+    (lambda char
+      (derive (symbol position) (symbol line) line
+      (derive (symbol position) (symbol char) char
+        (object (symbol position)))))))
+
+(def position.line (field (symbol position) (symbol line)))
+(def position.char (field (symbol position) (symbol char)))
+
+;; The position of the next char.
+(def next-char
+  (lambda p
+    (position
+      (position.line p)
+      (nat.+ one (position.char p)))))
+
+;; The position of the next line.
+(def next-line
+  (lambda p
+    (position
+      (nat.+ one (position.line p))
+      one)))
+
+;; The result of parsing an expression.
 (def parse-result
   (lambda rest
     (lambda expr
-      (lambda line
-        (derive (symbol parse-result) (symbol rest) rest
-        (derive (symbol parse-result) (symbol expr) expr
-        (derive (symbol parse-result) (symbol line) line
-          (object (symbol parse-result)))))))))
+      (derive (symbol parse-result) (symbol rest) rest
+      (derive (symbol parse-result) (symbol expr) expr
+        (object (symbol parse-result)))))))
 
 (def parse-result.rest (field (symbol parse-result) (symbol rest)))
 (def parse-result.expr (field (symbol parse-result) (symbol expr)))
-(def parse-result.line (field (symbol parse-result) (symbol line)))
 
 ;; Parses an M commment.
 (def parse-comment
   (lambda input
-    (lambda line
+    (lambda position
       (if (newline? (car input))
-        (parse-expr input line)
-        (parse-comment (cdr input) line)))))
+        (parse-expr input position)
+        (parse-comment (cdr input) position)))))
 
 ;; Parses an M identifier literal expression given [input].
 (def parse-identifier-literal-expr
   (lambda input
-    (lambda line
-      (lambda acc
-        (with (car input)
-          (lambda head
-            (if (char.= head quote)
-              (parse-result
-                (cdr input)
-                (identifier-expr (reverse acc) line)
-                line)
-            (if (char.= head backslash)
-              (parse-identifier-literal-expr
-                (cddr input)
-                line
-                (cons (escape (cadr input)) acc))
-              (parse-identifier-literal-expr
-                (cdr input)
-                line
-                (cons (car input) acc))))))))))
+    (lambda start
+      (lambda end
+        (lambda acc
+          (with (car input)
+            (lambda head
+              (if (char.= head quote)
+                (parse-result
+                  (cdr input)
+                  (identifier-expr (reverse acc) start end))
+              (if (char.= head backslash)
+                (parse-identifier-literal-expr
+                  (cddr input)
+                  start
+                  (next-char (next-char end))
+                  (cons (escape (cadr input)) acc))
+              (if (newline? head)
+                (parse-identifier-literal-expr
+                  (cdr input)
+                  start
+                  (next-line end)
+                  (cons head acc))
+                (parse-identifier-literal-expr
+                  (cdr input)
+                  start
+                  (next-char end)
+                  (cons head acc))))))))))))
 
 ;; Parses an M identifier expression given [input].
 (def parse-identifier-expr
   (lambda input
-    (lambda line
-      (lambda acc
-        (if (separator? (car input))
-          (parse-result input (identifier-expr (reverse acc) line) line)
-          (parse-identifier-expr (cdr input) line (cons (car input) acc)))))))
+    (lambda start
+      (lambda end
+        (lambda acc
+          (if (separator? (car input))
+            (parse-result input (identifier-expr (reverse acc) start end))
+            (parse-identifier-expr
+              (cdr input)
+              start
+              (next-char end)
+              (cons (car input) acc))))))))
 
 ;; Parses an M list expression given [input].
 (def parse-list-expr
   (lambda input
-    (lambda line
-      (lambda acc
-        (if (char.= (car input) close-parentheses)
-          (parse-result (cdr input) (list-expr (reverse acc) line) line)
-          (with (parse-expr input line)
-            (lambda result
-              (parse-list-expr
-                (parse-result.rest result)
-                (parse-result.line result)
-                (cons (parse-result.expr result) acc)))))))))
+    (lambda start
+      (lambda end
+        (lambda acc
+          (if (char.= (car input) close-parentheses)
+            (parse-result (cdr input) (list-expr (reverse acc) start end))
+            (with (parse-expr input end)
+              (lambda result
+                (parse-list-expr
+                  (parse-result.rest result)
+                  start
+                  (expr.end (parse-result.expr result))
+                  (cons (parse-result.expr result) acc))))))))))
 
 ;; Parses an M expression given [input].
 (def parse-expr
   (lambda input
-    (lambda line
+    (lambda position
       (with (car input)
         (lambda head
           (if (char.= head open-parentheses)
-            (parse-list-expr (cdr input) line ())
+            (parse-list-expr (cdr input) position position ())
           (if (char.= head quote)
-            (parse-identifier-literal-expr (cdr input) line ())
+            (parse-identifier-literal-expr (cdr input) position position ())
           (if (char.= head semicolon)
-            (parse-comment (cdr input) line)
+            (parse-comment (cdr input) position)
           (if (newline? head)
-            (parse-expr (cdr input) (nat.+ line one))
+            (parse-expr (cdr input) (next-line position))
           (if (whitespace? head)
-            (parse-expr (cdr input) line)
-            (parse-identifier-expr input line ())))))))))))
+            (parse-expr (cdr input) (next-char position))
+            (parse-identifier-expr input position position ())))))))))))
 
 ;; Parses an M program given [input].
 (def parse
   (lambda input
-    (lambda line
+    (lambda position
       (lambda acc
         (if (nil? input)
           (reverse acc)
-          (with (parse-expr input line)
+          (with (parse-expr input position)
             (lambda result
               (parse
                 (parse-result.rest result)
-                (parse-result.line result)
+                (expr.end (parse-result.expr result))
                 (cons (parse-result.expr result) acc)))))))))
 
 ;;; Generate Result
@@ -981,7 +1029,7 @@
 (def generate-program ())
 
 ;; List containing all internal variables.
-(def internal-variable ())
+(def internal-variables ())
 
 ;; A set of closures in an expression.
 (def closures
@@ -1169,7 +1217,10 @@
             (generate-expr (car args) (generate-result.env fn-result))))
           (generate-expr fn env1))
           (generate-apply-expr
-            (list-expr (cons fn (cons (car args) nil)) (expr.line fn))
+            (list-expr
+              (cons fn (cons (car args) nil))
+              (expr.start fn)
+              (expr.end fn))
             (cdr args)
             env1)))))))
 
@@ -1218,7 +1269,7 @@
         (generate-result
           (line-number-operation
             (generate-result.operation expr-result)
-            (expr.line expr))
+            (position.line (expr.start expr)))
           (generate-result.declaration expr-result)
           (generate-result.env expr-result)))
       (if (identifier-expr? expr)
@@ -1282,4 +1333,5 @@
             (lambda chars
               (then-run-with (file.name-without-extension in-file)
                 (lambda name
-                  (generate name out-file (parse chars one ())))))))))))
+                  (generate name out-file
+                    (parse chars (position one one) ())))))))))))
