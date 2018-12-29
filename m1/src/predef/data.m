@@ -1,13 +1,13 @@
 ;; The type of a data object.
 (def type-name left)
 
-;; Tests if [data] is of [type].
+;; Tests if a data object is of type.
 (def is?
   (lambda type
     (lambda data
       (symbol.= type (type-name data)))))
 
-;; Casts [data] to [type].
+;; Casts a data object to a type.
 (def as
   (lambda type
     (lambda data
@@ -39,7 +39,7 @@
         (symbol.+ (symbol " for ")
           type)))))))
 
-;; Creates a data object given a [type] and a list of [fields].
+;; Creates a data object given a type and a list of fields.
 (def data
   (lambda type
     (lambda fields
@@ -48,13 +48,13 @@
           (lambda field
             (derive data (left field) (right field))))))))
 
-;; Creates a data constructor given a [type] and a list of field [names].
+;; Creates a data constructor given a type]and a list of field names.
 (def new-data
   (lambda type
     (lambda names
       (new-data' type names ()))))
 
-;; Implementation of [new-data].
+;; Implementation of new-data.
 (def new-data'
   (lambda type
     (lambda names
@@ -67,7 +67,7 @@
               (cdr names)
               (cons (pair (car names) value) fields))))))))
 
-;; Variadic implemntation of [new-data].
+;; Variadic implemntation of new-data.
 (def new-data*
   (lambda type
     (vararg (new-data type))))

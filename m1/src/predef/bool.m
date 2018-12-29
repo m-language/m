@@ -4,19 +4,19 @@
 ;; The singleton falsy value, for which `(if false x y)` evaluates to y.
 (def false ())
 
-;; True if [x] and [y] are true.
+;; True if both arguments are true.
 (def and
   (lambda x
     (lambda y
       (if x (y) false))))
 
-;; True if [x] or [y] is true.
+;; True if either argument is true.
 (def or
   (lambda x
     (lambda y
       (if x true (y)))))
 
-;; True if [x] is false.
+;; True if its argument is false.
 (def not
   (lambda x
     (if x false true)))

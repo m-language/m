@@ -28,7 +28,7 @@
               (> compare)
               (= compare))))))))
 
-;; Compares lists given [compare].
+;; Compares two lists given a compare function..
 (def compare-list
   (lambda compare
     (lambda list1

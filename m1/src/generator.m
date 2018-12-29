@@ -50,7 +50,7 @@
 (def env.def (field (symbol env) (symbol def)))
 (def env.index (field (symbol env) (symbol index)))
 
-;; Gets the variable with [name] in [env].
+;; Gets the variable with a name in an environment.
 (def env.get
   (lambda env'
     (lambda name
@@ -171,7 +171,7 @@
               (env.locals env')
               (env.globals env')
               (env.def env')
-              (nat.+ one (env.index env')))
+              (nat.+ nat.1 (env.index env')))
           (lambda new-env
             (with (map (tree-map->list (closures expr new-env)) left)
             (lambda closures
@@ -182,11 +182,11 @@
                     (right
                       (fold
                         (append closures name)
-                        (pair zero (env.locals new-env))
+                        (pair nat.0 (env.locals new-env))
                         (lambda vars
                           (lambda closure
                             (pair
-                              (nat.+ one (left vars))
+                              (nat.+ nat.1 (left vars))
                               (tree-map.put
                                 (right vars)
                                 closure
@@ -385,7 +385,7 @@
 (def generate
   (lambda exprs
     (lambda out
-      (with (env exprs (empty-tree-map compare-string) internals nil zero)
+      (with (env exprs (empty-tree-map compare-string) internals () nat.0)
       (lambda env
         (with (generate' env)
         (lambda result

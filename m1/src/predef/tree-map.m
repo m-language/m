@@ -97,7 +97,7 @@
             value)
           (tree-map.compare map))))))
 
-;; Folds [node] with an accumulator [acc] and function [f].
+;; Folds a node with an accumulator and function.
 (def tree-map-node.fold
   (lambda node
     (lambda acc
@@ -110,14 +110,14 @@
             f)
           f))))))
 
-;; Folds [map] with an accumulator [acc] and function [f].
+;; Folds a map with an accumulator and function.
 (def tree-map.fold
   (lambda map
     (lambda acc
       (lambda f
         (tree-map-node.fold (tree-map.node map) acc f)))))
 
-;; Adds [map1] and [map2].
+;; Adds two maps.
 (def tree-map.+
   (lambda map1
     (lambda map2

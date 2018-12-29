@@ -35,14 +35,14 @@
   (lambda p
     (position
       (position.line p)
-      (nat.+ one (position.char p)))))
+      (nat.+ nat.1 (position.char p)))))
 
 ;; The position of the next line.
 (def next-line
   (lambda p
     (position
-      (nat.+ one (position.line p))
-      one)))
+      (nat.+ nat.1 (position.line p))
+      nat.1)))
 
 ;; The result of parsing an expression.
 (def parse-result
@@ -57,11 +57,12 @@
   (lambda input
     (lambda path
       (lambda position
-        (if (newline? (car input))
+        (if (or (nil? input)
+                (lambda "" (newline? (car input))))
           (parse-expr input path position)
           (parse-comment (cdr input) path position))))))
 
-;; Parses an M identifier literal expression given [input].
+;; Parses an M identifier literal expression given an input.
 (def parse-identifier-literal-expr
   (lambda input
     (lambda path
@@ -95,7 +96,7 @@
                     (next-char end)
                     (cons head acc)))))))))))))
 
-;; Parses an M identifier expression given [input].
+;; Parses an M identifier expression given an input.
 (def parse-identifier-expr
   (lambda input
     (lambda path
@@ -111,7 +112,7 @@
                 (next-char end)
                 (cons (car input) acc)))))))))
 
-;; Parses an M list expression given [input].
+;; Parses an M list expression given an input.
 (def parse-list-expr
   (lambda input
     (lambda path
@@ -129,7 +130,7 @@
                     (expr.end (parse-result.expr result))
                     (cons (parse-result.expr result) acc)))))))))))
 
-;; Parses an M expression given [input].
+;; Parses an M expression given an input.
 (def parse-expr
   (lambda input
     (lambda path
@@ -148,7 +149,7 @@
               (parse-expr (cdr input) path (next-char position))
               (parse-identifier-expr input path position position ()))))))))))))
 
-;; Parses an M program given [input].
+;; Parses an M program given an input.
 (def parse
   (lambda input
     (lambda path
@@ -164,7 +165,7 @@
                   (expr.end (parse-result.expr result))
                   (cons (parse-result.expr result) acc))))))))))
 
-;; Parses an M program given a [file].
+;; Parses an M program given a file.
 (def parse-file
   (lambda file
     (lambda path
@@ -193,5 +194,5 @@
                   (parse
                     chars
                     (concat path (file.name-without-extension file))
-                    (position one one)
+                    (position nat.1 nat.1)
                     ()))))))))))

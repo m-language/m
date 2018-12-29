@@ -1,7 +1,7 @@
 ;; The singleton empty list.
 (def nil ())
 
-;; Tests if a value is the empty list.
+;; Tests if a list is the empty list.
 (def nil? ())
 
 ;; Prepends an element to a list.
@@ -25,7 +25,7 @@
 ;; The fourth element in a list.
 (def cadddr (compose car (compose cdr cddr)))
 
-;; Appends [elem] to [list].
+;; Appends an element to a list.
 (def append
   (lambda list
     (lambda elem
@@ -33,7 +33,7 @@
         (cons elem list)
         (cons (car list) (append (cdr list) elem))))))
 
-;; Concatenates [list1] and [list2].
+;; Concatenates two lists.
 (def concat
   (lambda list1
     (lambda list2
@@ -41,7 +41,7 @@
         list2
         (cons (car list1) (concat (cdr list1) list2))))))
 
-;; Maps [list] with a function [f].
+;; Maps a list with a function.
 (def map
   (lambda list
     (lambda f
@@ -49,7 +49,7 @@
         nil
         (cons (f (car list)) (map (cdr list) f))))))
 
-;; Flat maps [list] with a function [f].
+;; Flat maps a list with a function.
 (def flat-map
   (lambda list
     (lambda f
@@ -57,7 +57,7 @@
         nil
         (append (f (car list)) (flat-map (cdr list) f))))))
 
-;; Folds [list] with an accumulator [acc] function [f].
+;; Folds a list with an accumulator and a function.
 (def fold
   (lambda list
     (lambda acc
@@ -76,12 +76,12 @@
           (cdr list)
           (cons (car list) acc))))))
 
-;; Reverses [list].
+;; Reverses a list.
 (def reverse
   (lambda list
     (reverse' list ())))
 
-;; Tests if [list1] and [list2] are equal given a function [f].
+;; Tests if two lists are equal are equal given its element's equality function.
 (def list.=
   (lambda f
     (lambda list1
