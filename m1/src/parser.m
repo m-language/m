@@ -24,8 +24,8 @@
 
 ;; A position in a file.
 (def position
-  (new-data* (symbol position)
-    (symbol line) (symbol char) ()))
+  (new-data (symbol position)
+    (list2 (symbol line) (symbol char))))
 
 (def position.line (field (symbol position) (symbol line)))
 (def position.char (field (symbol position) (symbol char)))
@@ -46,8 +46,8 @@
 
 ;; The result of parsing an expression.
 (def parse-result
-  (new-data* (symbol parse-result)
-    (symbol rest) (symbol expr) ()))
+  (new-data (symbol parse-result)
+    (list2 (symbol rest) (symbol expr))))
 
 (def parse-result.rest (field (symbol parse-result) (symbol rest)))
 (def parse-result.expr (field (symbol parse-result) (symbol expr)))

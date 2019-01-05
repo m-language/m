@@ -20,9 +20,9 @@
     (lambda env'
       (if (identifier-expr? expr)
         ((lambda variable
-          (if (none? variable)
+          (if (null? variable)
             (empty-tree-map compare-string)
-            (if (local-variable? (some.value variable))
+            (if (local-variable? (unnull variable))
               (tree-map.put
                 (empty-tree-map compare-string)
                 (identifier-expr.name expr)
@@ -36,13 +36,13 @@
 
 ;; The environment of a variable.
 (def env
-  (new-data* (symbol env)
-    (symbol exprs)
-    (symbol locals)
-    (symbol globals)
-    (symbol def)
-    (symbol index)
-    ()))
+  (new-data (symbol env)
+    (list5
+      (symbol exprs)
+      (symbol locals)
+      (symbol globals)
+      (symbol def)
+      (symbol index))))
 
 (def env.exprs (field (symbol env) (symbol exprs)))
 (def env.locals (field (symbol env) (symbol locals)))
@@ -55,15 +55,15 @@
   (lambda env'
     (lambda name
       (with (tree-map.get (env.locals env') name)
-        (lambda maybe
-          (if (some? maybe)
-            maybe
+        (lambda option
+          (if (some? option)
+            option
             (tree-map.get (env.globals env') name)))))))
 
 ;; The result of generating an expr.
 (def generate-result
-  (new-data* (symbol generate-result)
-    (symbol operation) (symbol declarations) (symbol env) ()))
+  (new-data (symbol generate-result)
+    (list3 (symbol operation) (symbol declarations) (symbol env))))
 
 (def generate-result.operation
   (field (symbol generate-result) (symbol operation)))
@@ -79,9 +79,9 @@
   (lambda name
     (lambda env'
       (with (env.get env' name)
-        (lambda maybe
-        (if (some? maybe)
-          (with (some.value maybe)
+        (lambda option
+        (if (some? option)
+          (with (unnull option)
           (lambda variable
             (if (global-variable? variable)
               (generate-result
@@ -97,9 +97,9 @@
                 ()
                 env'))))
           (if (nil? (env.exprs env'))
-            (error (symbol.+ (symbol "Could not find variable \"")
-                   (symbol.+ name
-                     (symbol "\""))))
+            (error (concat (symbol->list (symbol "Could not find variable \""))
+                   (concat name
+                     (symbol->list (symbol "\"")))))
             (with
               (generate-expr
                 (car (env.exprs env'))
@@ -108,7 +108,7 @@
                   (empty-tree-map compare-string)
                   (env.globals env')
                   ()
-                  (env.index env')))
+                  nat.0))
             (lambda next
               (with
                 (generate-identifier-expr
@@ -118,7 +118,7 @@
                     (env.locals env')
                     (env.globals (generate-result.env next))
                     (env.def env')
-                    (env.index (generate-result.env next))))
+                    (env.index env')))
               (lambda result
                 (generate-result
                   (combine-operation
@@ -278,7 +278,7 @@
           (generate-apply-expr
             fn
             (cons
-              (list-expr nil (expr.path fn) (expr.start fn) (expr.end fn))
+              (list-expr () (expr.path fn) (expr.start fn) (expr.end fn))
               ())
             env')
         (if (nil? (cdr args))

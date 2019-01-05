@@ -1,7 +1,7 @@
 ;; A node in a tree map.
 (def tree-map-node
-  (new-data* (symbol tree-map-node)
-    (symbol left) (symbol right) (symbol key) (symbol value) ()))
+  (new-data (symbol tree-map-node)
+    (list4 (symbol left) (symbol right) (symbol key) (symbol value))))
 
 (def tree-map-node.left (field (symbol tree-map-node) (symbol left)))
 (def tree-map-node.right (field (symbol tree-map-node) (symbol right)))
@@ -16,8 +16,8 @@
 
 ;; A tree map.
 (def tree-map
-  (new-data* (symbol tree-map)
-    (symbol node) (symbol compare) ()))
+  (new-data (symbol tree-map)
+    (list2 (symbol node) (symbol compare))))
 
 (def tree-map.node (field (symbol tree-map) (symbol node)))
 (def tree-map.compare (field (symbol tree-map) (symbol compare)))
@@ -33,7 +33,7 @@
     (lambda compare
       (lambda key
         (if (tree-map-node-nil? node)
-          none
+          null
           (fold-compare (compare key (tree-map-node.key node))
             (lambda <
               (tree-map-node.get (tree-map-node.left node) compare key))
@@ -130,7 +130,7 @@
 ;; Converts a tree map to a list.
 (def tree-map->list
   (lambda map
-    (tree-map.fold map nil
+    (tree-map.fold map ()
       (lambda list
         (lambda key
           (lambda value

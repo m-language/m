@@ -1,8 +1,16 @@
-;; The singleton truthy value, for which `(if true x y)` evaluates to x.
-(def true ())
+;;; Bool.m
+;;;
+;;; An implementation of booleans which are encoded using two argument functions
+;;; which ignore one argument.
+;;;
+;;; All definitions in this file are optimized to use the backend's native
+;;; implementation of booleans.
 
-;; The singleton falsy value, for which `(if false x y)` evaluates to y.
-(def false ())
+;; The singleton truthy value, a function which ignores its second argument.
+(def true (id const))
+
+;; The singleton falsy value, a function which ignores its first argument.
+(def false (const id))
 
 ;; True if both arguments are true.
 (def and

@@ -1,8 +1,20 @@
+;;; List.m
+;;;
+;;; An implementation of lists which are encoded using false as the empty list
+;;; and pair as the head and tail of the list.
+;;;
+;;; All definitions in this file are optimized to use the backend's native
+;;; implementation of lists.
+
 ;; The singleton empty list.
 (def nil ())
 
 ;; Tests if a list is the empty list.
-(def nil? ())
+(def nil?
+  (lambda list
+    (list
+      (const (const (const false)))
+      true)))
 
 ;; Prepends an element to a list.
 (def cons pair)
@@ -16,6 +28,9 @@
 ;; The rest of the rest of the list.
 (def cddr (compose cdr cdr))
 
+;; The rest of the rest of the rest of the list.
+(def cdddr (compose cdr cddr))
+
 ;; The second element in a list.
 (def cadr (compose car cdr))
 
@@ -23,7 +38,42 @@
 (def caddr (compose car cddr))
 
 ;; The fourth element in a list.
-(def cadddr (compose car (compose cdr cddr)))
+(def cadddr (compose car cdddr))
+
+;; Creates a list with a single element.
+(def list1
+  (lambda a
+    (cons a ())))
+
+;; Creates a list with two elements.
+(def list2
+  (lambda a
+    (lambda b
+      (cons a (list1 b)))))
+
+;; Creates a list with three elements.
+(def list3
+  (lambda a
+    (lambda b
+      (lambda c
+        (cons a (list2 b c))))))
+
+;; Creates a list with four elements.
+(def list4
+  (lambda a
+    (lambda b
+      (lambda c
+        (lambda d
+          (cons a (list3 b c d)))))))
+
+;; Creates a list with five elements.
+(def list5
+  (lambda a
+    (lambda b
+      (lambda c
+        (lambda d
+          (lambda e
+            (cons a (list4 b c d e))))))))
 
 ;; Appends an element to a list.
 (def append
@@ -46,7 +96,7 @@
   (lambda list
     (lambda f
       (if (nil? list)
-        nil
+        ()
         (cons (f (car list)) (map (cdr list) f))))))
 
 ;; Flat maps a list with a function.
@@ -54,7 +104,7 @@
   (lambda list
     (lambda f
       (if (nil? list)
-        nil
+        ()
         (append (f (car list)) (flat-map (cdr list) f))))))
 
 ;; Folds a list with an accumulator and a function.

@@ -1,6 +1,9 @@
+;;; Function.m
+;;;
+;;; Various higher order functions which have no external dependencies.
+
 ;; The identity function.
-(def id
-  (lambda x x))
+(def id (lambda x x))
 
 ;; A function which always returns the same result.
 (def const
@@ -27,5 +30,5 @@
     (lambda x
       (f x))))
 
-;; The inverse of [apply].
+;; The inverse of apply.
 (def with (swap apply))
