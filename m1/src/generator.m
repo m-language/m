@@ -223,7 +223,10 @@
     (lambda expr
       (lambda env'
         (if (some? (env.get env' name))
-          (generate-identifier-expr name env')
+          (if (some? (tree-map.get internals name))
+            (generate-identifier-expr name env')
+            (error (concat name
+                   (symbol->list (symbol " has already been defined")))))
           (with
             (env
               (env.exprs env')
