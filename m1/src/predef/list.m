@@ -9,13 +9,6 @@
 ;; The singleton empty list.
 (def nil ())
 
-;; Tests if a list is the empty list.
-(def nil?
-  (lambda list
-    (list
-      (const (const (const false)))
-      true)))
-
 ;; Prepends an element to a list.
 (def cons pair)
 
@@ -39,6 +32,13 @@
 
 ;; The fourth element in a list.
 (def cadddr (compose car cdddr))
+
+;; Tests if a list is the empty list.
+(def nil?
+  (lambda list
+    (list
+      (const (const (const false)))
+      true)))
 
 ;; Creates a list with a single element.
 (def list1

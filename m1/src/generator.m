@@ -266,6 +266,17 @@
                   (env.def new-env)
                   (env.index (generate-result.env result)))))))))))))
 
+;; Generates a do expression.
+(def generate-do-expr
+  (lambda expr
+    (lambda env'
+      (with (generate-expr expr env')
+      (lambda result
+        (generate-result
+          (do-operation (generate-result.operation result))
+          (generate-result.declarations result)
+          (generate-result.env result)))))))
+
 ;; Generates a symbol expression.
 (def generate-symbol-expr
   (lambda name
@@ -330,6 +341,10 @@
                 (identifier-expr.name (cadr exprs))
                 (caddr exprs)
                 env')
+            (if (list.= char.= name (symbol->list (symbol do)))
+              (generate-do-expr
+                (cadr exprs)
+                env')
             (if (list.= char.= name (symbol->list (symbol symbol)))
               (generate-symbol-expr
                 (identifier-expr.name (cadr exprs))
@@ -337,7 +352,7 @@
               (generate-apply-expr
                 (car exprs)
                 (cdr exprs)
-                env'))))))
+                env')))))))
           (if (identifier-expr? (car exprs))
             (identifier-expr.name (car exprs))
             ()))))

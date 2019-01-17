@@ -23,6 +23,11 @@
   (new-data (symbol lambda-operation)
     (list3 (symbol path) (symbol name) (symbol closures))))
 
+;; A do operation
+(def do-operation
+  (new-data (symbol do-operation)
+    (list1 (symbol operation))))
+
 ;; A symbol operation.
 (def symbol-operation
   (new-data (symbol symbol-operation)
