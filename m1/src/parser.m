@@ -175,7 +175,7 @@
             (if directory?
               (then-run-with (file.child-files file)
                 (lambda child-files
-                  (fold child-files (function->process (lambda "" ()))
+                  (fold child-files (return ())
                     (lambda acc
                       (lambda child
                         (then-run-with
