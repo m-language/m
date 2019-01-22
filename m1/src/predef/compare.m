@@ -28,7 +28,7 @@
               (> compare)
               (= compare))))))))
 
-;; Compares two lists given a compare function..
+;; Compares two lists given a compare function.
 (def compare-list
   (lambda compare
     (lambda list1
@@ -62,5 +62,5 @@
     (lambda char2
       (compare-nat (char->nat char1) (char->nat char2)))))
 
-;; Compare strings.
-(def compare-string (compare-list compare-char))
+;; Compares symbols.
+(def compare-symbol (compare-list compare-char))

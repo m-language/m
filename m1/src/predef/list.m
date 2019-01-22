@@ -80,7 +80,7 @@
   (lambda list
     (lambda elem
       (if (nil? list)
-        (cons elem list)
+        (list1 elem)
         (cons (car list) (append (cdr list) elem))))))
 
 ;; Concatenates two lists.
@@ -90,6 +90,14 @@
       (if (nil? list1)
         list2
         (cons (car list1) (concat (cdr list1) list2))))))
+
+;; Gets the nth element of a list.
+(def get
+  (lambda list
+    (lambda n
+      (if (nat.0? n)
+        (car list)
+        (get (cdr list) (nat.dec n))))))
 
 ;; Maps a list with a function.
 (def map

@@ -1,18 +1,26 @@
 ;; Mangles the name of a lambda given an index.
 (def mangle-lambda-name ())
 
-;; Generates a program.
-(def generate-program ())
-
 ;; List containing all internal variables.
 (def internal-variables ())
 
 ;; Map of internal variables.
 (def internals
-  (fold internal-variables (empty-tree-map compare-string)
+  (fold internal-variables (empty-tree-map compare-symbol)
     (lambda map
       (lambda variable
         (tree-map.put map (left variable) (right variable))))))
+
+;; The default M environment.
+(def default-env
+  (lambda exprs
+    (lambda internals'
+      (env
+        exprs
+        (empty-tree-map compare-symbol)
+        internals'
+        ()
+        nat.0))))
 
 ;; A set of closures in an expression.
 (def closures
@@ -21,15 +29,15 @@
       (if (identifier-expr? expr)
         ((lambda variable
           (if (null? variable)
-            (empty-tree-map compare-string)
+            (empty-tree-map compare-symbol)
             (if (local-variable? (unnull variable))
               (tree-map.put
-                (empty-tree-map compare-string)
+                (empty-tree-map compare-symbol)
                 (identifier-expr.name expr)
                 true)
-              (empty-tree-map compare-string))))
+              (empty-tree-map compare-symbol))))
         (env.get env' (identifier-expr.name expr)))
-        (fold (list-expr.exprs expr) (empty-tree-map compare-string)
+        (fold (list-expr.exprs expr) (empty-tree-map compare-symbol)
           (lambda map
             (lambda expr
               (tree-map.+ map (closures expr env')))))))))
@@ -105,7 +113,7 @@
                 (car (env.exprs env'))
                 (env
                   (cdr (env.exprs env'))
-                  (empty-tree-map compare-string)
+                  (empty-tree-map compare-symbol)
                   (env.globals env')
                   ()
                   nat.0))
@@ -203,13 +211,13 @@
                       (lambda closure
                         (generate-result.operation
                           (generate-identifier-expr closure new-env)))))
-                  (cons
+                  (append
+                    (generate-result.declarations result)
                     (lambda-declaration
                       mangled-name
                       (expr.path expr)
                       closures
-                      (generate-result.operation result))
-                    (generate-result.declarations result))
+                      (generate-result.operation result)))
                   (env
                     (env.exprs (generate-result.env result))
                     (env.locals new-env)
@@ -253,12 +261,12 @@
                   name
                   (expr.path expr)
                   (generate-result.operation result))
-                (cons
+                (append
+                  (generate-result.declarations result)
                   (def-declaration
                     name
                     (expr.path expr)
-                    (generate-result.operation result))
-                  (generate-result.declarations result))
+                    (generate-result.operation result)))
                 (env
                   (env.exprs (generate-result.env result))
                   (env.locals (generate-result.env result))
@@ -276,6 +284,13 @@
           (do-operation (generate-result.operation result))
           (generate-result.declarations result)
           (generate-result.env result)))))))
+
+;; Generates a macro expression.
+(def generate-macro-expr
+  (lambda name
+    (lambda expr
+      (lambda env'
+        (error (symbol "TODO macros"))))))
 
 ;; Generates a symbol expression.
 (def generate-symbol-expr
@@ -345,6 +360,11 @@
               (generate-do-expr
                 (cadr exprs)
                 env')
+            (if (list.= char.= name (symbol->list (symbol macro)))
+              (generate-macro-expr
+                (cadr exprs)
+                (cddr exprs)
+                env')
             (if (list.= char.= name (symbol->list (symbol symbol)))
               (generate-symbol-expr
                 (identifier-expr.name (cadr exprs))
@@ -352,7 +372,7 @@
               (generate-apply-expr
                 (car exprs)
                 (cdr exprs)
-                env')))))))
+                env'))))))))
           (if (identifier-expr? (car exprs))
             (identifier-expr.name (car exprs))
             ()))))
@@ -374,7 +394,7 @@
         (generate-list-expr expr env'))))))
 
 ;; Generates an M environment.
-(def generate'
+(def generate-env
   (lambda env'
     (if (nil? (env.exprs env'))
       (generate-result nil-operation () env')
@@ -388,7 +408,7 @@
             (env.def env')
             (env.index env')))
       (lambda car-result
-        (with (generate' (generate-result.env car-result))
+        (with (generate-env (generate-result.env car-result))
         (lambda cdr-result
           (generate-result
             (combine-operation
@@ -398,16 +418,3 @@
               (generate-result.declarations car-result)
               (generate-result.declarations cdr-result))
             (generate-result.env cdr-result)))))))))
-
-;; Generates M.
-(def generate
-  (lambda exprs
-    (lambda out
-      (with (env exprs (empty-tree-map compare-string) internals () nat.0)
-      (lambda env
-        (with (generate' env)
-        (lambda result
-          (generate-program
-            out
-            (generate-result.operation result)
-            (generate-result.declarations result)))))))))
