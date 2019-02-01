@@ -6,7 +6,7 @@
     (lambda char
       (ostream char))))
 
-;; Writes a character of chars to an ostream.
+;; Writes a list of chars to an ostream.
 (def ostream.[write]
   (lambda ostream
     (lambda list
@@ -21,7 +21,7 @@
   (lambda ostream
     (ostream.write ostream linefeed)))
 
-;; Writes a line to an ostream
+;; Writes a line to an ostream.
 (def ostream.writeln
   (lambda ostream
     (lambda line

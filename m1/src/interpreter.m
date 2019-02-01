@@ -47,7 +47,7 @@
           (if (null? value)
             (error (concat (symbol->list (symbol "Could not find value "))
                            (global-variable-operation.name operation)))
-            (unnull value))))))))
+            ((unnull value) heap))))))))
 
 ;; Interprets an if operation.
 (def interpret-if-operation
@@ -164,10 +164,11 @@
     (lambda heap
       (tree-map.put heap
         (def-declaration.name declaration)
-        (interpret-operation
-          (def-declaration.value declaration)
-          ()
-          heap)))))
+        (lambda heap'
+          (interpret-operation
+            (def-declaration.value declaration)
+            ()
+            heap'))))))
 
 ;; Interprets a lambda declaration.
 (def interpret-lambda-declaration

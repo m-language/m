@@ -9,7 +9,7 @@
 (def then-run-with
   (lambda p
     (lambda f
-      ((do p) id f))))
+      (p f))))
 
 ;; Combines two processes, running them one after another.
 (def then-run

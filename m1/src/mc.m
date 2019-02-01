@@ -14,11 +14,7 @@
               (repl
                 (generate-result.env result)
                 (interpret-declarations
-                  (map (generate-result.declarations result)
-                    (lambda decl
-                      (if (is? (symbol def-declaration) decl)
-                         (const decl (debug (def-declaration.name decl)))
-                         decl)))
+                  (generate-result.declarations result)
                   default-heap))))
             (with (file.child file.local-file (cadr args))
             (lambda out

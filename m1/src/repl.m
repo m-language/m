@@ -24,9 +24,11 @@
                   heap)
               (lambda new-heap
                 (with
-                  (debug (interpret-operation
+                  (interpret-operation
                     (generate-result.operation result)
                     ()
-                    new-heap))
-                  (lambda value
-                    (repl (generate-result.env result) new-heap)))))))))))))))
+                    new-heap)
+                (lambda value
+                  (then-run
+                    (ostream.writeln stdout (symbol "<function>"))
+                    (repl (generate-result.env result) new-heap))))))))))))))))
