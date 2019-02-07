@@ -7,16 +7,16 @@
 ;;; implementation of null.
 
 ;; A container for a value.
-(def some (pair true))
+(def some (ap pair true))
 
 ;; The singleton null value.
-(def null (pair false ()))
+(def null (ap pair false ()))
 
 ;; Tests if an option has a value.
 (def some? first)
 
 ;; Tests if an option is null.
-(def null? (compose not first))
+(def null? (ap compose not first))
 
 ;; The value of an option, or `()` if it is null.
 (def unnull second)

@@ -2,15 +2,15 @@
 
 ;; Reads a character from an istream.
 (def istream.read
-  (lambda istream istream))
+  (fn istream istream))
 
 ;; Reads a line from an istream.
 (def istream.readline
-  (lambda istream
-    (then-run-with istream
-    (lambda char
-      (if (newline? char)
-        (do ())
-        (run-with (istream.readline istream)
-        (lambda line
-          (cons char line))))))))
+  (fn istream
+    (ap then-run-with istream
+    (fn char
+      (if (ap newline? char)
+        (impure ())
+        (ap run-with (ap istream.readline istream)
+        (fn line
+          (ap cons char line))))))))

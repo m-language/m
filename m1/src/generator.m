@@ -1,52 +1,52 @@
-;; Mangles the name of a lambda given an index.
-(def mangle-lambda-name ())
+;; Mangles the name of a function given an index.
+(def mangle-fn-name ())
 
 ;; List containing all internal variables.
 (def internal-variables ())
 
 ;; Map of internal variables.
 (def internals
-  (fold internal-variables (empty-tree-map compare-symbol)
-    (lambda map
-      (lambda variable
-        (tree-map.put map (first variable) (second variable))))))
+  (ap fold internal-variables (ap empty-tree-map compare-symbol)
+    (fn map
+      (fn variable
+        (ap tree-map.put map (ap first variable) (ap second variable))))))
 
 ;; The default M environment.
 (def default-env
-  (lambda exprs
-    (lambda internals'
-      (env
+  (fn exprs
+    (fn internals'
+      (ap env
         exprs
-        (empty-tree-map compare-symbol)
+        (ap empty-tree-map compare-symbol)
         internals'
-        (empty-tree-map compare-symbol)
+        (ap empty-tree-map compare-symbol)
         ()
         nat.0))))
 
 ;; A set of closures in an expression.
 (def closures
-  (lambda expr
-    (lambda env'
-      (if (identifier-expr? expr)
-        ((lambda variable
-          (if (null? variable)
-            (empty-tree-map compare-symbol)
-            (if (local-variable? (unnull variable))
-              (tree-map.put
-                (empty-tree-map compare-symbol)
-                (identifier-expr.name expr)
+  (fn expr
+    (fn env'
+      (if (ap identifier-expr? expr)
+        (ap (fn variable
+          (if (ap null? variable)
+            (ap empty-tree-map compare-symbol)
+            (if (ap local-variable? (ap unnull variable))
+              (ap tree-map.put
+                (ap empty-tree-map compare-symbol)
+                (ap identifier-expr.name expr)
                 true)
-              (empty-tree-map compare-symbol))))
-        (env.get env' (identifier-expr.name expr)))
-        (fold (list-expr.exprs expr) (empty-tree-map compare-symbol)
-          (lambda map
-            (lambda expr
-              (tree-map.+ map (closures expr env')))))))))
+              (ap empty-tree-map compare-symbol))))
+        (ap env.get env' (ap identifier-expr.name expr)))
+        (ap fold (ap list-expr.exprs expr) (ap empty-tree-map compare-symbol)
+          (fn map
+            (fn expr
+              (ap tree-map.+ map (ap closures expr env')))))))))
 
 ;; The environment of a variable.
 (def env
-  (new-data (symbol env)
-    (list6
+  (ap new-data (symbol env)
+    (ap list6
       (symbol exprs)
       (symbol locals)
       (symbol globals)
@@ -54,404 +54,408 @@
       (symbol def)
       (symbol index))))
 
-(def env.exprs (field (symbol env) (symbol exprs)))
-(def env.locals (field (symbol env) (symbol locals)))
-(def env.globals (field (symbol env) (symbol globals)))
-(def env.heap (field (symbol env) (symbol heap)))
-(def env.def (field (symbol env) (symbol def)))
-(def env.index (field (symbol env) (symbol index)))
+(def env.exprs (ap field (symbol env) (symbol exprs)))
+(def env.locals (ap field (symbol env) (symbol locals)))
+(def env.globals (ap field (symbol env) (symbol globals)))
+(def env.heap (ap field (symbol env) (symbol heap)))
+(def env.def (ap field (symbol env) (symbol def)))
+(def env.index (ap field (symbol env) (symbol index)))
 
 ;; Gets the variable with a name in an environment.
 (def env.get
-  (lambda env'
-    (lambda name
-      (with (tree-map.get (env.locals env') name)
-        (lambda option
-          (if (some? option)
+  (fn env'
+    (fn name
+      (ap with (ap tree-map.get (ap env.locals env') name)
+        (fn option
+          (if (ap some? option)
             option
-            (tree-map.get (env.globals env') name)))))))
+            (ap tree-map.get (ap env.globals env') name)))))))
 
 ;; The result of generating an expr.
 (def generate-result
-  (new-data (symbol generate-result)
-    (list3 (symbol operation) (symbol declarations) (symbol env))))
+  (ap new-data (symbol generate-result)
+    (ap list3 (symbol operation) (symbol declarations) (symbol env))))
 
 (def generate-result.operation
-  (field (symbol generate-result) (symbol operation)))
+  (ap field (symbol generate-result) (symbol operation)))
 
 (def generate-result.declarations
-  (field (symbol generate-result) (symbol declarations)))
+  (ap field (symbol generate-result) (symbol declarations)))
 
 (def generate-result.env
-  (field (symbol generate-result) (symbol env)))
+  (ap field (symbol generate-result) (symbol env)))
 
 ;; Generates an identifier expression.
 (def generate-identifier-expr
-  (lambda name
-    (lambda env'
-      (with (env.get env' name)
-        (lambda option
-        (if (some? option)
-          (with (unnull option)
-          (lambda variable
-            (if (global-variable? variable)
-              (generate-result
-                (global-variable-operation
-                  (global-variable.name variable)
-                  (global-variable.path variable))
+  (fn name
+    (fn env'
+      (ap with (ap env.get env' name)
+        (fn option
+        (if (ap some? option)
+          (ap with (ap unnull option)
+          (fn variable
+            (if (ap global-variable? variable)
+              (ap generate-result
+                (ap global-variable-operation
+                  (ap global-variable.name variable)
+                  (ap global-variable.path variable))
                 ()
                 env')
-              (generate-result
-                (local-variable-operation
-                  (local-variable.name variable)
-                  (local-variable.index variable))
+              (ap generate-result
+                (ap local-variable-operation
+                  (ap local-variable.name variable)
+                  (ap local-variable.index variable))
                 ()
                 env'))))
-          (if (nil? (env.exprs env'))
-            (error (concat (symbol->list (symbol "Could not find variable \""))
-                   (concat name
-                     (symbol->list (symbol "\"")))))
-            (with
-              (generate-expr
-                (car (env.exprs env'))
-                (env
-                  (cdr (env.exprs env'))
-                  (empty-tree-map compare-symbol)
-                  (env.globals env')
-                  (env.heap env')
+          (if (ap nil? (ap env.exprs env'))
+            (ap error (ap concat (ap symbol->list (symbol "Could not find variable \""))
+                      (ap concat name
+                        (ap symbol->list (symbol "\"")))))
+            (ap with
+              (ap generate-expr
+                (ap car (ap env.exprs env'))
+                (ap env
+                  (ap cdr (ap env.exprs env'))
+                  (ap empty-tree-map compare-symbol)
+                  (ap env.globals env')
+                  (ap env.heap env')
                   ()
                   nat.0))
-            (lambda next
-              (with
-                (generate-identifier-expr
+            (fn next
+              (ap with
+                (ap generate-identifier-expr
                   name
-                  (env
-                    (env.exprs (generate-result.env next))
-                    (env.locals env')
-                    (env.globals (generate-result.env next))
-                    (env.heap env')
-                    (env.def env')
-                    (env.index env')))
-              (lambda result
-                (generate-result
-                  (combine-operation
-                    (generate-result.operation next)
-                    (generate-result.operation result))
-                  (concat
-                    (generate-result.declarations next)
-                    (generate-result.declarations result))
-                  (generate-result.env result)))))))))))))
+                  (ap env
+                    (ap env.exprs (ap generate-result.env next))
+                    (ap env.locals env')
+                    (ap env.globals (ap generate-result.env next))
+                    (ap env.heap env')
+                    (ap env.def env')
+                    (ap env.index env')))
+              (fn result
+                (ap generate-result
+                  (ap combine-operation
+                    (ap generate-result.operation next)
+                    (ap generate-result.operation result))
+                  (ap concat
+                    (ap generate-result.declarations next)
+                    (ap generate-result.declarations result))
+                  (ap generate-result.env result)))))))))))))
 
 ;; Generates a nil expression.
 (def generate-nil
-  (lambda env'
-    (generate-result nil-operation () env')))
+  (fn env'
+    (ap generate-result nil-operation () env')))
 
 ;; Generates an if expression.
 (def generate-if-expr
-  (lambda cond-expr
-    (lambda true-expr
-      (lambda false-expr
-        (lambda env'
-          ((lambda cond-result
-            ((lambda true-result
-              ((lambda false-result
-                (generate-result
-                  (if-operation
-                    (generate-result.operation cond-result)
-                    (generate-result.operation true-result)
-                    (generate-result.operation false-result))
-                  (concat
-                    (generate-result.declarations cond-result)
-                    (concat
-                      (generate-result.declarations true-result)
-                      (generate-result.declarations false-result)))
-                  (generate-result.env false-result)))
-              (generate-expr false-expr (generate-result.env true-result))))
-            (generate-expr true-expr (generate-result.env cond-result))))
-          (generate-expr cond-expr env')))))))
+  (fn cond-expr
+    (fn true-expr
+      (fn false-expr
+        (fn env'
+          (ap (fn cond-result
+            (ap (fn true-result
+              (ap (fn false-result
+                (ap generate-result
+                  (ap if-operation
+                    (ap generate-result.operation cond-result)
+                    (ap generate-result.operation true-result)
+                    (ap generate-result.operation false-result))
+                  (ap concat
+                    (ap generate-result.declarations cond-result)
+                    (ap concat
+                      (ap generate-result.declarations true-result)
+                      (ap generate-result.declarations false-result)))
+                  (ap generate-result.env false-result)))
+              (ap generate-expr false-expr (ap generate-result.env true-result))))
+            (ap generate-expr true-expr (ap generate-result.env cond-result))))
+          (ap generate-expr cond-expr env')))))))
 
-;; Generates a lambda expression.
-(def generate-lambda-expr
-  (lambda name
-    (lambda expr
-      (lambda env'
-        (with (mangle-lambda-name (env.def env') (env.index env'))
-        (lambda mangled-name
-          (with
-            (env
-              (env.exprs env')
-              (env.locals env')
-              (env.globals env')
-              (env.heap env')
-              (env.def env')
-              (nat.+ nat.1 (env.index env')))
-          (lambda new-env
-            (with (map (tree-map->list (closures expr new-env)) first)
-            (lambda closures
-              (with
-                (generate-expr expr
-                  (env
-                    (env.exprs new-env)
-                    (second
-                      (fold
-                        (append closures name)
-                        (pair nat.0 (env.locals new-env))
-                        (lambda vars
-                          (lambda closure
-                            (pair
-                              (nat.+ nat.1 (first vars))
-                              (tree-map.put
-                                (second vars)
+;; Generates a fn expression.
+(def generate-fn-expr
+  (fn name
+    (fn expr
+      (fn env'
+        (ap with (ap mangle-fn-name (ap env.def env') (ap env.index env'))
+        (fn mangled-name
+          (ap with
+            (ap env
+              (ap env.exprs env')
+              (ap env.locals env')
+              (ap env.globals env')
+              (ap env.heap env')
+              (ap env.def env')
+              (ap nat.+ nat.1 (ap env.index env')))
+          (fn new-env
+            (ap with (ap map (ap tree-map->list (ap closures expr new-env)) first)
+            (fn closures
+              (ap with
+                (ap generate-expr expr
+                  (ap env
+                    (ap env.exprs new-env)
+                    (ap second
+                      (ap fold
+                        (ap append closures name)
+                        (ap pair nat.0 (ap env.locals new-env))
+                        (fn vars
+                          (fn closure
+                            (ap pair
+                              (ap nat.+ nat.1 (ap first vars))
+                              (ap tree-map.put
+                                (ap second vars)
                                 closure
-                                (local-variable closure (first vars))))))))
-                    (env.globals new-env)
-                    (env.heap new-env)
+                                (ap local-variable closure (ap first vars))))))))
+                    (ap env.globals new-env)
+                    (ap env.heap new-env)
                     mangled-name
-                    (env.index new-env)))
-              (lambda result
-                (with
-                  (lambda-declaration
+                    (ap env.index new-env)))
+              (fn result
+                (ap with
+                  (ap fn-declaration
                     mangled-name
-                    (expr.path expr)
+                    (ap expr.path expr)
                     closures
-                    (generate-result.operation result))
-                (lambda declaration
-                  (generate-result
-                    (lambda-operation
-                      (expr.path expr)
+                    (ap generate-result.operation result))
+                (fn declaration
+                  (ap generate-result
+                    (ap fn-operation
+                      (ap expr.path expr)
                         mangled-name
-                        (map closures
-                        (lambda closure
-                          (generate-result.operation
-                            (generate-identifier-expr closure new-env)))))
-                    (append (generate-result.declarations result) declaration)
-                    (env
-                      (env.exprs (generate-result.env result))
-                      (env.locals new-env)
-                      (env.globals (generate-result.env result))
-                      (interpret-lambda-declaration declaration
-                        (env.heap (generate-result.env result)))
-                      (env.def new-env)
-                      (env.index new-env)))))))))))))))))
+                        (ap map closures
+                        (fn closure
+                          (ap generate-result.operation
+                            (ap generate-identifier-expr closure new-env)))))
+                    (ap append (ap generate-result.declarations result) declaration)
+                    (ap env
+                      (ap env.exprs (ap generate-result.env result))
+                      (ap env.locals new-env)
+                      (ap env.globals (ap generate-result.env result))
+                      (ap interpret-fn-declaration declaration
+                        (ap env.heap (ap generate-result.env result)))
+                      (ap env.def new-env)
+                      (ap env.index new-env)))))))))))))))))
 
 ;; Generates a def expression.
 (def generate-def-expr
-  (lambda name
-    (lambda expr
-      (lambda env'
-        (if (some? (env.get env' name))
-          (if (some? (tree-map.get internals name))
-            (generate-identifier-expr name env')
-            (error (concat name
-                   (symbol->list (symbol " has already been defined")))))
-          (with
-            (env
-              (env.exprs env')
-              (env.locals env')
-              (tree-map.put
-                (env.globals env')
+  (fn name
+    (fn expr
+      (fn env'
+        (if (ap some? (ap env.get env' name))
+          (if (ap some? (ap tree-map.get internals name))
+            (ap generate-identifier-expr name env')
+            (ap error (ap concat name
+                      (ap symbol->list (symbol " has already been defined")))))
+          (ap with
+            (ap env
+              (ap env.exprs env')
+              (ap env.locals env')
+              (ap tree-map.put
+                (ap env.globals env')
                 name
-                (global-variable name (expr.path expr)))
-              (env.heap env')
-              (env.def env')
-              (env.index env'))
-          (lambda new-env
-            (with
-              (generate-expr
+                (ap global-variable name (ap expr.path expr)))
+              (ap env.heap env')
+              (ap env.def env')
+              (ap env.index env'))
+          (fn new-env
+            (ap with
+              (ap generate-expr
                 expr
-                (env
-                  (env.exprs new-env)
-                  (env.locals new-env)
-                  (env.globals new-env)
-                  (env.heap new-env)
+                (ap env
+                  (ap env.exprs new-env)
+                  (ap env.locals new-env)
+                  (ap env.globals new-env)
+                  (ap env.heap new-env)
                   name
-                  (env.index new-env)))
-            (lambda result
-              (with
-                (def-declaration
+                  (ap env.index new-env)))
+            (fn result
+              (ap with
+                (ap def-declaration
                   name
-                  (expr.path expr)
-                  (generate-result.operation result))
-              (lambda declaration
-                (generate-result
-                  (def-operation
+                  (ap expr.path expr)
+                  (ap generate-result.operation result))
+              (fn declaration
+                (ap generate-result
+                  (ap def-operation
                     name
-                    (expr.path expr)
-                    (generate-result.operation result))
-                  (append (generate-result.declarations result) declaration)
-                  (env
-                    (env.exprs (generate-result.env result))
-                    (env.locals (generate-result.env result))
-                    (env.globals (generate-result.env result))
-                    (interpret-def-declaration declaration
-                      (env.heap (generate-result.env result)))
-                    (env.def new-env)
-                    (env.index (generate-result.env result)))))))))))))))
+                    (ap expr.path expr)
+                    (ap generate-result.operation result))
+                  (ap append (ap generate-result.declarations result) declaration)
+                  (ap env
+                    (ap env.exprs (ap generate-result.env result))
+                    (ap env.locals (ap generate-result.env result))
+                    (ap env.globals (ap generate-result.env result))
+                    (ap interpret-def-declaration declaration
+                      (ap env.heap (ap generate-result.env result)))
+                    (ap env.def new-env)
+                    (ap env.index (ap generate-result.env result)))))))))))))))
 
-;; Generates a do expression.
-(def generate-do-expr
-  (lambda expr
-    (lambda env'
-      (with (generate-expr expr env')
-      (lambda result
-        (generate-result
-          (do-operation (generate-result.operation result))
-          (generate-result.declarations result)
-          (generate-result.env result)))))))
+;; Generates a impure expression.
+(def generate-impure-expr
+  (fn expr
+    (fn env'
+      (ap with (ap generate-expr expr env')
+      (fn result
+        (ap generate-result
+          (ap impure-operation (ap generate-result.operation result))
+          (ap generate-result.declarations result)
+          (ap generate-result.env result)))))))
 
 ;; Generates a macro expression.
 (def generate-macro-expr
-  (lambda macro
-    (lambda exprs
-      (lambda env'
-        (with (generate-expr macro env')
-        (lambda result
-          (with
-            (interpret-declarations
-              (generate-result.declarations result)
-              (env.heap env'))
-          (lambda new-heap
-            (with
-              (interpret-operation
-                (generate-result.operation result)
+  (fn macro
+    (fn exprs
+      (fn env'
+        (ap with (ap generate-expr macro env')
+        (fn result
+          (ap with
+            (ap interpret-declarations
+              (ap generate-result.declarations result)
+              (ap env.heap env'))
+          (fn new-heap
+            (ap with
+              (ap interpret-operation
+                (ap generate-result.operation result)
                 ()
                 new-heap)
-            (lambda fn
-              (generate-expr
-                (list->expr (right (fn (map exprs expr->list))))
-                (env
-                  (env.exprs (generate-result.env result))
-                  (env.locals env')
-                  (env.globals (generate-result.env result))
+            (fn fn
+              (ap generate-expr
+                (ap list->expr (ap right (ap fn (ap map exprs expr->list))))
+                (ap env
+                  (ap env.exprs (ap generate-result.env result))
+                  (ap env.locals env')
+                  (ap env.globals (ap generate-result.env result))
                   new-heap
-                  (env.index env')
-                  (env.def env')))))))))))))
+                  (ap env.index env')
+                  (ap env.def env')))))))))))))
 
 ;; Generates a symbol expression.
 (def generate-symbol-expr
-  (lambda name
-    (lambda env'
-      (generate-result (symbol-operation name) () env'))))
+  (fn name
+    (fn env'
+      (ap generate-result (ap symbol-operation name) () env'))))
 
 ;; Generates an apply expression.
 (def generate-apply-expr
-  (lambda fn
-    (lambda args
-      (lambda env'
-        (if (nil? args)
-          (generate-apply-expr
+  (fn fn
+    (fn args
+      (fn env'
+        (if (ap nil? args)
+          (ap generate-apply-expr
             fn
-            (cons
-              (list-expr () (expr.path fn) (expr.start fn) (expr.end fn))
+            (ap cons
+              (ap list-expr () (ap expr.path fn) (ap expr.start fn) (ap expr.end fn))
               ())
             env')
-        (if (nil? (cdr args))
-          ((lambda fn-result
-            ((lambda arg-result
-              (generate-result
-                (apply-operation
-                  (generate-result.operation fn-result)
-                  (generate-result.operation arg-result))
-                (concat
-                  (generate-result.declarations fn-result)
-                  (generate-result.declarations arg-result))
-                (generate-result.env arg-result)))
-            (generate-expr (car args) (generate-result.env fn-result))))
-          (generate-expr fn env'))
-          (generate-apply-expr
-            (list-expr
-              (cons fn (cons (car args) ()))
-              (expr.path fn)
-              (expr.start fn)
-              (expr.end fn))
-            (cdr args)
+        (if (ap nil? (ap cdr args))
+          (ap (fn fn-result
+            (ap (fn arg-result
+              (ap generate-result
+                (ap apply-operation
+                  (ap generate-result.operation fn-result)
+                  (ap generate-result.operation arg-result))
+                (ap concat
+                  (ap generate-result.declarations fn-result)
+                  (ap generate-result.declarations arg-result))
+                (ap generate-result.env arg-result)))
+            (ap generate-expr (ap car args) (ap generate-result.env fn-result))))
+          (ap generate-expr fn env'))
+          (ap generate-apply-expr
+            (ap list-expr
+              (ap list3
+                (ap identifier-expr (symbol "ap") (ap expr.path fn)
+                  (ap expr.start fn) (ap expr.end fn))
+                fn
+                (ap car args))
+              (ap expr.path fn)
+              (ap expr.start fn)
+              (ap expr.end fn))
+            (ap cdr args)
             env')))))))
 
 ;; Generates a list expression.
 (def generate-list-expr
-  (lambda expr
-    (lambda env'
-      ((lambda exprs
-        (if (nil? exprs)
-          (generate-nil env')
-          ((lambda name
-            (if (list.= char.= name (symbol->list (symbol if)))
-              (generate-if-expr
-                (cadr exprs)
-                (caddr exprs)
-                (cadddr exprs)
+  (fn expr
+    (fn env'
+      (ap (fn exprs
+        (if (ap nil? exprs)
+          (ap generate-nil env')
+          (ap (fn name
+            (if (ap list.= char.= name (ap symbol->list (symbol if)))
+              (ap generate-if-expr
+                (ap cadr exprs)
+                (ap caddr exprs)
+                (ap cadddr exprs)
                 env')
-            (if (list.= char.= name (symbol->list (symbol lambda)))
-              (generate-lambda-expr
-                (identifier-expr.name (cadr exprs))
-                (caddr exprs)
+            (if (ap list.= char.= name (ap symbol->list (symbol fn)))
+              (ap generate-fn-expr
+                (ap identifier-expr.name (ap cadr exprs))
+                (ap caddr exprs)
                 env')
-            (if (list.= char.= name (symbol->list (symbol def)))
-              (generate-def-expr
-                (identifier-expr.name (cadr exprs))
-                (caddr exprs)
+            (if (ap list.= char.= name (ap symbol->list (symbol def)))
+              (ap generate-def-expr
+                (ap identifier-expr.name (ap cadr exprs))
+                (ap caddr exprs)
                 env')
-            (if (list.= char.= name (symbol->list (symbol do)))
-              (generate-do-expr
-                (cadr exprs)
+            (if (ap list.= char.= name (ap symbol->list (symbol impure)))
+              (ap generate-impure-expr
+                (ap cadr exprs)
                 env')
-            (if (list.= char.= name (symbol->list (symbol macro)))
-              (generate-macro-expr
-                (cadr exprs)
-                (cddr exprs)
+            (if (ap list.= char.= name (ap symbol->list (symbol ap)))
+              (ap generate-apply-expr
+                (ap cadr exprs)
+                (ap cddr exprs)
                 env')
-            (if (list.= char.= name (symbol->list (symbol symbol)))
-              (generate-symbol-expr
-                (identifier-expr.name (cadr exprs))
+            (if (ap list.= char.= name (ap symbol->list (symbol symbol)))
+              (ap generate-symbol-expr
+                (ap identifier-expr.name (ap cadr exprs))
                 env')
-              (generate-apply-expr
-                (car exprs)
-                (cdr exprs)
+              (ap generate-macro-expr
+                (ap car exprs)
+                (ap cdr exprs)
                 env'))))))))
-          (if (identifier-expr? (car exprs))
-            (identifier-expr.name (car exprs))
+          (if (ap identifier-expr? (ap car exprs))
+            (ap identifier-expr.name (ap car exprs))
             ()))))
-      (list-expr.exprs expr)))))
+      (ap list-expr.exprs expr)))))
 
 ;; Generates a single expression.
 (def generate-expr
-  (lambda expr
-    (lambda env'
-      ((lambda expr-result
-        (generate-result
-          (line-number-operation
-            (generate-result.operation expr-result)
-            (position.line (expr.start expr)))
-          (generate-result.declarations expr-result)
-          (generate-result.env expr-result)))
-      (if (identifier-expr? expr)
-        (generate-identifier-expr (identifier-expr.name expr) env')
-        (generate-list-expr expr env'))))))
+  (fn expr
+    (fn env'
+      (ap (fn expr-result
+        (ap generate-result
+          (ap line-number-operation
+            (ap generate-result.operation expr-result)
+            (ap position.line (ap expr.start expr)))
+          (ap generate-result.declarations expr-result)
+          (ap generate-result.env expr-result)))
+      (if (ap identifier-expr? expr)
+        (ap generate-identifier-expr (ap identifier-expr.name expr) env')
+        (ap generate-list-expr expr env'))))))
 
 ;; Generates an M environment.
 (def generate-env
-  (lambda env'
-    (if (nil? (env.exprs env'))
-      (generate-result nil-operation () env')
-      (with
-        (generate-expr
-          (car (env.exprs env'))
-          (env
-            (cdr (env.exprs env'))
-            (env.locals env')
-            (env.globals env')
-            (env.heap env')
-            (env.def env')
-            (env.index env')))
-      (lambda car-result
-        (with (generate-env (generate-result.env car-result))
-        (lambda cdr-result
-          (generate-result
-            (combine-operation
-              (generate-result.operation car-result)
-              (generate-result.operation cdr-result))
-            (concat
-              (generate-result.declarations car-result)
-              (generate-result.declarations cdr-result))
-            (generate-result.env cdr-result)))))))))
+  (fn env'
+    (if (ap nil? (ap env.exprs env'))
+      (ap generate-result nil-operation () env')
+      (ap with
+        (ap generate-expr
+          (ap car (ap env.exprs env'))
+          (ap env
+            (ap cdr (ap env.exprs env'))
+            (ap env.locals env')
+            (ap env.globals env')
+            (ap env.heap env')
+            (ap env.def env')
+            (ap env.index env')))
+      (fn car-result
+        (ap with (ap generate-env (ap generate-result.env car-result))
+        (fn cdr-result
+          (ap generate-result
+            (ap combine-operation
+              (ap generate-result.operation car-result)
+              (ap generate-result.operation cdr-result))
+            (ap concat
+              (ap generate-result.declarations car-result)
+              (ap generate-result.declarations cdr-result))
+            (ap generate-result.env cdr-result)))))))))

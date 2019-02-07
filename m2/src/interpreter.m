@@ -1,188 +1,192 @@
 ;; Interprets an operation.
 (def interpret-operation
-  (lambda operation
-    (lambda stack
-      (lambda heap
-        ((lambda type
-          (if (symbol.= type (symbol local-variable-operation))
+  (fn operation
+    (fn stack
+      (fn heap
+        (ap (fn type
+          (if (ap symbol.= type (symbol local-variable-operation))
             interpret-local-variable-operation
-          (if (symbol.= type (symbol global-variable-operation))
+          (if (ap symbol.= type (symbol global-variable-operation))
             interpret-global-variable-operation
-          (if (symbol.= type (symbol if-operation))
+          (if (ap symbol.= type (symbol if-operation))
             interpret-if-operation
-          (if (symbol.= type (symbol def-operation))
+          (if (ap symbol.= type (symbol def-operation))
             interpret-def-operation
-          (if (symbol.= type (symbol lambda-operation))
-            interpret-lambda-operation
-          (if (symbol.= type (symbol do-operation))
-            interpret-do-operation
-          (if (symbol.= type (symbol symbol-operation))
+          (if (ap symbol.= type (symbol fn-operation))
+            interpret-fn-operation
+          (if (ap symbol.= type (symbol impure-operation))
+            interpret-impure-operation
+          (if (ap symbol.= type (symbol symbol-operation))
             interpret-symbol-operation
-          (if (symbol.= type (symbol apply-operation))
+          (if (ap symbol.= type (symbol apply-operation))
             interpret-apply-operation
-          (if (symbol.= type (symbol combine-operation))
+          (if (ap symbol.= type (symbol combine-operation))
             interpret-combine-operation
-          (if (symbol.= type (symbol line-number-operation))
+          (if (ap symbol.= type (symbol line-number-operation))
             interpret-line-number-operation
-          (if (symbol.= type (symbol nil-operation))
+          (if (ap symbol.= type (symbol nil-operation))
             interpret-nil-operation
-            (error (symbol "..."))))))))))))))
-        (type-name operation)
+            (ap error (symbol "..."))))))))))))))
+        (ap type-name operation)
           operation stack heap)))))
 
 ;; Interprets a local variable operation.
 (def interpret-local-variable-operation
-  (lambda operation
-    (lambda stack
-      (lambda heap
-        (get stack (local-variable-operation.index operation))))))
+  (fn operation
+    (fn stack
+      (fn heap
+        (ap get stack (ap local-variable-operation.index operation))))))
 
 ;; Interprets a global variable operation.
 (def interpret-global-variable-operation
-  (lambda operation
-    (lambda stack
-      (lambda heap
-        (with (tree-map.get heap (global-variable-operation.name operation))
-        (lambda value
-          (if (null? value)
-            (error (concat (symbol->list (symbol "Could not find value "))
-                           (global-variable-operation.name operation)))
-            ((unnull value) heap))))))))
+  (fn operation
+    (fn stack
+      (fn heap
+        (ap with
+          (ap tree-map.get heap (ap global-variable-operation.name operation))
+        (fn value
+          (if (ap null? value)
+            (ap error
+              (ap concat
+                (ap symbol->list (symbol "Could not find value "))
+                (ap global-variable-operation.name operation)))
+            (ap (ap unnull value) heap))))))))
 
 ;; Interprets an if operation.
 (def interpret-if-operation
-  (lambda operation
-    (lambda stack
-      (lambda heap
-        (if (interpret-operation (if-operation.cond operation) stack heap)
-          (interpret-operation (if-operation.true operation) stack heap)
-          (interpret-operation (if-operation.false operation) stack heap))))))
+  (fn operation
+    (fn stack
+      (fn heap
+        (if (ap interpret-operation (ap if-operation.cond operation) stack heap)
+          (ap interpret-operation (ap if-operation.true operation) stack heap)
+          (ap interpret-operation (ap if-operation.false operation) stack heap))))))
 
 ;; Interprets a def operation.
 (def interpret-def-operation
-  (lambda operation
-    (lambda stack
-      (lambda heap
-        (with (tree-map.get heap (def-operation.name operation))
-        (lambda value
-          (if (null? value)
-            (error (concat (symbol->list (symbol "Could not find value \""))
-                   (concat (def-operation.name operation)
-                     (symbol "\""))))
-            (unnull value))))))))
+  (fn operation
+    (fn stack
+      (fn heap
+        (ap with (ap tree-map.get heap (ap def-operation.name operation))
+        (fn value
+          (if (ap null? value)
+            (ap error
+              (ap concat (ap symbol->list (symbol "Could not find value \""))
+              (ap concat (ap def-operation.name operation)
+                (symbol "\""))))
+            (ap unnull value))))))))
 
-;; Interprets a lambda operation.
-(def interpret-lambda-operation
-  (lambda operation
-    (lambda stack
-      (lambda heap
-        (lambda arg
-          (with (tree-map.get heap (lambda-operation.name operation))
-          (lambda function
-            (if (null? function)
-              (error (concat (symbol "Could not find synthetic function ")
-                             (lambda-operation.name operation)))
-              ((unnull function)
-                (concat (map (lambda-operation.closures operation)
-                    (lambda closure (interpret-operation closure stack heap)))
-                  (cons arg stack))
+;; Interprets a fn operation.
+(def interpret-fn-operation
+  (fn operation
+    (fn stack
+      (fn heap
+        (fn arg
+          (ap with (ap tree-map.get heap (ap fn-operation.name operation))
+          (fn function
+            (if (ap null? function)
+              (ap error (ap concat (symbol "Could not find synthetic function ")
+                        (ap fn-operation.name operation)))
+              (ap (ap unnull function)
+                (ap concat (ap map (ap fn-operation.closures operation)
+                    (fn closure (ap interpret-operation closure stack heap)))
+                  (ap cons arg stack))
                 heap)))))))))
 
-;; Interprets a do operation.
-(def interpret-do-operation
-  (lambda operation
-    (lambda stack
-      (lambda heap
-        (do (interpret-operation (do-operation operation) stack heap))))))
+;; Interprets a impure operation.
+(def interpret-impure-operation
+  (fn operation
+    (fn stack
+      (fn heap
+        (impure (ap interpret-operation (ap impure-operation operation) stack heap))))))
 
 ;; Interprets a symbol operation.
 (def interpret-symbol-operation
-  (lambda operation
-    (lambda stack
-      (lambda heap
-        (symbol-operation.name operation)))))
+  (fn operation
+    (fn stack
+      (fn heap
+        (ap symbol-operation.name operation)))))
 
 ;; Interperts an apply operation.
 (def interpret-apply-operation
-  (lambda operation
-    (lambda stack
-      (lambda heap
-        ((interpret-operation (apply-operation.fn operation) stack heap)
-          (interpret-operation (apply-operation.arg operation) stack heap))))))
+  (fn operation
+    (fn stack
+      (fn heap
+        (ap (ap interpret-operation (ap apply-operation.fn operation) stack heap)
+          (ap interpret-operation (ap apply-operation.arg operation) stack heap))))))
 
 ;; Interpets a combine operation.
 (def interpret-combine-operation
-  (lambda operation
-    (lambda stack
-      (lambda heap
-        ((lambda ignore (lambda x x))
-          (interpret-operation
-            (combine-operation.first operation)
+  (fn operation
+    (fn stack
+      (fn heap
+        (ap (fn ignore (fn x x))
+          (ap interpret-operation
+            (ap combine-operation.first operation)
             stack
             heap)
-          (interpret-operation
-            (combine-operation.second operation)
+          (ap interpret-operation
+            (ap combine-operation.second operation)
             stack
             heap))))))
 
 ;; Interprets a line number operation.
 (def interpret-line-number-operation
-  (lambda operation
-    (interpret-operation (line-number-operation.operation operation))))
+  (fn operation
+    (ap interpret-operation (ap line-number-operation.operation operation))))
 
 ;; Interprets a nil operation.
 (def interpret-nil-operation
-  (lambda operation
-    (lambda stack
-      (lambda heap
+  (fn operation
+    (fn stack
+      (fn heap
         ()))))
 
 ;; Interprets a list of declarations
 (def interpret-declarations
-  (lambda declarations
-    (lambda heap
-      (fold declarations heap
-        (lambda heap'
-          (lambda declaration
-            (interpret-declaration declaration heap')))))))
+  (fn declarations
+    (fn heap
+      (ap fold declarations heap
+        (fn heap'
+          (fn declaration
+            (ap interpret-declaration declaration heap')))))))
 
 ;; Interprets a declaration.
 (def interpret-declaration
-  (lambda declaration
-    (lambda heap
-      ((lambda type
-        (if (symbol.= type (symbol def-declaration))
+  (fn declaration
+    (fn heap
+      (ap (fn type
+        (if (ap symbol.= type (symbol def-declaration))
           interpret-def-declaration
-        (if (symbol.= type (symbol lambda-declaration))
-          interpret-lambda-declaration
-          (error (symbol "...")))))
-      (type-name declaration)
+        (if (ap symbol.= type (symbol fn-declaration))
+          interpret-fn-declaration
+          (ap error (symbol "...")))))
+      (ap type-name declaration)
         declaration heap))))
 
 ;; Interprets a def declaration.
 (def interpret-def-declaration
-  (lambda declaration
-    (lambda heap
-      (tree-map.put heap
-        (def-declaration.name declaration)
-        (lambda heap'
-          (interpret-operation
-            (def-declaration.value declaration)
+  (fn declaration
+    (fn heap
+      (ap tree-map.put heap
+        (ap def-declaration.name declaration)
+        (fn heap'
+          (ap interpret-operation
+            (ap def-declaration.value declaration)
             ()
             heap'))))))
 
-;; Interprets a lambda declaration.
-(def interpret-lambda-declaration
-  (lambda declaration
-    (lambda heap
-      (tree-map.put heap
-        (lambda-declaration.name declaration)
-        (lambda stack
-          (lambda heap'
-            (interpret-operation
-              (lambda-declaration.value declaration)
+;; Interprets a fn declaration.
+(def interpret-fn-declaration
+  (fn declaration
+    (fn heap
+      (ap tree-map.put heap
+        (ap fn-declaration.name declaration)
+        (fn stack
+          (fn heap'
+            (ap interpret-operation
+              (ap fn-declaration.value declaration)
               stack
               heap')))))))
 
 ;; The default heap for the interpreter.
-(def default-heap (empty-tree-map compare-symbol))
+(def default-heap (ap empty-tree-map compare-symbol))

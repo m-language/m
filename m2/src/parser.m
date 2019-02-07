@@ -1,198 +1,201 @@
 ;; The escape code of a character.
 (def escape
-  (lambda char
-    (if (char.= char letter-b) backspace
-    (if (char.= char letter-t) tab
-    (if (char.= char letter-n) linefeed
-    (if (char.= char letter-v) vtab
-    (if (char.= char letter-f) formfeed
-    (if (char.= char letter-r) carriage-return
+  (fn char
+    (if (ap char.= char letter-b) backspace
+    (if (ap char.= char letter-t) tab
+    (if (ap char.= char letter-n) linefeed
+    (if (ap char.= char letter-v) vtab
+    (if (ap char.= char letter-f) formfeed
+    (if (ap char.= char letter-r) carriage-return
       char))))))))
 
 ;; True if a character an identifier separator.
 (def separator?
-  (lambda char
-    (or (whitespace? char)
-        (lambda ""
-          (or (char.= char open-parentheses)
-              (lambda ""
-                (or (char.= char close-parentheses)
-                    (lambda ""
-                      (or (char.= char semicolon)
-                          (lambda ""
-                            (char.= char quote)))))))))))
+  (fn char
+    (ap or (ap whitespace? char)
+        (fn ""
+          (ap or (ap char.= char open-parentheses)
+              (fn ""
+                (ap or (ap char.= char close-parentheses)
+                    (fn ""
+                      (ap or (ap char.= char semicolon)
+                          (fn ""
+                            (ap char.= char quote)))))))))))
 
 ;; A position in a file.
 (def position
-  (new-data (symbol position)
-    (list2 (symbol line) (symbol char))))
+  (ap new-data (symbol position)
+    (ap list2 (symbol line) (symbol char))))
 
-(def position.line (field (symbol position) (symbol line)))
-(def position.char (field (symbol position) (symbol char)))
+(def position.line (ap field (symbol position) (symbol line)))
+(def position.char (ap field (symbol position) (symbol char)))
 
 ;; The position of the next char.
 (def next-char
-  (lambda p
-    (position
-      (position.line p)
-      (nat.+ nat.1 (position.char p)))))
+  (fn p
+    (ap position
+      (ap position.line p)
+      (ap nat.+ nat.1 (ap position.char p)))))
 
 ;; The position of the next line.
 (def next-line
-  (lambda p
-    (position
-      (nat.+ nat.1 (position.line p))
+  (fn p
+    (ap position
+      (ap nat.+ nat.1 (ap position.line p))
       nat.1)))
 
 ;; The result of parsing an expression.
 (def parse-result
-  (new-data (symbol parse-result)
-    (list2 (symbol rest) (symbol expr))))
+  (ap new-data (symbol parse-result)
+    (ap list2 (symbol rest) (symbol expr))))
 
-(def parse-result.rest (field (symbol parse-result) (symbol rest)))
-(def parse-result.expr (field (symbol parse-result) (symbol expr)))
+(def parse-result.rest (ap field (symbol parse-result) (symbol rest)))
+(def parse-result.expr (ap field (symbol parse-result) (symbol expr)))
 
 ;; Parses an M commment.
 (def parse-comment
-  (lambda input
-    (lambda path
-      (lambda position
-        (if (or (nil? input)
-                (lambda "" (newline? (car input))))
-          (parse-expr input path position)
-          (parse-comment (cdr input) path position))))))
+  (fn input
+    (fn path
+      (fn position
+        (if (ap or (ap nil? input)
+                (fn "" (ap newline? (ap car input))))
+          (ap parse-expr input path position)
+          (ap parse-comment (ap cdr input) path position))))))
 
 ;; Parses an M identifier literal expression given an input.
 (def parse-identifier-literal-expr
-  (lambda input
-    (lambda path
-      (lambda start
-        (lambda end
-          (lambda acc
-            (with (car input)
-              (lambda head
-                (if (char.= head quote)
-                  (parse-result
-                    (cdr input)
-                    (identifier-expr (reverse acc) path start end))
-                (if (char.= head backslash)
-                  (parse-identifier-literal-expr
-                    (cddr input)
+  (fn input
+    (fn path
+      (fn start
+        (fn end
+          (fn acc
+            (ap with (ap car input)
+              (fn head
+                (if (ap char.= head quote)
+                  (ap parse-result
+                    (ap cdr input)
+                    (ap identifier-expr (ap reverse acc) path start end))
+                (if (ap char.= head backslash)
+                  (ap parse-identifier-literal-expr
+                    (ap cddr input)
                     path
                     start
-                    (next-char (next-char end))
-                    (cons (escape (cadr input)) acc))
-                (if (newline? head)
-                  (parse-identifier-literal-expr
-                    (cdr input)
+                    (ap next-char (ap next-char end))
+                    (ap cons (ap escape (ap cadr input)) acc))
+                (if (ap newline? head)
+                  (ap parse-identifier-literal-expr
+                    (ap cdr input)
                     path
                     start
-                    (next-line end)
-                    (cons head acc))
-                  (parse-identifier-literal-expr
-                    (cdr input)
+                    (ap next-line end)
+                    (ap cons head acc))
+                  (ap parse-identifier-literal-expr
+                    (ap cdr input)
                     path
                     start
-                    (next-char end)
-                    (cons head acc)))))))))))))
+                    (ap next-char end)
+                    (ap cons head acc)))))))))))))
 
 ;; Parses an M identifier expression given an input.
 (def parse-identifier-expr
-  (lambda input
-    (lambda path
-      (lambda start
-        (lambda end
-          (lambda acc
-            (if (separator? (car input))
-              (parse-result input (identifier-expr (reverse acc) path start end))
-              (parse-identifier-expr
-                (cdr input)
+  (fn input
+    (fn path
+      (fn start
+        (fn end
+          (fn acc
+            (if (ap separator? (ap car input))
+              (ap parse-result input
+                (ap identifier-expr (ap reverse acc) path start end))
+              (ap parse-identifier-expr
+                (ap cdr input)
                 path
                 start
-                (next-char end)
-                (cons (car input) acc)))))))))
+                (ap next-char end)
+                (ap cons (ap car input) acc)))))))))
 
 ;; Parses an M list expression given an input.
 (def parse-list-expr
-  (lambda input
-    (lambda path
-      (lambda start
-        (lambda end
-          (lambda acc
-            (if (char.= (car input) close-parentheses)
-              (parse-result (cdr input) (list-expr (reverse acc) path start end))
-              (with (parse-expr input path end)
-                (lambda result
-                  (parse-list-expr
-                    (parse-result.rest result)
+  (fn input
+    (fn path
+      (fn start
+        (fn end
+          (fn acc
+            (if (ap char.= (ap car input) close-parentheses)
+              (ap parse-result
+                (ap cdr input)
+                (ap list-expr (ap reverse acc) path start end))
+              (ap with (ap parse-expr input path end)
+                (fn result
+                  (ap parse-list-expr
+                    (ap parse-result.rest result)
                     path
                     start
-                    (expr.end (parse-result.expr result))
-                    (cons (parse-result.expr result) acc)))))))))))
+                    (ap expr.end (ap parse-result.expr result))
+                    (ap cons (ap parse-result.expr result) acc)))))))))))
 
 ;; Parses an M expression given an input.
 (def parse-expr
-  (lambda input
-    (lambda path
-      (lambda position
-        (with (car input)
-          (lambda head
-            (if (char.= head open-parentheses)
-              (parse-list-expr (cdr input) path (next-char position) (next-char position) ())
-            (if (char.= head quote)
-              (parse-identifier-literal-expr (cdr input) path (next-char position) (next-char position) ())
-            (if (char.= head semicolon)
-              (parse-comment (cdr input) path (next-char position))
-            (if (newline? head)
-              (parse-expr (cdr input) path (next-line position))
-            (if (whitespace? head)
-              (parse-expr (cdr input) path (next-char position))
-              (parse-identifier-expr input path position position ()))))))))))))
+  (fn input
+    (fn path
+      (fn position
+        (ap with (ap car input)
+          (fn head
+            (if (ap char.= head open-parentheses)
+              (ap parse-list-expr (ap cdr input) path (ap next-char position) (ap next-char position) ())
+            (if (ap char.= head quote)
+              (ap parse-identifier-literal-expr (ap cdr input) path (ap next-char position) (ap next-char position) ())
+            (if (ap char.= head semicolon)
+              (ap parse-comment (ap cdr input) path (ap next-char position))
+            (if (ap newline? head)
+              (ap parse-expr (ap cdr input) path (ap next-line position))
+            (if (ap whitespace? head)
+              (ap parse-expr (ap cdr input) path (ap next-char position))
+              (ap parse-identifier-expr input path position position ()))))))))))))
 
 ;; Parses an M program given an input.
 (def parse
-  (lambda input
-    (lambda path
-      (lambda position
-        (lambda acc
-          (if (nil? input)
-            (reverse acc)
-            (with (parse-expr input path position)
-              (lambda result
-                (parse
-                  (parse-result.rest result)
+  (fn input
+    (fn path
+      (fn position
+        (fn acc
+          (if (ap nil? input)
+            (ap reverse acc)
+            (ap with (ap parse-expr input path position)
+              (fn result
+                (ap parse
+                  (ap parse-result.rest result)
                   path
-                  (expr.end (parse-result.expr result))
-                  (cons (parse-result.expr result) acc))))))))))
+                  (ap expr.end (ap parse-result.expr result))
+                  (ap cons (ap parse-result.expr result) acc))))))))))
 
 ;; Parses an M program given a file.
 (def parse-file
-  (lambda file
-    (lambda path
-      (lambda init
-        (then-run-with (file.directory? file)
-          (lambda directory?
+  (fn file
+    (fn path
+      (fn init
+        (ap then-run-with (ap file.directory? file)
+          (fn directory?
             (if directory?
-              (then-run-with (file.child-files file)
-                (lambda child-files
-                  (fold child-files (return ())
-                    (lambda acc
-                      (lambda child
-                        (then-run-with
-                          (parse-file
+              (ap then-run-with (ap file.child-files file)
+                (fn child-files
+                  (ap fold child-files (ap return ())
+                    (fn acc
+                      (fn child
+                        (ap then-run-with
+                          (ap parse-file
                             child
                             (if init
                               ()
-                              (concat path (append (file.name file) dot)))
+                              (ap concat path (ap append (ap file.name file) dot)))
                             false)
-                          (lambda parse
-                            (run-with acc
-                              (lambda exprs
-                                (concat exprs parse))))))))))
-              (run-with (file.read file)
-                (lambda chars
-                  (parse
+                          (fn parse
+                            (ap run-with acc
+                              (fn exprs
+                                (ap concat exprs parse))))))))))
+              (ap run-with (ap file.read file)
+                (fn chars
+                  (ap parse
                     chars
-                    (concat path (file.name-without-extension file))
-                    (position nat.1 nat.1)
+                    (ap concat path (ap file.name-without-extension file))
+                    (ap position nat.1 nat.1)
                     ()))))))))))

@@ -3,32 +3,32 @@
 ;;; Various higher order functions which have no external dependencies.
 
 ;; The identity function.
-(def id (lambda x x))
+(def id (fn x x))
 
 ;; A function which always returns the same result.
 (def const
-  (lambda x
-    (lambda "" x)))
+  (fn x
+    (fn "" x)))
 
 ;; Composes two functions.
 (def compose
-  (lambda f
-    (lambda g
-      (lambda x
-        (f (g x))))))
+  (fn f
+    (fn g
+      (fn x
+        (ap f (ap g x))))))
 
 ;; Swaps the order of a function's arguments.
 (def swap
-  (lambda f
-    (lambda x
-      (lambda y
-        (f y x)))))
+  (fn f
+    (fn x
+      (fn y
+        (ap f y x)))))
 
 ;; Applies a function to an argument.
 (def apply
-  (lambda f
-    (lambda x
-      (f x))))
+  (fn f
+    (fn x
+      (ap f x))))
 
 ;; The inverse of apply.
-(def with (swap apply))
+(def with (ap swap apply))

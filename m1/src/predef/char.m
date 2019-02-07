@@ -13,77 +13,78 @@
 (def char.= nat.=)
 
 ;; The literal character "(".
-(def open-parentheses (car (symbol "(")))
+(def open-parentheses (ap car (symbol "(")))
 
 ;; The literal character ")".
-(def close-parentheses (car (symbol ")")))
+(def close-parentheses (ap car (symbol ")")))
 
 ;; The literal character ";".
-(def semicolon (car (symbol ";")))
+(def semicolon (ap car (symbol ";")))
 
 ;; The literal character ".".
-(def dot (car (symbol ".")))
+(def dot (ap car (symbol ".")))
 
 ;; The literal character "\"".
-(def quote (car (symbol "\"")))
+(def quote (ap car (symbol "\"")))
 
 ;; The literal character "\\".
-(def backslash (car (symbol "\\")))
+(def backslash (ap car (symbol "\\")))
 
 ;; The literal character " ".
-(def space (car (symbol " ")))
+(def space (ap car (symbol " ")))
 
 ;; The literal character "\b".
-(def backspace (car (symbol "\b")))
+(def backspace (ap car (symbol "\b")))
 
 ;; The literal character "\t".
-(def tab (car (symbol "\t")))
+(def tab (ap car (symbol "\t")))
 
 ;; The literal character "\n".
-(def linefeed (car (symbol "\n")))
+(def linefeed (ap car (symbol "\n")))
 
 ;; The literal character "\v".
-(def vtab (car (symbol "\v")))
+(def vtab (ap car (symbol "\v")))
 
 ;; The literal character "\f".
-(def formfeed (car (symbol "\f")))
+(def formfeed (ap car (symbol "\f")))
 
 ;; The literal character "\r".
-(def carriage-return (car (symbol "\r")))
+(def carriage-return (ap car (symbol "\r")))
 
 ;; The literal character "b".
-(def letter-b (car (symbol "b")))
+(def letter-b (ap car (symbol "b")))
 
 ;; The literal character "t".
-(def letter-t (car (symbol "t")))
+(def letter-t (ap car (symbol "t")))
 
 ;; The literal character "n".
-(def letter-n (car (symbol "n")))
+(def letter-n (ap car (symbol "n")))
 
 ;; The literal character "v".
-(def letter-v (car (symbol "v")))
+(def letter-v (ap car (symbol "v")))
 
 ;; The literal character "f".
-(def letter-f (car (symbol "f")))
+(def letter-f (ap car (symbol "f")))
 
 ;; The literal character "r".
-(def letter-r (car (symbol "r")))
+(def letter-r (ap car (symbol "r")))
 
 ;; True if a character is "\r", "\n", or "\f".
 (def newline?
-  (lambda char
-    (or (char.= char linefeed)
-        (lambda ""
-          (or (char.= char carriage-return)
-              (lambda ""
-                (char.= char formfeed)))))))
+  (fn char
+    (ap or (ap char.= char linefeed)
+        (fn ""
+          (ap or (ap char.= char carriage-return)
+              (fn ""
+                (ap char.= char formfeed)))))))
 
 ;; True if a character is a newline, " ", "\t", or "\v".
 (def whitespace?
-  (lambda char
-    (or (newline? char)
-        (lambda ""
-          (or (char.= char space)
-              (lambda ""
-                (or (char.= char tab)
-                    (lambda "" (char.= char vtab)))))))))
+  (fn char
+    (ap or (ap newline? char)
+        (fn ""
+          (ap or (ap char.= char space)
+              (fn ""
+                (ap or (ap char.= char tab)
+                    (fn ""
+                      (ap char.= char vtab)))))))))

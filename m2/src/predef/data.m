@@ -12,73 +12,73 @@
 
 ;; Tests if a data structure is of a type.
 (def is?
-  (lambda type
-    (lambda data
-      (symbol.= type (type-name data)))))
+  (fn type
+    (fn data
+      (ap symbol.= type (ap type-name data)))))
 
 ;; Casts a data structure to a type.
 (def as
-  (lambda type
-    (lambda data
-      (if (is? type data)
+  (fn type
+    (fn data
+      (if (ap is? type data)
         data
-        (error (concat (symbol->list (symbol "Could not cast "))
-               (concat (symbol->list (type-name data))
-               (concat (symbol->list (symbol " to "))
-                 (symbol->list type)))))))))
+        (ap error (ap concat (ap symbol->list (symbol "Could not cast "))
+                  (ap concat (ap symbol->list (ap type-name data))
+                  (ap concat (ap symbol->list (symbol " to "))
+                    (ap symbol->list type)))))))))
 
 ;; Derives a data structure with a field.
 (def derive
-  (lambda data
-    (lambda name
-      (lambda value
-        (pair (first data)
-          (lambda field
-            (if (symbol.= field name)
+  (fn data
+    (fn name
+      (fn value
+        (ap pair (ap first data)
+          (fn field
+            (if (ap symbol.= field name)
               value
-              ((second data) field))))))))
+              (ap (ap second data) field))))))))
 
 ;; Creates an empty data structure given a type.
 (def object
-  (lambda type
-    (pair type
-      (lambda name
-        (concat (symbol->list (symbol "Could not find field "))
-        (concat (symbol->list name)
-        (concat (symbol->list (symbol " for "))
-          (symbol->list type))))))))
+  (fn type
+    (ap pair type
+      (fn name
+        (ap concat (ap symbol->list (symbol "Could not find field "))
+        (ap concat (ap symbol->list name)
+        (ap concat (ap symbol->list (symbol " for "))
+          (ap symbol->list type))))))))
 
 ;; Creates a data structure given a type and a list of fields.
 (def data
-  (lambda type
-    (lambda fields
-      (fold fields (object type)
-        (lambda data
-          (lambda field
-            (derive data (first field) (second field))))))))
+  (fn type
+    (fn fields
+      (ap fold fields (ap object type)
+        (fn data
+          (fn field
+            (ap derive data (ap first field) (ap second field))))))))
 
 ;; Creates a data structure'constructor given a type and a list of field names.
 (def new-data
-  (lambda type
-    (lambda names
-      (new-data' type names ()))))
+  (fn type
+    (fn names
+      (ap new-data' type names ()))))
 
 ;; Implementation of new-data.
 (def new-data'
-  (lambda type
-    (lambda names
-      (lambda fields
-        (if (nil? names)
-          (data type fields)
-          (lambda value
-            (new-data'
+  (fn type
+    (fn names
+      (fn fields
+        (if (ap nil? names)
+          (ap data type fields)
+          (fn value
+            (ap new-data'
               type
-              (cdr names)
-              (cons (pair (car names) value) fields))))))))
+              (ap cdr names)
+              (ap cons (ap pair (ap car names) value) fields))))))))
 
 ;; Gets the value of a field in a data structure.
 (def field
-  (lambda type
-    (lambda name
-      (lambda data
-        ((second (as type data)) name)))))
+  (fn type
+    (fn name
+      (fn data
+        (ap (ap second (ap as type data)) name)))))

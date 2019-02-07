@@ -10,52 +10,52 @@
 (def nat.0 ())
 
 ;; The natural number 1.
-(def nat.1 (cons () ()))
+(def nat.1 (ap cons () ()))
 
 ;; Tests if a natural number is 0.
 (def nat.0? nil?)
 
 ;; The successor of a natural number.
-(def nat.inc (cons ()))
+(def nat.inc (ap cons ()))
 
 ;; The predecessor of a natural number.
-(def nat.dec (lambda x (cdr x)))
+(def nat.dec (fn x (ap cdr x)))
 
 ;; Adds two natural numbers.
 (def nat.+
-  (lambda x
-    (lambda y
-      (if (nat.0? y)
+  (fn x
+    (fn y
+      (if (ap nat.0? y)
         x
-        (nat.+ (nat.inc x) (nat.dec y))))))
+        (ap nat.+ (ap nat.inc x) (ap nat.dec y))))))
 
 ;; Subtracts two natural numbers.
 (def nat.-
-  (lambda x
-    (lambda y
-      (if (nat.0? y)
+  (fn x
+    (fn y
+      (if (ap nat.0? y)
         x
-        (nat.- (nat.dec x) (nat.dec y))))))
+        (ap nat.- (ap nat.dec x) (ap nat.dec y))))))
 
 ;; True if the first natural number is less than the second natural number.
 (def nat.<
-  (lambda x
-    (lambda y
-      (if (nat.0? x)
-        (not (nat.0? y))
-        (if (nat.0? y)
+  (fn x
+    (fn y
+      (if (ap nat.0? x)
+        (ap not (ap nat.0? y))
+        (if (ap nat.0? y)
           false
-          (nat.< (nat.dec x) (nat.dec y)))))))
+          (ap nat.< (ap nat.dec x) (ap nat.dec y)))))))
 
 ;; True if the first natural number is greater than the second natural number.
-(def nat.> (swap nat.<))
+(def nat.> (ap swap nat.<))
 
 ;; True if two natural numbers are equal.
 (def nat.=
-  (lambda x
-    (lambda y
-      (if (nat.0? x)
-        (nat.0? y)
-        (if (nat.0? y)
+  (fn x
+    (fn y
+      (if (ap nat.0? x)
+        (ap nat.0? y)
+        (if (ap nat.0? y)
           false
-          (nat.= (nat.dec x) (nat.dec y)))))))
+          (ap nat.= (ap nat.dec x) (ap nat.dec y)))))))

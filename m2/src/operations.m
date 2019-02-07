@@ -1,115 +1,115 @@
 ;; Operation for a local variable.
 (def local-variable-operation
-  (new-data (symbol local-variable-operation)
-    (list2 (symbol name) (symbol index))))
+  (ap new-data (symbol local-variable-operation)
+    (ap list2 (symbol name) (symbol index))))
 
 (def local-variable-operation.name
-  (field (symbol local-variable-operation) (symbol name)))
+  (ap field (symbol local-variable-operation) (symbol name)))
 
 (def local-variable-operation.index
-  (field (symbol local-variable-operation) (symbol index)))
+  (ap field (symbol local-variable-operation) (symbol index)))
 
 ;; Operation for a global variable.
 (def global-variable-operation
-  (new-data (symbol global-variable-operation)
-    (list2 (symbol name) (symbol path))))
+  (ap new-data (symbol global-variable-operation)
+    (ap list2 (symbol name) (symbol path))))
 
 (def global-variable-operation.name
-  (field (symbol global-variable-operation) (symbol name)))
+  (ap field (symbol global-variable-operation) (symbol name)))
 
 (def global-variable-operation.path
-  (field (symbol global-variable-operation) (symbol path)))
+  (ap field (symbol global-variable-operation) (symbol path)))
 
 ;; An if operation.
 (def if-operation
-  (new-data (symbol if-operation)
-    (list3 (symbol cond) (symbol true) (symbol false))))
+  (ap new-data (symbol if-operation)
+    (ap list3 (symbol cond) (symbol true) (symbol false))))
 
 (def if-operation.cond
-  (field (symbol if-operation) (symbol cond)))
+  (ap field (symbol if-operation) (symbol cond)))
 
 (def if-operation.true
-  (field (symbol if-operation) (symbol true)))
+  (ap field (symbol if-operation) (symbol true)))
 
 (def if-operation.false
-  (field (symbol if-operation) (symbol false)))
+  (ap field (symbol if-operation) (symbol false)))
 
 ;; A def operation.
 (def def-operation
-  (new-data (symbol def-operation)
-    (list3 (symbol name) (symbol path) (symbol value))))
+  (ap new-data (symbol def-operation)
+    (ap list3 (symbol name) (symbol path) (symbol value))))
 
 (def def-operation.name
-  (field (symbol def-operation) (symbol name)))
+  (ap field (symbol def-operation) (symbol name)))
 
 (def def-operation.path
-  (field (symbol def-operation) (symbol path)))
+  (ap field (symbol def-operation) (symbol path)))
 
 (def def-operation.value
-  (field (symbol def-operation) (symbol value)))
+  (ap field (symbol def-operation) (symbol value)))
 
-;; A lambda operation.
-(def lambda-operation
-  (new-data (symbol lambda-operation)
-    (list3 (symbol path) (symbol name) (symbol closures))))
+;; A function operation.
+(def fn-operation
+  (ap new-data (symbol fn-operation)
+    (ap list3 (symbol path) (symbol name) (symbol closures))))
 
-(def lambda-operation.path
-  (field (symbol lambda-operation) (symbol path)))
+(def fn-operation.path
+  (ap field (symbol fn-operation) (symbol path)))
 
-(def lambda-operation.name
-  (field (symbol lambda-operation) (symbol name)))
+(def fn-operation.name
+  (ap field (symbol fn-operation) (symbol name)))
 
-(def lambda-operation.closures
-  (field (symbol lambda-operation) (symbol closures)))
+(def fn-operation.closures
+  (ap field (symbol fn-operation) (symbol closures)))
 
 ;; A do operation
 (def do-operation
-  (new-data (symbol do-operation)
-    (list1 (symbol operation))))
+  (ap new-data (symbol do-operation)
+    (ap list1 (symbol operation))))
 
 (def do-operation.operation
-  (field (symbol do-operation) (symbol operation)))
+  (ap field (symbol do-operation) (symbol operation)))
 
 ;; A symbol operation.
 (def symbol-operation
-  (new-data (symbol symbol-operation)
-    (list1 (symbol name))))
+  (ap new-data (symbol symbol-operation)
+    (ap list1 (symbol name))))
 
 (def symbol-operation.name
-  (field (symbol symbol-operation) (symbol name)))
+  (ap field (symbol symbol-operation) (symbol name)))
 
 ;; An apply operation.
 (def apply-operation
-  (new-data (symbol apply-operation)
-    (list2 (symbol fn) (symbol arg))))
+  (ap new-data (symbol apply-operation)
+    (ap list2 (symbol fn) (symbol arg))))
 
 (def apply-operation.fn
-  (field (symbol apply-operation) (symbol fn)))
+  (ap field (symbol apply-operation) (symbol fn)))
 
 (def apply-operation.arg
-  (field (symbol apply-operation) (symbol arg)))
+  (ap field (symbol apply-operation) (symbol arg)))
 
 ;; Combines two operations.
 (def combine-operation
-  (new-data (symbol combine-operation)
-    (list2 (symbol first) (symbol second))))
+  (ap new-data (symbol combine-operation)
+    (ap list2 (symbol first) (symbol second))))
 
 (def combine-operation.first
-  (field (symbol combine-operation) (symbol first)))
+  (ap field (symbol combine-operation) (symbol first)))
 
 (def combine-operation.second
-  (field (symbol combine-operation) (symbol second)))
+  (ap field (symbol combine-operation) (symbol second)))
 
 ;; Marks an operation with a line number.
 (def line-number-operation
-  (new-data (symbol line-number-operation)
-    (list2 (symbol operation) (symbol line))))
+  (ap new-data (symbol line-number-operation)
+    (ap list2 (symbol operation) (symbol line))))
 
 (def line-number-operation.operation
-  (field (symbol line-number-operation) (symbol operation)))
+  (ap field (symbol line-number-operation) (symbol operation)))
 
 (def line-number-operation.line
-  (field (symbol line-number-operation) (symbol line)))
+  (ap field (symbol line-number-operation) (symbol line)))
 
 ;; The nil operation.
-(def nil-operation (object (symbol nil-operation)))
+(def nil-operation (ap object (ap symbol nil-operation)))

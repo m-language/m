@@ -9,17 +9,17 @@
 
 ;; Creates a pair of two values.
 (def pair
-  (lambda first
-    (lambda second
-      (lambda x
-        (x first second)))))
+  (fn first
+    (fn second
+      (fn x
+        (ap x first second)))))
 
 ;; The first value of a pair.
 (def first
-  (lambda pair
-    (pair true)))
+  (fn pair
+    (ap pair true)))
 
 ;; The second value of a pair.
 (def second
-  (lambda pair
-    (pair false)))
+  (fn pair
+    (ap pair false)))

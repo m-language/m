@@ -9,7 +9,7 @@
 (def symbol->list id)
 
 ;; Tests if two symbols are equal.
-(def symbol.= (list.= char.=))
+(def symbol.= (ap list.= char.=))
 
 ;; Adds two symbols.
 (def symbol.+ concat)

@@ -1,25 +1,26 @@
 ;; The main function for the M compiler.
 (def ""
-  (lambda args
-    (if (nil? args)
-      (repl (default-env ()) default-heap)
-      (with (file.child file.local-file (car args))
-      (lambda in
-        (then-run-with (parse-file in () true)
-        (lambda exprs
-          (if (nil? (cdr args))
-            (with
-              (generate-env (default-env exprs (empty-tree-map compare-symbol)))
-            (lambda result
-              (repl
-                (generate-result.env result)
-                (interpret-declarations
-                  (generate-result.declarations result)
+  (fn args
+    (if (ap nil? args)
+      (ap repl (ap default-env ()) default-heap)
+      (ap with (ap file.child file.local-file (ap car args))
+      (fn in
+        (ap then-run-with (ap parse-file in () true)
+        (fn exprs
+          (if (ap nil? (ap cdr args))
+            (ap with
+              (ap generate-env
+                (ap default-env exprs (ap empty-tree-map compare-symbol)))
+            (fn result
+              (ap repl
+                (ap generate-result.env result)
+                (ap interpret-declarations
+                  (ap generate-result.declarations result)
                   default-heap))))
-            (with (file.child file.local-file (cadr args))
-            (lambda out
-              (write-result
-                (generate-env (default-env exprs internals))
+            (ap with (ap file.child file.local-file (ap cadr args))
+            (fn out
+              (ap write-result
+                (ap generate-env (ap default-env exprs internals))
                 out)))))))))))
 
 ;; Writes a program.
@@ -27,9 +28,9 @@
 
 ;; Writes a generate result.
 (def write-result
-  (lambda result
-    (lambda out
-      (write-program
+  (fn result
+    (fn out
+      (ap write-program
         out
-        (generate-result.operation result)
-        (generate-result.declarations result)))))
+        (ap generate-result.operation result)
+        (ap generate-result.declarations result)))))

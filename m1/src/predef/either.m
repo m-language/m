@@ -7,21 +7,21 @@
 ;;; implementation of either.
 
 (def left
-  (lambda value
-    (lambda first
-      (lambda ""
-        (first value)))))
+  (fn value
+    (fn first
+      (fn ""
+        (ap first value)))))
 
 (def right
-  (lambda value
-    (lambda ""
-      (lambda second
-        (second value)))))
+  (fn value
+    (fn ""
+      (fn second
+        (ap second value)))))
 
 (def left?
-  (lambda either
-    (either (const true) (const false))))
+  (fn either
+    (ap either (ap const true) (ap const false))))
 
 (def right?
-  (lambda either
-    (either (const false) (const true))))
+  (fn either
+    (ap either (ap const false) (ap const true))))

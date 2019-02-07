@@ -1,34 +1,34 @@
 ;; The M repl.
 (def repl
-  (lambda env'
-    (lambda heap
-      (then-run-with
-        (then-run
-          (ostream.write stdout (car (symbol >)))
-          (istream.readline stdin))
-      (lambda line
-        (if (symbol.= line (symbol ""))
-          (do ())
-          (with
-            (parse-result.expr
-              (parse-expr
-                (append line linefeed)
+  (fn env'
+    (fn heap
+      (ap then-run-with
+        (ap then-run
+          (ap ostream.write stdout (ap car (symbol >)))
+          (ap istream.readline stdin))
+      (fn line
+        (if (ap symbol.= line (symbol ""))
+          (impure ())
+          (ap with
+            (ap parse-result.expr
+              (ap parse-expr
+                (ap append line linefeed)
                 (symbol "repl.m")
-                (position nat.1 nat.1)))
-          (lambda expr
-            (with (generate-expr expr env')
-            (lambda result
-              (with
-                (interpret-declarations
-                  (generate-result.declarations result)
+                (ap position nat.1 nat.1)))
+          (fn expr
+            (ap with (ap generate-expr expr env')
+            (fn result
+              (ap with
+                (ap interpret-declarations
+                  (ap generate-result.declarations result)
                   heap)
-              (lambda new-heap
-                (with
-                  (interpret-operation
-                    (generate-result.operation result)
+              (fn new-heap
+                (ap with
+                  (ap interpret-operation
+                    (ap generate-result.operation result)
                     ()
                     new-heap)
-                (lambda value
-                  (then-run
-                    (ostream.writeln stdout (symbol "<function>"))
-                    (repl (generate-result.env result) new-heap))))))))))))))))
+                (fn value
+                  (ap then-run
+                    (ap ostream.writeln stdout (symbol "<function>"))
+                    (ap repl (ap generate-result.env result) new-heap))))))))))))))))
