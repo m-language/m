@@ -52,8 +52,6 @@
   (fn either
     (ap either
       (fn name
-        (ap identifier-expr name ()
-          (ap position nat.1 nat.1) (ap position nat.1 nat.1)))
+        (ap identifier-expr name () start-position start-position))
       (fn list
-        (ap list-expr (ap map list list->expr) ()
-          (ap position nat.1 nat.1) (ap position nat.1 nat.1))))))
+        (ap list-expr (ap map list list->expr) () start-position start-position)))))

@@ -62,13 +62,13 @@
 (def fn-operation.closures
   (ap field (symbol fn-operation) (symbol closures)))
 
-;; A do operation
-(def do-operation
-  (ap new-data (symbol do-operation)
+;; A impure operation
+(def impure-operation
+  (ap new-data (symbol impure-operation)
     (ap list1 (symbol operation))))
 
-(def do-operation.operation
-  (ap field (symbol do-operation) (symbol operation)))
+(def impure-operation.operation
+  (ap field (symbol impure-operation) (symbol operation)))
 
 ;; A symbol operation.
 (def symbol-operation
@@ -112,4 +112,4 @@
   (ap field (symbol line-number-operation) (symbol line)))
 
 ;; The nil operation.
-(def nil-operation (ap object (ap symbol nil-operation)))
+(def nil-operation (ap object (symbol nil-operation)))

@@ -30,6 +30,8 @@
 (def position.line (ap field (symbol position) (symbol line)))
 (def position.char (ap field (symbol position) (symbol char)))
 
+(def start-position (ap position nat.1 nat.1))
+
 ;; The position of the next char.
 (def next-char
   (fn p

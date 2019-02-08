@@ -1,27 +1,16 @@
 ;; Mangles the name of a function given an index.
 (def mangle-fn-name ())
 
-;; List containing all internal variables.
-(def internal-variables ())
-
-;; Map of internal variables.
-(def internals
-  (ap fold internal-variables (ap empty-tree-map compare-symbol)
-    (fn map
-      (fn variable
-        (ap tree-map.put map (ap first variable) (ap second variable))))))
-
 ;; The default M environment.
 (def default-env
   (fn exprs
-    (fn internals'
-      (ap env
-        exprs
-        (ap empty-tree-map compare-symbol)
-        internals'
-        (ap empty-tree-map compare-symbol)
-        ()
-        nat.0))))
+    (ap env
+      exprs
+      (ap empty-tree-map compare-symbol)
+      (ap empty-tree-map compare-symbol)
+      (ap empty-tree-map compare-symbol)
+      ()
+      nat.0)))
 
 ;; A set of closures in an expression.
 (def closures
@@ -241,10 +230,8 @@
     (fn expr
       (fn env'
         (if (ap some? (ap env.get env' name))
-          (if (ap some? (ap tree-map.get internals name))
-            (ap generate-identifier-expr name env')
             (ap error (ap concat name
-                      (ap symbol->list (symbol " has already been defined")))))
+                      (ap symbol->list (symbol " has already been defined"))))
           (ap with
             (ap env
               (ap env.exprs env')
@@ -279,7 +266,7 @@
                     name
                     (ap expr.path expr)
                     (ap generate-result.operation result))
-                  (ap append (ap generate-result.declarations result) declaration)
+                  (ap cons declaration (ap generate-result.declarations result))
                   (ap env
                     (ap env.exprs (ap generate-result.env result))
                     (ap env.locals (ap generate-result.env result))

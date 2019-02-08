@@ -20,7 +20,7 @@
             (ap with (ap file.child file.local-file (ap cadr args))
             (fn out
               (ap write-result
-                (ap generate-env (ap default-env exprs internals))
+                (ap generate-env (ap default-env exprs))
                 out)))))))))))
 
 ;; Writes a program.

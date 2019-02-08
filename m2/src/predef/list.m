@@ -36,7 +36,7 @@
 ;; Tests if a list is the empty list.
 (def nil?
   (fn list
-    (list
+    (ap list
       (ap const (ap const (ap const false)))
       true)))
 
