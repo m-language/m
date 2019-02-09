@@ -7,19 +7,21 @@
 ;;; implementation of natural numbers.
 
 ;; The natural number 0.
-(def nat.0 ())
+(def nat.0 (ap left id))
 
 ;; The natural number 1.
-(def nat.1 (ap cons () ()))
+(def nat.1 (ap right nat.0))
 
 ;; Tests if a natural number is 0.
-(def nat.0? nil?)
+(def nat.0? left?)
 
 ;; The successor of a natural number.
-(def nat.inc (ap cons ()))
+(def nat.inc right)
 
 ;; The predecessor of a natural number.
-(def nat.dec (fn x (ap cdr x)))
+(def nat.dec
+  (fn nat
+    (ap nat left id)))
 
 ;; Adds two natural numbers.
 (def nat.+
