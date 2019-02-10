@@ -12,10 +12,11 @@
 ;; The location of a global variable
 (def global-variable
   (new-data (symbol global-variable)
-    (list2 (symbol name) (symbol path))))
+    (list3 (symbol name) (symbol path) (symbol macro?))))
 
 (def global-variable.name (field (symbol global-variable) (symbol name)))
 (def global-variable.path (field (symbol global-variable) (symbol path)))
+(def global-variable.macro? (field (symbol global-variable) (symbol macro?)))
 
 ;; Tests if a value is a global variable.
 (def global-variable? (is? (symbol global-variable)))

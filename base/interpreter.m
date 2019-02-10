@@ -48,8 +48,7 @@
   (fn operation
     (fn stack
       (fn heap
-        (with
-          (heap (global-variable-operation.name operation))
+        (with (heap (global-variable-operation.name operation))
         (fn value
           (if (null? value)
             (error
@@ -76,10 +75,9 @@
         (fn value
           (if (null? value)
             (error
-              (concat (symbol->list (symbol "Could not find value \""))
-              (concat (def-operation.name operation)
-                (symbol "\""))))
-            (unnull value))))))))
+              (concat (symbol->list (symbol "Could not find value "))
+                      (def-operation.name operation)))
+            ((unnull value) heap))))))))
 
 ;; Interprets a fn operation.
 (def interpret-fn-operation
@@ -175,11 +173,11 @@
     (fn heap
       (fn name
         (if (symbol.= name (def-declaration.name declaration))
-          (fn heap'
-            (interpret-operation'
-              (def-declaration.value declaration)
-              ()
-              heap'))
+          (some
+            (fn heap'
+              (interpret-operation
+                (def-declaration.value declaration)
+                heap')))
           (heap name))))))
 
 ;; Interprets a fn declaration.
@@ -188,12 +186,13 @@
     (fn heap
       (fn name
         (if (symbol.= name (fn-declaration.name declaration))
-          (fn stack
-            (fn heap'
-              (interpret-operation'
-                (fn-declaration.value declaration)
-                stack
-                heap')))
+          (some
+            (fn stack
+              (fn heap'
+                (interpret-operation'
+                  (fn-declaration.value declaration)
+                  stack
+                  heap'))))
           (heap name))))))
 
 ;; The empty heap for the interpreter.

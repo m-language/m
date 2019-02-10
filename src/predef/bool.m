@@ -16,13 +16,13 @@
 (def and
   (fn x
     (fn y
-      (if x (y) false))))
+      (if x (y ()) false))))
 
 ;; True if either argument is true.
 (def or
   (fn x
     (fn y
-      (if x true (y)))))
+      (if x true (y ())))))
 
 ;; True if its argument is false.
 (def not

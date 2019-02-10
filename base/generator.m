@@ -1,17 +1,6 @@
 ;; Mangles the name of a function given an index.
 (def mangle-fn-name ())
 
-;; The default M environment.
-(def default-env
-  (fn exprs
-    (env
-      exprs
-      (empty-tree-map compare-symbol)
-      (empty-tree-map compare-symbol)
-      empty-heap
-      ()
-      nat.0)))
-
 ;; A set of closures in an expression.
 (def closures
   (fn expr
@@ -50,6 +39,17 @@
 (def env.def (field (symbol env) (symbol def)))
 (def env.index (field (symbol env) (symbol index)))
 
+;; The default M environment.
+(def default-env
+  (fn exprs
+    (env
+      exprs
+      (empty-tree-map compare-symbol)
+      (empty-tree-map compare-symbol)
+      empty-heap
+      ()
+      nat.0)))
+
 ;; Gets the variable with a name in an environment.
 (def env.get
   (fn env'
@@ -59,6 +59,16 @@
           (if (some? option)
             option
             (tree-map.get (env.globals env') name)))))))
+
+;; True if a name has been defined as a macro.
+(def env.macro?
+  (fn env'
+    (fn name
+      (with (tree-map.get (env.globals env') name)
+      (fn option
+        (if (null? option)
+          false
+          (global-variable.macro? (unnull option))))))))
 
 ;; The result of generating an expr.
 (def generate-result
@@ -73,6 +83,59 @@
 
 (def generate-result.env
   (field (symbol generate-result) (symbol env)))
+
+;; Generates a global expression.
+(def generate-global-expr
+  (fn macro?
+    (fn name
+      (fn expr
+        (fn env'
+          (if (some? (env.get env' name))
+              (error (concat name
+                        (symbol->list (symbol " has already been defined"))))
+            (with
+              (env
+                (env.exprs env')
+                (env.locals env')
+                (tree-map.put
+                  (env.globals env')
+                  name
+                  (global-variable name (expr.path expr) macro?))
+                (env.heap env')
+                (env.def env')
+                (env.index env'))
+            (fn new-env
+              (with
+                (generate-expr
+                  expr
+                  (env
+                    (env.exprs new-env)
+                    (env.locals new-env)
+                    (env.globals new-env)
+                    (env.heap new-env)
+                    name
+                    (env.index new-env)))
+              (fn result
+                (with
+                  (def-declaration
+                    name
+                    (expr.path expr)
+                    (generate-result.operation result))
+                (fn declaration
+                  (generate-result
+                    (def-operation
+                      name
+                      (expr.path expr)
+                      (generate-result.operation result))
+                    (cons declaration (generate-result.declarations result))
+                    (env
+                      (env.exprs (generate-result.env result))
+                      (env.locals (generate-result.env result))
+                      (env.globals (generate-result.env result))
+                      (interpret-def-declaration declaration
+                        (env.heap (generate-result.env result)))
+                      (env.def new-env)
+                      (env.index (generate-result.env result))))))))))))))))
 
 ;; Generates an identifier expression.
 (def generate-identifier-expr
@@ -226,55 +289,7 @@
 
 ;; Generates a def expression.
 (def generate-def-expr
-  (fn name
-    (fn expr
-      (fn env'
-        (if (some? (env.get env' name))
-            (error (concat name
-                      (symbol->list (symbol " has already been defined"))))
-          (with
-            (env
-              (env.exprs env')
-              (env.locals env')
-              (tree-map.put
-                (env.globals env')
-                name
-                (global-variable name (expr.path expr)))
-              (env.heap env')
-              (env.def env')
-              (env.index env'))
-          (fn new-env
-            (with
-              (generate-expr
-                expr
-                (env
-                  (env.exprs new-env)
-                  (env.locals new-env)
-                  (env.globals new-env)
-                  (env.heap new-env)
-                  name
-                  (env.index new-env)))
-            (fn result
-              (with
-                (def-declaration
-                  name
-                  (expr.path expr)
-                  (generate-result.operation result))
-              (fn declaration
-                (generate-result
-                  (def-operation
-                    name
-                    (expr.path expr)
-                    (generate-result.operation result))
-                  (cons declaration (generate-result.declarations result))
-                  (env
-                    (env.exprs (generate-result.env result))
-                    (env.locals (generate-result.env result))
-                    (env.globals (generate-result.env result))
-                    (interpret-def-declaration declaration
-                      (env.heap (generate-result.env result)))
-                    (env.def new-env)
-                    (env.index (generate-result.env result)))))))))))))))
+  (generate-global-expr false))
 
 ;; Generates a impure expression.
 (def generate-impure-expr
@@ -289,8 +304,7 @@
 
 ;; Generates a macro expression.
 (def generate-macro-expr
-  (fn macro
-    (error (symbol "TODO macros"))))
+  (generate-global-expr true))
 
 ;; Generates a symbol expression.
 (def generate-symbol-expr
@@ -303,34 +317,42 @@
   (fn fn
     (fn args
       (fn env'
-        (if (nil? args)
-          (generate-apply-expr
-            fn
-            (cons
-              (list-expr () (expr.path fn) (expr.start fn) (expr.end fn))
-              ())
-            env')
-        (if (nil? (cdr args))
-          ((fn fn-result
-            ((fn arg-result
-              (generate-result
-                (apply-operation
-                  (generate-result.operation fn-result)
-                  (generate-result.operation arg-result))
-                (concat
-                  (generate-result.declarations fn-result)
-                  (generate-result.declarations arg-result))
-                (generate-result.env arg-result)))
-            (generate-expr (car args) (generate-result.env fn-result))))
-          (generate-expr fn env'))
-          (generate-apply-expr
-            (list-expr
-              (list2 fn (car args))
-              (expr.path fn)
-              (expr.start fn)
-              (expr.end fn))
-            (cdr args)
-            env')))))))
+        (with (generate-expr fn env')
+        (fn fn-result
+          (if (and (identifier-expr? fn)
+                   (fn ""
+                     (env.macro?
+                       (generate-result.env fn-result)
+                       (identifier-expr.name fn))))
+            (with
+              (interpret-operation
+                (generate-result.operation fn-result)
+                (env.heap (generate-result.env fn-result)))
+            (fn function
+              (generate-expr
+                (list-expr
+                  (map (function (map args expr->list)) list->expr)
+                  (identifier-expr.path fn)
+                  (identifier-expr.start fn)
+                  (identifier-expr.end fn))
+                (generate-result.env fn-result))))
+            (fold args fn-result
+              (fn fn-result
+                (fn arg
+                  (apply-generate-result fn-result
+                    (generate-expr arg (generate-result.env fn-result)))))))))))))
+
+(def apply-generate-result
+  (fn fn-result
+    (fn arg-result
+      (generate-result
+        (apply-operation
+          (generate-result.operation fn-result)
+          (generate-result.operation arg-result))
+        (concat
+          (generate-result.declarations fn-result)
+          (generate-result.declarations arg-result))
+        (generate-result.env arg-result)))))
 
 ;; Generates a list expression.
 (def generate-list-expr
@@ -362,7 +384,8 @@
                 env')
             (if (list.= char.= name (symbol->list (symbol macro)))
               (generate-macro-expr
-                (cadr exprs)
+                (identifier-expr.name (cadr exprs))
+                (caddr exprs)
                 env')
             (if (list.= char.= name (symbol->list (symbol symbol)))
               (generate-symbol-expr
