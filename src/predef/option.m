@@ -7,16 +7,18 @@
 ;;; implementation of null.
 
 ;; A container for a value.
-(def some (ap pair true))
+(def some right)
 
 ;; The singleton null value.
-(def null (ap pair false ()))
+(def null (ap left ()))
 
 ;; Tests if an option has a value.
-(def some? first)
+(def some? right?)
 
 ;; Tests if an option is null.
-(def null? (ap compose not first))
+(def null? left?)
 
 ;; The value of an option, or `()` if it is null.
-(def unnull second)
+(def unnull
+  (fn either
+    (ap either id id)))

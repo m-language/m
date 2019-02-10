@@ -1,6 +1,12 @@
 ;; Interprets an operation.
 (def interpret-operation
   (fn operation
+    (fn heap
+      (ap interpret-operation' operation () heap))))
+
+;; Interprets an operation with a stack.
+(def interpret-operation'
+  (fn operation
     (fn stack
       (fn heap
         (ap (fn type
@@ -43,7 +49,7 @@
     (fn stack
       (fn heap
         (ap with
-          (ap tree-map.get heap (ap global-variable-operation.name operation))
+          (ap heap (ap global-variable-operation.name operation))
         (fn value
           (if (ap null? value)
             (ap error
@@ -57,16 +63,16 @@
   (fn operation
     (fn stack
       (fn heap
-        (if (ap interpret-operation (ap if-operation.cond operation) stack heap)
-          (ap interpret-operation (ap if-operation.true operation) stack heap)
-          (ap interpret-operation (ap if-operation.false operation) stack heap))))))
+        (if (ap interpret-operation' (ap if-operation.cond operation) stack heap)
+          (ap interpret-operation' (ap if-operation.true operation) stack heap)
+          (ap interpret-operation' (ap if-operation.false operation) stack heap))))))
 
 ;; Interprets a def operation.
 (def interpret-def-operation
   (fn operation
     (fn stack
       (fn heap
-        (ap with (ap tree-map.get heap (ap def-operation.name operation))
+        (ap with (ap heap (ap def-operation.name operation))
         (fn value
           (if (ap null? value)
             (ap error
@@ -81,14 +87,14 @@
     (fn stack
       (fn heap
         (fn arg
-          (ap with (ap tree-map.get heap (ap fn-operation.name operation))
+          (ap with (ap heap (ap fn-operation.name operation))
           (fn function
             (if (ap null? function)
               (ap error (ap concat (symbol "Could not find synthetic function ")
                         (ap fn-operation.name operation)))
               (ap (ap unnull function)
                 (ap concat (ap map (ap fn-operation.closures operation)
-                    (fn closure (ap interpret-operation closure stack heap)))
+                    (fn closure (ap interpret-operation' closure stack heap)))
                   (ap cons arg stack))
                 heap)))))))))
 
@@ -97,7 +103,7 @@
   (fn operation
     (fn stack
       (fn heap
-        (impure (ap interpret-operation (ap impure-operation operation) stack heap))))))
+        (impure (ap interpret-operation' (ap impure-operation operation) stack heap))))))
 
 ;; Interprets a symbol operation.
 (def interpret-symbol-operation
@@ -111,8 +117,8 @@
   (fn operation
     (fn stack
       (fn heap
-        (ap (ap interpret-operation (ap apply-operation.fn operation) stack heap)
-          (ap interpret-operation (ap apply-operation.arg operation) stack heap))))))
+        (ap (ap interpret-operation' (ap apply-operation.fn operation) stack heap)
+          (ap interpret-operation' (ap apply-operation.arg operation) stack heap))))))
 
 ;; Interpets a combine operation.
 (def interpret-combine-operation
@@ -120,11 +126,11 @@
     (fn stack
       (fn heap
         (ap (fn ignore (fn x x))
-          (ap interpret-operation
+          (ap interpret-operation'
             (ap combine-operation.first operation)
             stack
             heap)
-          (ap interpret-operation
+          (ap interpret-operation'
             (ap combine-operation.second operation)
             stack
             heap))))))
@@ -132,7 +138,7 @@
 ;; Interprets a line number operation.
 (def interpret-line-number-operation
   (fn operation
-    (ap interpret-operation (ap line-number-operation.operation operation))))
+    (ap interpret-operation' (ap line-number-operation.operation operation))))
 
 ;; Interprets a nil operation.
 (def interpret-nil-operation
@@ -167,26 +173,28 @@
 (def interpret-def-declaration
   (fn declaration
     (fn heap
-      (ap tree-map.put heap
-        (ap def-declaration.name declaration)
-        (fn heap'
-          (ap interpret-operation
-            (ap def-declaration.value declaration)
-            ()
-            heap'))))))
+      (fn name
+        (if (ap symbol.= name (ap def-declaration.name declaration))
+          (fn heap'
+            (ap interpret-operation'
+              (ap def-declaration.value declaration)
+              ()
+              heap'))
+          (ap heap name))))))
 
 ;; Interprets a fn declaration.
 (def interpret-fn-declaration
   (fn declaration
     (fn heap
-      (ap tree-map.put heap
-        (ap fn-declaration.name declaration)
-        (fn stack
-          (fn heap'
-            (ap interpret-operation
-              (ap fn-declaration.value declaration)
-              stack
-              heap')))))))
+      (fn name
+        (if (ap symbol.= name (ap fn-declaration.name declaration))
+          (fn stack
+            (fn heap'
+              (ap interpret-operation'
+                (ap fn-declaration.value declaration)
+                stack
+                heap')))
+          (ap heap name))))))
 
-;; The default heap for the interpreter.
-(def default-heap (ap empty-tree-map compare-symbol))
+;; The empty heap for the interpreter.
+(def empty-heap (ap const null))

@@ -8,7 +8,7 @@
       exprs
       (ap empty-tree-map compare-symbol)
       (ap empty-tree-map compare-symbol)
-      (ap empty-tree-map compare-symbol)
+      empty-heap
       ()
       nat.0)))
 
@@ -302,7 +302,6 @@
             (ap with
               (ap interpret-operation
                 (ap generate-result.operation result)
-                ()
                 new-heap)
             (fn fn
               (ap generate-expr

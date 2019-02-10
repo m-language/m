@@ -2,21 +2,20 @@
 (def ""
   (fn args
     (if (ap nil? args)
-      (ap repl (ap default-env ()) default-heap)
+      (ap repl (ap default-env ()) empty-heap nat.1)
       (ap with (ap file.child file.local-file (ap car args))
       (fn in
         (ap then-run-with (ap parse-file in () true)
         (fn exprs
           (if (ap nil? (ap cdr args))
-            (ap with
-              (ap generate-env
-                (ap default-env exprs (ap empty-tree-map compare-symbol)))
+            (ap with (ap generate-env (ap default-env exprs))
             (fn result
               (ap repl
                 (ap generate-result.env result)
                 (ap interpret-declarations
                   (ap generate-result.declarations result)
-                  default-heap))))
+                  empty-heap)
+                nat.1)))
             (ap with (ap file.child file.local-file (ap cadr args))
             (fn out
               (ap write-result
