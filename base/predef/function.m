@@ -15,20 +15,20 @@
   (fn f
     (fn g
       (fn x
-        (ap f (ap g x))))))
+        (f (g x))))))
 
 ;; Swaps the order of a function's arguments.
 (def swap
   (fn f
     (fn x
       (fn y
-        (ap f y x)))))
+        (f y x)))))
 
 ;; Applies a function to an argument.
 (def apply
   (fn f
     (fn x
-      (ap f x))))
+      (f x))))
 
 ;; The inverse of apply.
-(def with (ap swap apply))
+(def with (swap apply))

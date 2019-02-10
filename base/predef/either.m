@@ -6,22 +6,26 @@
 ;;; All definitions in this file are optimized to use the backend's native
 ;;; implementation of either.
 
+;; Creates a left either.
 (def left
   (fn value
     (fn first
       (fn ""
-        (ap first value)))))
+        (first value)))))
 
+;; Creates a right either.
 (def right
   (fn value
     (fn ""
       (fn second
-        (ap second value)))))
+        (second value)))))
 
+;; True if an either is left.
 (def left?
   (fn either
-    (ap either (ap const true) (ap const false))))
+    (either (const true) (const false))))
 
+;; True if an either is right.
 (def right?
   (fn either
-    (ap either (ap const false) (ap const true))))
+    (either (const false) (const true))))

@@ -7,10 +7,10 @@
 ;; Reads a line from an istream.
 (def istream.readline
   (fn istream
-    (ap then-run-with istream
+    (then-run-with istream
     (fn char
-      (if (ap newline? char)
+      (if (newline? char)
         (impure ())
-        (ap run-with (ap istream.readline istream)
+        (run-with (istream.readline istream)
         (fn line
-          (ap cons char line))))))))
+          (cons char line))))))))

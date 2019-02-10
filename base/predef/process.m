@@ -9,16 +9,16 @@
 (def then-run-with
   (fn p
     (fn f
-      (ap p f))))
+      (p f))))
 
 ;; Combines two processes, running them one after another.
 (def then-run
   (fn p1
     (fn p2
-      (ap then-run-with p1 (ap const p2)))))
+      (then-run-with p1 (const p2)))))
 
 ;; Runs a function in a process.
 (def run-with
   (fn p
     (fn f
-      (ap then-run-with p (ap compose return f)))))
+      (then-run-with p (compose return f)))))

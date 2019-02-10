@@ -10,7 +10,7 @@
 (def some right)
 
 ;; The singleton null value.
-(def null (ap left ()))
+(def null (left ()))
 
 ;; Tests if an option has a value.
 (def some? right?)
@@ -21,4 +21,4 @@
 ;; The value of an option, or `()` if it is null.
 (def unnull
   (fn either
-    (ap either id id)))
+    (either id id)))

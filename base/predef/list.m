@@ -19,44 +19,44 @@
 (def cdr right)
 
 ;; The rest of the rest of the list.
-(def cddr (ap compose cdr cdr))
+(def cddr (compose cdr cdr))
 
 ;; The rest of the rest of the rest of the list.
-(def cdddr (ap compose cdr cddr))
+(def cdddr (compose cdr cddr))
 
 ;; The second element in a list.
-(def cadr (ap compose car cdr))
+(def cadr (compose car cdr))
 
 ;; The third element in a list.
-(def caddr (ap compose car cddr))
+(def caddr (compose car cddr))
 
 ;; The fourth element in a list.
-(def cadddr (ap compose car cdddr))
+(def cadddr (compose car cdddr))
 
 ;; Tests if a list is the empty list.
 (def nil?
   (fn list
-    (ap list
-      (ap const (ap const (ap const false)))
+    (list
+      (const (const (const false)))
       true)))
 
 ;; Creates a list with a single element.
 (def list1
   (fn a
-    (ap cons a ())))
+    (cons a ())))
 
 ;; Creates a list with two elements.
 (def list2
   (fn a
     (fn b
-      (ap cons a (ap list1 b)))))
+      (cons a (list1 b)))))
 
 ;; Creates a list with three elements.
 (def list3
   (fn a
     (fn b
       (fn c
-        (ap cons a (ap list2 b c))))))
+        (cons a (list2 b c))))))
 
 ;; Creates a list with four elements.
 (def list4
@@ -64,7 +64,7 @@
     (fn b
       (fn c
         (fn d
-          (ap cons a (ap list3 b c d)))))))
+          (cons a (list3 b c d)))))))
 
 ;; Creates a list with five elements.
 (def list5
@@ -73,7 +73,7 @@
       (fn c
         (fn d
           (fn e
-            (ap cons a (ap list4 b c d e))))))))
+            (cons a (list4 b c d e))))))))
 
 ;; Creates a list with six elements.
 (def list6
@@ -83,80 +83,80 @@
         (fn d
           (fn e
             (fn f
-              (ap cons a (ap list5 b c d e f)))))))))
+              (cons a (list5 b c d e f)))))))))
 
 ;; Appends an element to a list.
 (def append
   (fn list
     (fn elem
-      (if (ap nil? list)
-        (ap list1 elem)
-        (ap cons (ap car list) (ap append (ap cdr list) elem))))))
+      (if (nil? list)
+        (list1 elem)
+        (cons (car list) (append (cdr list) elem))))))
 
 ;; Concatenates two lists.
 (def concat
   (fn list1
     (fn list2
-      (if (ap nil? list1)
+      (if (nil? list1)
         list2
-        (ap cons (ap car list1) (ap concat (ap cdr list1) list2))))))
+        (cons (car list1) (concat (cdr list1) list2))))))
 
 ;; Gets the nth element of a list.
 (def get
   (fn list
     (fn n
-      (if (ap nat.0? n)
-        (ap car list)
-        (ap get (ap cdr list) (ap nat.dec n))))))
+      (if (nat.0? n)
+        (car list)
+        (get (cdr list) (nat.dec n))))))
 
 ;; Maps a list with a function.
 (def map
   (fn list
     (fn f
-      (if (ap nil? list)
+      (if (nil? list)
         ()
-        (ap cons (ap f (ap car list)) (ap map (ap cdr list) f))))))
+        (cons (f (car list)) (map (cdr list) f))))))
 
 ;; Flat maps a list with a function.
 (def flat-map
   (fn list
     (fn f
-      (if (ap nil? list)
+      (if (nil? list)
         ()
-        (ap append (ap f (ap car list)) (ap flat-map (ap cdr list) f))))))
+        (append (f (car list)) (flat-map (cdr list) f))))))
 
 ;; Folds a list with an accumulator and a function.
 (def fold
   (fn list
     (fn acc
       (fn f
-        (if (ap nil? list)
+        (if (nil? list)
           acc
-          (ap fold (ap cdr list) (ap f acc (ap car list)) f))))))
+          (fold (cdr list) (f acc (car list)) f))))))
 
 ;; Implementation of reverse.
 (def reverse'
   (fn list
     (fn acc
-      (if (ap nil? list)
+      (if (nil? list)
         acc
-        (ap reverse'
-          (ap cdr list)
-          (ap cons (ap car list) acc))))))
+        (reverse'
+          (cdr list)
+          (cons (car list) acc))))))
 
 ;; Reverses a list.
 (def reverse
   (fn list
-    (ap reverse' list ())))
+    (reverse' list ())))
 
 ;; Tests if two lists are equal are equal given its element's equality function.
 (def list.=
   (fn f
     (fn list1
       (fn list2
-        (if (ap nil? list1)
-          (ap nil? list2)
-          (if (ap nil? list2)
+        (if (nil? list1)
+          (nil? list2)
+          (if (nil? list2)
             false
-            (ap and (ap f (ap car list1) (ap car list2))
-                 (fn "" (ap list.= f (ap cdr list1) (ap cdr list2))))))))))
+            (and (f (car list1) (car list2))
+                 (fn "" (list.= f (cdr list1) (cdr list2))))))))))

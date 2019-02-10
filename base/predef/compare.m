@@ -1,20 +1,20 @@
 ;; Represents that two values are equal.
-(def compare= (ap object (symbol compare=)))
+(def compare= (object (symbol compare=)))
 
 ;; Represents that the first value is greater than the second value.
-(def compare< (ap object (symbol compare<)))
+(def compare< (object (symbol compare<)))
 
 ;; Represents that the first value is less than the second value.
-(def compare> (ap object (symbol compare>)))
+(def compare> (object (symbol compare>)))
 
 ;; Tests if a value is compare=.
-(def compare=? (ap is? (symbol compare=)))
+(def compare=? (is? (symbol compare=)))
 
 ;; Tests if a value is compare<.
-(def compare<? (ap is? (symbol compare<)))
+(def compare<? (is? (symbol compare<)))
 
 ;; Tests if a value is compare>.
-(def compare>? (ap is? (symbol compare>)))
+(def compare>? (is? (symbol compare>)))
 
 ;; Folds over the result of a compare.
 (def fold-compare
@@ -22,37 +22,37 @@
     (fn <
       (fn >
         (fn =
-          (if (ap compare<? compare)
-            (ap < compare)
-            (if (ap compare>? compare)
-              (ap > compare)
-              (ap = compare))))))))
+          (if (compare<? compare)
+            (< compare)
+            (if (compare>? compare)
+              (> compare)
+              (= compare))))))))
 
 ;; Compares two lists given a compare function.
 (def compare-list
   (fn compare
     (fn list1
       (fn list2
-        (if (ap and (ap nil? list1)
-                 (fn "" (ap nil? list2)))
+        (if (and (nil? list1)
+                 (fn "" (nil? list2)))
           compare=
-        (if (ap nil? list1)
+        (if (nil? list1)
           compare<
-        (if (ap nil? list2)
+        (if (nil? list2)
           compare>
-        (ap (fn compare-result
-          (if (ap compare=? compare-result)
-            (ap compare-list compare (ap cdr list1) (ap cdr list2))
+        ((fn compare-result
+          (if (compare=? compare-result)
+            (compare-list compare (cdr list1) (cdr list2))
             compare-result))
-          (ap compare (ap car list1) (ap car list2))))))))))
+          (compare (car list1) (car list2))))))))))
 
 ;; Compares nats.
 (def compare-nat
   (fn nat1
     (fn nat2
-      (if (ap nat.> nat1 nat2)
+      (if (nat.> nat1 nat2)
         compare>
-        (if (ap nat.< nat1 nat2)
+        (if (nat.< nat1 nat2)
           compare<
           compare=)))))
 
@@ -60,7 +60,7 @@
 (def compare-char
   (fn char1
     (fn char2
-      (ap compare-nat (ap char->nat char1) (ap char->nat char2)))))
+      (compare-nat (char->nat char1) (char->nat char2)))))
 
 ;; Compares symbols.
-(def compare-symbol (ap compare-list compare-char))
+(def compare-symbol (compare-list compare-char))

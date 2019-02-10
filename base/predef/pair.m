@@ -12,14 +12,14 @@
   (fn first
     (fn second
       (fn x
-        (ap x first second)))))
+        (x first second)))))
 
 ;; The first value of a pair.
 (def first
   (fn pair
-    (ap pair true)))
+    (pair true)))
 
 ;; The second value of a pair.
 (def second
   (fn pair
-    (ap pair false)))
+    (pair false)))
