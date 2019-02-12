@@ -5,12 +5,12 @@
   (fn istream istream))
 
 ;; Reads a line from an istream.
-(def istream.readline
+(def istream.readln
   (fn istream
     (then-run-with istream
     (fn char
       (if (newline? char)
         (impure ())
-        (run-with (istream.readline istream)
+        (run-with (istream.readln istream)
         (fn line
           (cons char line))))))))

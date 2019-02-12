@@ -180,7 +180,7 @@
             (if directory?
               (then-run-with (file.child-files file)
                 (fn child-files
-                  (fold child-files (return ())
+                  (fold child-files (impure ())
                     (fn acc
                       (fn child
                         (then-run-with
@@ -188,7 +188,7 @@
                             child
                             (if init
                               ()
-                              (concat path (append (file.name file) dot)))
+                              (concat path (append (file.name file) slash)))
                             false)
                           (fn parse
                             (run-with acc

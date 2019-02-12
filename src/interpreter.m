@@ -101,7 +101,7 @@
   (fn operation
     (fn stack
       (fn heap
-        (impure (interpret-operation' (impure-operation operation) stack heap))))))
+        (impure (interpret-operation' (impure-operation.operation operation) stack heap))))))
 
 ;; Interprets a symbol operation.
 (def interpret-symbol-operation

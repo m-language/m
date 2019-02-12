@@ -91,8 +91,7 @@
       (fn expr
         (fn env'
           (if (some? (env.get env' name))
-              (error (concat name
-                        (symbol->list (symbol " has already been defined"))))
+            (error (concat name (symbol " has already been defined")))
             (with
               (env
                 (env.exprs env')
@@ -105,7 +104,7 @@
                 (env.def env')
                 (env.index env'))
             (fn new-env
-              (with
+              (run-with
                 (generate-expr
                   expr
                   (env
@@ -146,24 +145,24 @@
         (if (some? option)
           (with (unnull option)
           (fn variable
-            (if (global-variable? variable)
-              (generate-result
-                (global-variable-operation
-                  (global-variable.name variable)
-                  (global-variable.path variable))
-                ()
-                env')
-              (generate-result
-                (local-variable-operation
-                  (local-variable.name variable)
-                  (local-variable.index variable))
-                ()
-                env'))))
+            (impure
+              (generate-result (generate-identifier-expr' variable) () env'))))
           (if (nil? (env.exprs env'))
-            (error (concat (symbol->list (symbol "Could not find variable \""))
-                      (concat name
-                        (symbol->list (symbol "\"")))))
-            (with
+            (then-run-with (mpm-get-ref name)
+            (fn ref
+              (then-run-with (mpm-get-src ref)
+              (fn src
+                (with (parse src ref start-position ())
+                (fn exprs
+                  (generate-identifier-expr name
+                    (env
+                      exprs
+                      (env.locals env')
+                      (env.globals env')
+                      (env.heap env')
+                      (env.def env')
+                      (env.index env')))))))))
+            (then-run-with
               (generate-expr
                 (car (env.exprs env'))
                 (env
@@ -174,7 +173,7 @@
                   ()
                   nat.0))
             (fn next
-              (with
+              (run-with
                 (generate-identifier-expr
                   name
                   (env
@@ -194,10 +193,20 @@
                     (generate-result.declarations result))
                   (generate-result.env result)))))))))))))
 
+(def generate-identifier-expr'
+  (fn variable
+    (if (global-variable? variable)
+      (global-variable-operation
+        (global-variable.name variable)
+        (global-variable.path variable))
+      (local-variable-operation
+        (local-variable.name variable)
+        (local-variable.index variable)))))
+
 ;; Generates a nil expression.
 (def generate-nil
   (fn env'
-    (generate-result nil-operation () env')))
+    (impure (generate-result nil-operation () env'))))
 
 ;; Generates an if expression.
 (def generate-if-expr
@@ -205,9 +214,12 @@
     (fn true-expr
       (fn false-expr
         (fn env'
-          ((fn cond-result
-            ((fn true-result
-              ((fn false-result
+          (then-run-with (generate-expr cond-expr env')
+          (fn cond-result
+            (then-run-with (generate-expr true-expr (generate-result.env cond-result))
+            (fn true-result
+              (run-with (generate-expr false-expr (generate-result.env true-result))
+              (fn false-result
                 (generate-result
                   (if-operation
                     (generate-result.operation cond-result)
@@ -218,10 +230,7 @@
                     (concat
                       (generate-result.declarations true-result)
                       (generate-result.declarations false-result)))
-                  (generate-result.env false-result)))
-              (generate-expr false-expr (generate-result.env true-result))))
-            (generate-expr true-expr (generate-result.env cond-result))))
-          (generate-expr cond-expr env')))))))
+                  (generate-result.env false-result)))))))))))))
 
 ;; Generates a fn expression.
 (def generate-fn-expr
@@ -241,7 +250,7 @@
           (fn new-env
             (with (map (tree-map->list (closures expr new-env)) first)
             (fn closures
-              (with
+              (run-with
                 (generate-expr expr
                   (env
                     (env.exprs new-env)
@@ -275,8 +284,7 @@
                         mangled-name
                         (map closures
                         (fn closure
-                          (generate-result.operation
-                            (generate-identifier-expr closure new-env)))))
+                          (generate-identifier-expr' (unnull (env.get new-env closure))))))
                     (append (generate-result.declarations result) declaration)
                     (env
                       (env.exprs (generate-result.env result))
@@ -295,7 +303,7 @@
 (def generate-impure-expr
   (fn expr
     (fn env'
-      (with (generate-expr expr env')
+      (run-with (generate-expr expr env')
       (fn result
         (generate-result
           (impure-operation (generate-result.operation result))
@@ -310,14 +318,14 @@
 (def generate-symbol-expr
   (fn name
     (fn env'
-      (generate-result (symbol-operation name) () env'))))
+      (impure (generate-result (symbol-operation name) () env')))))
 
 ;; Generates an apply expression.
 (def generate-apply-expr
   (fn fn
     (fn args
       (fn env'
-        (with (generate-expr fn env')
+        (then-run-with (generate-expr fn env')
         (fn fn-result
           (if (and (identifier-expr? fn)
                    (fn ""
@@ -336,13 +344,16 @@
                   (identifier-expr.start fn)
                   (identifier-expr.end fn))
                 (generate-result.env fn-result))))
-            (fold args fn-result
-              (fn fn-result
+            (fold args (impure fn-result)
+              (fn proc
                 (fn arg
-                  (apply-generate-result fn-result
-                    (generate-expr arg (generate-result.env fn-result)))))))))))))
+                  (then-run-with proc
+                  (fn fn-result
+                    (run-with (generate-expr arg (generate-result.env fn-result))
+                    (fn arg-result
+                      (generate-apply-expr' fn-result arg-result)))))))))))))))
 
-(def apply-generate-result
+(def generate-apply-expr'
   (fn fn-result
     (fn arg-result
       (generate-result
@@ -358,10 +369,15 @@
 (def generate-list-expr
   (fn expr
     (fn env'
-      ((fn exprs
+      (with (list-expr.exprs expr)
+      (fn exprs
         (if (nil? exprs)
           (generate-nil env')
-          ((fn name
+          (with
+            (if (identifier-expr? (car exprs))
+              (identifier-expr.name (car exprs))
+              ())
+          (fn name
             (if (list.= char.= name (symbol->list (symbol if)))
               (generate-if-expr
                 (cadr exprs)
@@ -394,33 +410,30 @@
               (generate-apply-expr
                 (car exprs)
                 (cdr exprs)
-                env'))))))))
-          (if (identifier-expr? (car exprs))
-            (identifier-expr.name (car exprs))
-            ()))))
-      (list-expr.exprs expr)))))
+                env')))))))))))))))
 
 ;; Generates a single expression.
 (def generate-expr
   (fn expr
     (fn env'
-      ((fn expr-result
+      (run-with
+        (if (identifier-expr? expr)
+          (generate-identifier-expr (identifier-expr.name expr) env')
+          (generate-list-expr expr env'))
+      (fn expr-result
         (generate-result
           (line-number-operation
             (generate-result.operation expr-result)
             (position.line (expr.start expr)))
           (generate-result.declarations expr-result)
-          (generate-result.env expr-result)))
-      (if (identifier-expr? expr)
-        (generate-identifier-expr (identifier-expr.name expr) env')
-        (generate-list-expr expr env'))))))
+          (generate-result.env expr-result)))))))
 
 ;; Generates an M environment.
 (def generate-env
   (fn env'
     (if (nil? (env.exprs env'))
-      (generate-result nil-operation () env')
-      (with
+      (impure (generate-result nil-operation () env'))
+      (then-run-with
         (generate-expr
           (car (env.exprs env'))
           (env
@@ -431,7 +444,7 @@
             (env.def env')
             (env.index env')))
       (fn car-result
-        (with (generate-env (generate-result.env car-result))
+        (run-with (generate-env (generate-result.env car-result))
         (fn cdr-result
           (generate-result
             (combine-operation

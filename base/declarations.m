@@ -12,6 +12,8 @@
 (def def-declaration.value
   (field (symbol def-declaration) (symbol value)))
 
+(def def-declaration? (is? (symbol def-declaration)))
+
 ;; A function declaration.
 (def fn-declaration
   (new-data (symbol fn-declaration)
@@ -28,3 +30,5 @@
 
 (def fn-declaration.value
   (field (symbol fn-declaration) (symbol value)))
+
+(def fn-declaration? (is? (symbol fn-declaration)))

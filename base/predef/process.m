@@ -1,7 +1,7 @@
 ;;; Process.m
 
 ;; Creates a constant process.
-(def return
+(def impure
   (fn x
     (impure x)))
 
@@ -21,4 +21,4 @@
 (def run-with
   (fn p
     (fn f
-      (then-run-with p (compose return f)))))
+      (then-run-with p (compose impure f)))))

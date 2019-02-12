@@ -1,4 +1,4 @@
-;;; Char.m
+    ;;; Char.m
 ;;;
 ;;; An implementation of characters which are encoded using a natural number as
 ;;; the character's Unicode value.
@@ -26,6 +26,9 @@
 
 ;; The literal character "\"".
 (def quote (car (symbol "\"")))
+
+;; The literal character "/".
+(def slash (car (symbol "/")))
 
 ;; The literal character "\\".
 (def backslash (car (symbol "\\")))

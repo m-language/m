@@ -123,7 +123,17 @@
     (fn f
       (if (nil? list)
         ()
-        (append (f (car list)) (flat-map (cdr list) f))))))
+        (concat (f (car list)) (flat-map (cdr list) f))))))
+
+;; Filters a list with a function.
+(def filter
+  (fn list
+    (fn f
+      (if (nil? list)
+        ()
+        (if (f (car list))
+          (cons (car list) (filter (cdr list) f))
+          (filter (cdr list) f))))))
 
 ;; Folds a list with an accumulator and a function.
 (def fold

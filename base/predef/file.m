@@ -3,15 +3,6 @@
 ;; The root file for this program.
 (def file.local-file ())
 
-;; A list of child files.
-(def file.child-files ())
-
-;; True if a file is a directory.
-(def file.directory? ())
-
-;; Reads the contents of a file as a list of characters.
-(def file.read ())
-
 ;; The name of a file.
 (def file.name ())
 
@@ -20,3 +11,18 @@
 
 ;; The child of a file given a name.
 (def file.child ())
+
+;; Reads the contents of a file as a list of characters.
+(def file.read ())
+
+;; Writes a list of characters to a file.
+(def file.write ())
+
+;; True if a file is a directory.
+(def file.directory? ())
+
+;; A list of child files.
+(def file.child-files ())
+
+;; Copys a file.
+(def file.copy ())
