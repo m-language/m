@@ -51,13 +51,19 @@
 ;; A function operation.
 (def fn-operation
   (new-data (symbol fn-operation)
-    (list3 (symbol path) (symbol name) (symbol closures))))
+    (list5 (symbol path) (symbol name) (symbol arg) (symbol value) (symbol closures))))
 
 (def fn-operation.path
   (field (symbol fn-operation) (symbol path)))
 
 (def fn-operation.name
   (field (symbol fn-operation) (symbol name)))
+
+(def fn-operation.arg
+  (field (symbol fn-operation) (symbol arg)))
+
+(def fn-operation.value
+  (field (symbol fn-operation) (symbol value)))
 
 (def fn-operation.closures
   (field (symbol fn-operation) (symbol closures)))
@@ -89,17 +95,6 @@
 (def apply-operation.arg
   (field (symbol apply-operation) (symbol arg)))
 
-;; Combines two operations.
-(def combine-operation
-  (new-data (symbol combine-operation)
-    (list2 (symbol first) (symbol second))))
-
-(def combine-operation.first
-  (field (symbol combine-operation) (symbol first)))
-
-(def combine-operation.second
-  (field (symbol combine-operation) (symbol second)))
-
 ;; Marks an operation with a line number.
 (def line-number-operation
   (new-data (symbol line-number-operation)
@@ -113,3 +108,40 @@
 
 ;; The nil operation.
 (def nil-operation (object (symbol nil-operation)))
+
+;; Folds over an operation.
+(def operation.fold
+  (fn operation
+    (fn acc
+      (fn f
+        (f
+          (with (type-name operation)
+          (fn type
+            (if (symbol.= type (symbol local-variable-operation))
+              acc
+            (if (symbol.= type (symbol global-variable-operation))
+              acc
+            (if (symbol.= type (symbol if-operation))
+              (operation.fold (if-operation.false operation)
+                (operation.fold (if-operation.true operation)
+                  (operation.fold (if-operation.cond operation) acc f)
+                  f)
+                f)
+            (if (symbol.= type (symbol def-operation))
+              (operation.fold (def-operation.value operation) acc f)
+            (if (symbol.= type (symbol fn-operation))
+              (operation.fold (fn-operation.value operation) acc f)
+            (if (symbol.= type (symbol impure-operation))
+              (operation.fold (impure-operation.operation operation) acc f)
+            (if (symbol.= type (symbol symbol-operation))
+              acc
+            (if (symbol.= type (symbol apply-operation))
+              (operation.fold (apply-operation.arg operation)
+                (operation.fold (apply-operation.fn operation) acc f)
+                f)
+            (if (symbol.= type (symbol line-number-operation))
+              (operation.fold (line-number-operation.operation operation) acc f)
+            (if (symbol.= type (symbol nil-operation))
+              acc
+              (error (symbol "..."))))))))))))))
+          operation)))))

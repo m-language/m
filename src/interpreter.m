@@ -26,13 +26,11 @@
             interpret-symbol-operation
           (if (symbol.= type (symbol apply-operation))
             interpret-apply-operation
-          (if (symbol.= type (symbol combine-operation))
-            interpret-combine-operation
           (if (symbol.= type (symbol line-number-operation))
             interpret-line-number-operation
           (if (symbol.= type (symbol nil-operation))
             interpret-nil-operation
-            (error (symbol "..."))))))))))))))
+            (error (symbol "...")))))))))))))
         (type-name operation)
           operation stack heap)))))
 
@@ -117,21 +115,6 @@
       (fn heap
         ((interpret-operation' (apply-operation.fn operation) stack heap)
           (interpret-operation' (apply-operation.arg operation) stack heap))))))
-
-;; Interpets a combine operation.
-(def interpret-combine-operation
-  (fn operation
-    (fn stack
-      (fn heap
-        ((fn ignore (fn x x))
-          (interpret-operation'
-            (combine-operation.first operation)
-            stack
-            heap)
-          (interpret-operation'
-            (combine-operation.second operation)
-            stack
-            heap))))))
 
 ;; Interprets a line number operation.
 (def interpret-line-number-operation

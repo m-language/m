@@ -49,9 +49,6 @@
     (fn exprs
       (generate-env (default-env exprs))))))
 
-;; Writes a program.
-(def write-program ())
-
 ;; Writes a generate result.
 (def write-result
   (fn result
@@ -60,3 +57,6 @@
         out
         (generate-result.operation result)
         (generate-result.declarations result)))))
+
+;; Writes a program.
+(def write-program ())

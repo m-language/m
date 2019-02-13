@@ -1,26 +1,6 @@
 ;; Mangles the name of a function given an index.
 (def mangle-fn-name ())
 
-;; A set of closures in an expression.
-(def closures
-  (fn expr
-    (fn env'
-      (if (identifier-expr? expr)
-        ((fn variable
-          (if (null? variable)
-            (empty-tree-map compare-symbol)
-            (if (local-variable? (unnull variable))
-              (tree-map.put
-                (empty-tree-map compare-symbol)
-                (identifier-expr.name expr)
-                true)
-              (empty-tree-map compare-symbol))))
-        (env.get env' (identifier-expr.name expr)))
-        (fold (list-expr.exprs expr) (empty-tree-map compare-symbol)
-          (fn map
-            (fn expr
-              (tree-map.+ map (closures expr env')))))))))
-
 ;; The environment of a variable.
 (def env
   (new-data (symbol env)
@@ -69,6 +49,26 @@
         (if (null? option)
           false
           (global-variable.macro? (unnull option))))))))
+
+;; A set of closures in an expression.
+(def closures
+  (fn expr
+    (fn env'
+      (if (identifier-expr? expr)
+        ((fn variable
+          (if (null? variable)
+            (empty-tree-map compare-symbol)
+            (if (local-variable? (unnull variable))
+              (tree-map.put
+                (empty-tree-map compare-symbol)
+                (identifier-expr.name expr)
+                true)
+              (empty-tree-map compare-symbol))))
+        (env.get env' (identifier-expr.name expr)))
+        (fold (list-expr.exprs expr) (empty-tree-map compare-symbol)
+          (fn map
+            (fn expr
+              (tree-map.+ map (closures expr env')))))))))
 
 ;; The result of generating an expr.
 (def generate-result
@@ -185,9 +185,7 @@
                     (env.index env')))
               (fn result
                 (generate-result
-                  (combine-operation
-                    (generate-result.operation next)
-                    (generate-result.operation result))
+                  (generate-result.operation result)
                   (concat
                     (generate-result.declarations next)
                     (generate-result.declarations result))
@@ -281,8 +279,10 @@
                   (generate-result
                     (fn-operation
                       (expr.path expr)
-                        mangled-name
-                        (map closures
+                      mangled-name
+                      name
+                      (generate-result.operation result)
+                      (map closures
                         (fn closure
                           (generate-identifier-expr' (unnull (env.get new-env closure))))))
                     (append (generate-result.declarations result) declaration)
@@ -447,9 +447,7 @@
         (run-with (generate-env (generate-result.env car-result))
         (fn cdr-result
           (generate-result
-            (combine-operation
-              (generate-result.operation car-result)
-              (generate-result.operation cdr-result))
+            (generate-result.operation cdr-result)
             (concat
               (generate-result.declarations car-result)
               (generate-result.declarations cdr-result))

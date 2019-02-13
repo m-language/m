@@ -162,13 +162,17 @@
         (fn acc
           (if (nil? input)
             (reverse acc)
+          (if (newline? (car input))
+            (parse (cdr input) path (next-line position) acc)
+          (if (whitespace? (car input))
+            (parse (cdr input) path (next-char position) acc)
             (with (parse-expr input path position)
               (fn result
                 (parse
                   (parse-result.rest result)
                   path
                   (expr.end (parse-result.expr result))
-                  (cons (parse-result.expr result) acc))))))))))
+                  (cons (parse-result.expr result) acc))))))))))))
 
 ;; Parses an M program given a file.
 (def parse-file
