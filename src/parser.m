@@ -1,13 +1,10 @@
 ;; The escape code of a character.
 (def escape
   (fn char
-    (if (char.= char letter-b) backspace
     (if (char.= char letter-t) tab
     (if (char.= char letter-n) linefeed
-    (if (char.= char letter-v) vtab
-    (if (char.= char letter-f) formfeed
     (if (char.= char letter-r) carriage-return
-      char))))))))
+      char)))))
 
 ;; True if a character an identifier separator.
 (def separator?
@@ -162,7 +159,7 @@
         (fn acc
           (if (nil? input)
             (reverse acc)
-          (if (newline? (car input))
+          (if (char.= linefeed (car input))
             (parse (cdr input) path (next-line position) acc)
           (if (whitespace? (car input))
             (parse (cdr input) path (next-char position) acc)

@@ -10,7 +10,7 @@
             (ostream.write stdout (car (symbol >)))
             (istream.readln stdin))
         (fn line
-          (if (symbol.= line (symbol ""))
+          (if (symbol.= (filter line (compose not whitespace?)) (symbol ""))
             (impure ())
             (with (char.= (car line) (car (symbol "!")))
             (fn !?
