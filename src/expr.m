@@ -55,3 +55,23 @@
         (identifier-expr name () start-position start-position))
       (fn list
         (list-expr (map list list->expr) () start-position start-position)))))
+
+;; A set of closures in an expression.
+(def closures
+  (fn expr
+    (fn env'
+      (if (identifier-expr? expr)
+        ((fn variable
+          (if (null? variable)
+            (empty-tree-map compare-symbol)
+            (if (local-variable? (unnull variable))
+              (tree-map.put
+                (empty-tree-map compare-symbol)
+                (identifier-expr.name expr)
+                true)
+              (empty-tree-map compare-symbol))))
+        (env.get env' (identifier-expr.name expr)))
+        (fold (list-expr.exprs expr) (empty-tree-map compare-symbol)
+          (fn map
+            (fn expr
+              (tree-map.+ map (closures expr env')))))))))
