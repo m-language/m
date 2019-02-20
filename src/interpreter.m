@@ -20,8 +20,6 @@
             interpret-def-operation
           (if (symbol.= type (symbol fn-operation))
             interpret-fn-operation
-          (if (symbol.= type (symbol impure-operation))
-            interpret-impure-operation
           (if (symbol.= type (symbol symbol-operation))
             interpret-symbol-operation
           (if (symbol.= type (symbol apply-operation))
@@ -30,7 +28,7 @@
             interpret-line-number-operation
           (if (symbol.= type (symbol nil-operation))
             interpret-nil-operation
-            (error (symbol "...")))))))))))))
+            (error (symbol "..."))))))))))))
         (type-name operation)
           operation stack heap)))))
 
@@ -93,13 +91,6 @@
                     (fn closure (interpret-operation' closure stack heap)))
                   (cons arg stack))
                 heap)))))))))
-
-;; Interprets a impure operation.
-(def interpret-impure-operation
-  (fn operation
-    (fn stack
-      (fn heap
-        (impure (interpret-operation' (impure-operation.operation operation) stack heap))))))
 
 ;; Interprets a symbol operation.
 (def interpret-symbol-operation

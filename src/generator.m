@@ -299,17 +299,6 @@
 (def generate-def-expr
   (generate-global-expr false))
 
-;; Generates a impure expression.
-(def generate-impure-expr
-  (fn expr
-    (fn env'
-      (run-with (generate-expr expr env')
-      (fn result
-        (generate-result
-          (impure-operation (generate-result.operation result))
-          (generate-result.declarations result)
-          (generate-result.env result)))))))
-
 ;; Generates a macro expression.
 (def generate-macro-expr
   (generate-global-expr true))
@@ -394,10 +383,6 @@
                 (identifier-expr.name (cadr exprs))
                 (caddr exprs)
                 env')
-            (if (list.= char.= name (symbol->list (symbol impure)))
-              (generate-impure-expr
-                (cadr exprs)
-                env')
             (if (list.= char.= name (symbol->list (symbol macro)))
               (generate-macro-expr
                 (identifier-expr.name (cadr exprs))
@@ -410,7 +395,7 @@
               (generate-apply-expr
                 (car exprs)
                 (cdr exprs)
-                env')))))))))))))))
+                env'))))))))))))))
 
 ;; Generates a single expression.
 (def generate-expr

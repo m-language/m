@@ -34,8 +34,6 @@
         desugar-def-operation
       (if (symbol.= type (symbol fn-operation))
         desugar-fn-operation
-      (if (symbol.= type (symbol impure-operation))
-        desugar-impure-operation
       (if (symbol.= type (symbol symbol-operation))
         desugar-symbol-operation
       (if (symbol.= type (symbol apply-operation))
@@ -44,7 +42,7 @@
         desugar-line-number-operation
       (if (symbol.= type (symbol nil-operation))
         desugar-nil-operation
-        (error (symbol "...")))))))))))))
+        (error (symbol "..."))))))))))))
     (type-name operation)
       operation)))
 
@@ -80,13 +78,6 @@
     (concat (symbol " ")
     (concat (desugar-operation (fn-operation.value operation))
     (symbol ")")))))))
-
-;; Desugars an impure operation.
-(def desugar-impure-operation
-  (fn operation
-    (concat (symbol "(impure ")
-    (concat (desugar-operation (impure-operation.operation operation))
-    (symbol ")")))))
 
 ;; Desugars a symbol operation.
 (def desugar-symbol-operation

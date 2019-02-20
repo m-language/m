@@ -68,14 +68,6 @@
 (def fn-operation.closures
   (field (symbol fn-operation) (symbol closures)))
 
-;; A impure operation
-(def impure-operation
-  (new-data (symbol impure-operation)
-    (list1 (symbol operation))))
-
-(def impure-operation.operation
-  (field (symbol impure-operation) (symbol operation)))
-
 ;; A symbol operation.
 (def symbol-operation
   (new-data (symbol symbol-operation)
@@ -131,8 +123,6 @@
               (operation.fold (def-operation.value operation) acc f)
             (if (symbol.= type (symbol fn-operation))
               (operation.fold (fn-operation.value operation) acc f)
-            (if (symbol.= type (symbol impure-operation))
-              (operation.fold (impure-operation.operation operation) acc f)
             (if (symbol.= type (symbol symbol-operation))
               acc
             (if (symbol.= type (symbol apply-operation))
@@ -143,5 +133,5 @@
               (operation.fold (line-number-operation.operation operation) acc f)
             (if (symbol.= type (symbol nil-operation))
               acc
-              (error (symbol "..."))))))))))))))
+              (error (symbol "...")))))))))))))
           operation)))))
