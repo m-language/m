@@ -1,14 +1,11 @@
 #!/bin/bash
 
-
 # Remove artifacts from previous builds
 if [ -d mc-out ]; then
-    rm -rf mc-out
+    bash clean.sh
 fi
 
-if [ ! -d m-jvm ]; then
-    git clone https://github.com/m-language/m-jvm
-fi
+git clone https://github.com/m-language/m-jvm
 
 # Build the jvm compiler
 echo "[build.sh] Building the jvm compiler"
