@@ -3,7 +3,6 @@
 *.class
 *.jar
 *.bat
-*.sh
 mc-out
 .boot
 m-jvm/
