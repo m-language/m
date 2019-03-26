@@ -7,3 +7,6 @@
 *.json
 
 out
+mc-out
+.boot
+m-jvm/
