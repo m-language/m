@@ -8,12 +8,12 @@
       (with (file.child file.local-file (cadr args))
       (fn out
         (if (nil? (cddr args)) (compile in out)
-        (error (symbol "Too many arguments.")))))))))))
+        (error (symbol "Usage: mc <in> <out>")))))))))))
 
 ;; Runs the m repl with no declarations.
 (def empty-repl
   (fn ""
-    (repl (default-env ()) empty-heap nat.1)))
+    (repl default-global-env empty-heap nat.1 (empty-tree-map compare-symbol))))
 
 ;; Runs the m repl.
 (def run-repl
@@ -21,9 +21,10 @@
     (then-run-with (generate in)
     (fn result
       (repl
-        (generate-result.env result)
-        (interpret-declarations (generate-result.declarations result) empty-heap)
-        nat.1)))))
+        (generated.global-env result)
+        (interpret-declarations (generated.declarations result) empty-heap)
+        nat.1
+        (empty-tree-map compare-symbol))))))
 
 ;; Compiles a file and writes its result.
 (def compile
@@ -31,32 +32,25 @@
     (fn out
       (then-run-with (generate in)
       (fn result
-        (write-result result out))))))
-
-;; Puts a file in mpm.
-(def mpm-put
-  (fn in
-    (then-run-with (generate in)
-    (fn result
-      (then-run
-        (mpm-put-refs (generate-result.declarations result))
-        (mpm-put-srcs in))))))
+        (generate-result.match result
+        (fn degenerate' (error (car (degenerate.errors degenerate'))))
+        (fn generating' (error (flat-map (generating.dependencies generating') ((swap append) space))))
+        (fn generated' (write-result generated' out))))))))
 
 ;; Generates a file.
 (def generate
   (fn in
     (then-run-with (parse-file in () true)
     (fn exprs
-      (generate-env (default-env exprs))))))
+      (mpm-resolve-generate-result (generate-exprs exprs default-global-env))))))
 
 ;; Writes a generate result.
 (def write-result
   (fn result
     (fn out
-      (write-program
-        out
-        (generate-result.operation result)
-        (generate-result.declarations result)))))
+      (write-program out
+        (generated.operation result)
+        (generated.declarations result)))))
 
 ;; Writes a program.
 (def write-program ())

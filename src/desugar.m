@@ -1,24 +1,12 @@
 ;; Desugars a file.
 (def desugar-file
   (fn in
-    (fn out
-      (then-run-with (generate in)
-      (fn result
-        (with
-          (desugar-declarations
-            (sort-declarations
-              (generate-result.declarations result)))
-        (fn desugared
-          (file.write out desugared))))))))
-
-;; Desugars an M program.
-(def desugar
-  (fn exprs
-    (with (generate-env (default-env exprs))
+  (fn out
+    (then-run-with (generate in)
     (fn result
-      (desugar-declarations
-        (sort-declarations
-          (generate-result.declarations result)))))))
+      (with (desugar-declarations (generated.declarations result))
+      (fn desugared
+        (file.write out desugared))))))))
 
 ;; Desugars an operation.
 (def desugar-operation
@@ -28,8 +16,6 @@
         desugar-local-variable-operation
       (if (symbol.= type (symbol global-variable-operation))
         desugar-global-variable-operation
-      (if (symbol.= type (symbol if-operation))
-        desugar-if-operation
       (if (symbol.= type (symbol def-operation))
         desugar-def-operation
       (if (symbol.= type (symbol fn-operation))
@@ -42,66 +28,67 @@
         desugar-line-number-operation
       (if (symbol.= type (symbol nil-operation))
         desugar-nil-operation
-        (error (symbol "..."))))))))))))
+        (error (symbol "...")))))))))))
     (type-name operation)
-      operation)))
+      desugar-operation operation)))
 
 ;; Desugars a local variable operation
 (def desugar-local-variable-operation
+  (fn desugar-operation
   (fn operation
-    (desugar-quote (local-variable-operation.name operation))))
+    (desugar-quote (local-variable-operation.name operation)))))
 
 ;; Desugars a global variable operation
 (def desugar-global-variable-operation
+  (fn desugar-operation
   (fn operation
-    (desugar-quote (global-variable-operation.name operation))))
-
-;; Desugars an if operation
-(def desugar-if-operation
-  (fn operation
-    (concat (symbol "(if ")
-    (concat (desugar-operation (if-operation.cond operation))
-    (concat (symbol " ")
-    (concat (desugar-operation (if-operation.true operation))
-    (concat (symbol " ")
-    (concat (desugar-operation (if-operation.false operation))
-    (symbol ")")))))))))
+    (desugar-quote (global-variable-operation.name operation)))))
 
 ;; Desugars a def operation.
-(def desugar-def-operation def-operation.name)
+(def desugar-def-operation
+  (fn desugar-operation
+  (fn operation
+    (def-operation.name operation))))
 
 ;; Desugars a fn operation.
 (def desugar-fn-operation
+  (fn desugar-operation
   (fn operation
     (concat (symbol "(fn ")
     (concat (desugar-quote (fn-operation.arg operation))
     (concat (symbol " ")
     (concat (desugar-operation (fn-operation.value operation))
-    (symbol ")")))))))
+    (symbol ")"))))))))
 
 ;; Desugars a symbol operation.
 (def desugar-symbol-operation
+  (fn desugar-operation
   (fn operation
     (concat (symbol "(symbol ")
     (concat (desugar-quote (symbol-operation.name operation))
-    (symbol ")")))))
+    (symbol ")"))))))
 
 ;; Desugars an apply operation.
 (def desugar-apply-operation
+  (fn desugar-operation
   (fn operation
     (concat (symbol "(")
     (concat (desugar-operation (apply-operation.fn operation))
     (concat (symbol " ")
     (concat (desugar-operation (apply-operation.arg operation))
-    (symbol ")")))))))
+    (symbol ")"))))))))
 
 ;; Desugars a line number operation
 (def desugar-line-number-operation
+  (fn desugar-operation
   (fn operation
-    (desugar-operation (line-number-operation.operation operation))))
+    (desugar-operation (line-number-operation.operation operation)))))
 
 ;; Desugars a nil operation.
-(def desugar-nil-operation (const (symbol "()")))
+(def desugar-nil-operation
+  (fn desugar-operation
+  (fn operation
+    (symbol "()"))))
 
 ;; Desugars a list of declarations.
 (def desugar-declarations
@@ -158,6 +145,5 @@
         (if (char.= char open-parentheses) true
         (if (char.= char close-parentheses) true
         (if (char.= char semicolon) true
-        (if (char.= char (car (symbol "_"))) true
         (if (whitespace? char) true
-        (desugar-should-quote? (cdr name))))))))))))))
+        (desugar-should-quote? (cdr name)))))))))))))
