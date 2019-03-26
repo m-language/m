@@ -150,7 +150,7 @@
 (def tree-map-node ((new-data (symbol tree-map-node)) ((((list4 (symbol left)) (symbol right)) (symbol key)) (symbol value))))
 (def tree-map ((new-data (symbol tree-map)) ((list2 (symbol node)) (symbol compare))))
 (def empty-tree-map (fn compare ((tree-map tree-map-node-nil) compare)))
-(def istream.read (fn istream istream))
+(def istream.read id)
 (def istream.readln (fn istream ((then-run-with istream) (fn char ((((newline? char) (fn "" (impure ()))) (fn "" ((run-with (istream.readln istream)) (fn line ((cons char) line))))) ())))))
 (def compare= (object (symbol compare=)))
 (def compare< (object (symbol compare<)))

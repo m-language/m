@@ -2,14 +2,14 @@
 
 The compiler for the M programming language.
 
-## Building (Windows)
-TODO
+## Building
 
-## Building (Linux)
+Building the compiler requires Gradle and Kotlin to be installed.
+In addition, [the M jvm backend](https://github.com/m-language/m-jvm) 
+and [the M standard library](https://github.com/m-language/m-stdlib)
+must be cloned in the same directory (if they are not found, the
+build script will clone them for you).
 
-```Bash
-chmod +x ./build.sh   # Make build script executable
-./build.sh            # Download m-jvm, build, and build jar from current source
-```
-
-The resulting Jar file will be in `mc-out/jar/mc.jar`
+    ./clean -- Cleans the M compiler
+    ./build -- Builds the M compiler
+    ./repl  -- Launches the M repl

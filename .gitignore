@@ -2,11 +2,7 @@
 *.xml
 *.class
 *.jar
-*.bat
-*.sh
 *.json
 
 out
-mc-out
-.boot
-m-jvm/
+bin
