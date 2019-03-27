@@ -1,6 +1,4 @@
 import java.io.File
-import java.lang.Exception
-import java.net.URLClassLoader
 
 fun exit(message: String = "Terminating build") {
     System.err.println(message)
@@ -76,10 +74,8 @@ fun build() {
         }
     }
 
-    if (!mJvmJar.exists()) {
-        println("Building m-jvm jar")
-        exec("gradle fatJar", mJvm)
-    }
+    println("Building m-jvm jar")
+    exec("gradle fatJar", mJvm)
 
     val mJvmCompile = { input: String, output: String ->
         println("Compiling $input with m-jvm")
