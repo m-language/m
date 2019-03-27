@@ -23,7 +23,7 @@ fun exec(string: String, file: File = File(".")) {
 }
 
 fun execM(input: String, string: String, file: File = File(".")) {
-    val exec = ProcessBuilder("java -classpath ${bin.absolutePath};${mJvmJar.absolutePath} -Xss16m mc $input".split(' ').toList())
+    val exec = ProcessBuilder("java -classpath ${bin.absolutePath}${File.pathSeparator}${mJvmJar.absolutePath} -Xss16m mc $input".split(' ').toList())
             .redirectError(ProcessBuilder.Redirect.INHERIT).directory(file.absoluteFile).start()
     exec.outputStream.write("$string\n\n".toByteArray())
     exec.outputStream.flush()
@@ -86,7 +86,7 @@ fun build() {
 
     val mCompile = { input: String, output: String ->
         println("Compiling $input with m-compiler")
-        exec("java -classpath ./bin;$mJvmJar -Xss16m mc $input $output")
+        exec("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss16m mc $input $output")
     }
 
     mCompile("mc.m", bin.path)
@@ -112,7 +112,7 @@ fun build() {
 
 fun repl() {
     build()
-    val exec = ProcessBuilder("java -classpath ./bin;$mJvmJar -Xss16m mc src".split(' ').toList()).inheritIO().start()
+    val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss16m mc src".split(' ').toList()).inheritIO().start()
     val code = exec.waitFor()
     if (code != 0) exit("REPL failed with exit code $code")
 }
