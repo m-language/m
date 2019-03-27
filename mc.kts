@@ -71,7 +71,7 @@ fun clean() {
 fun build() {
     if (!mJvm.exists()) {
         val mJvmGit = "https://github.com/m-language/m-jvm.git"
-        ask("$mJvm does not exist\nWould you like to clone it from $mJvmGit?") {
+        ask("$mJvm does not exist, would you like to clone it from $mJvmGit?") {
             exec("git clone $mJvmGit", File(".."))
         }
     }
@@ -100,7 +100,7 @@ fun build() {
 
     if (!mStdlib.exists()) {
         val mStdlibGit = "https://github.com/m-language/m-stdlib.git"
-        ask("$mStdlib does not exist\nWould you like to clone it from $mStdlibGit?") {
+        ask("$mStdlib does not exist, would you like to clone it from $mStdlibGit?") {
             exec("git clone $mStdlibGit", File(".."))
         }
     }
