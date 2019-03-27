@@ -63,6 +63,9 @@ fun clean() {
     println("Removing bin")
     bin.deleteRecursively()
 
+    println("Removing mpm-root")
+    File(File.listRoots().first(), "mpm-root").listFiles().forEach { it.deleteRecursively() }
+
     println("Cleaning m-jvm")
     exec("gradle clean", mJvm)
 }
