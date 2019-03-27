@@ -33,6 +33,7 @@ fun execM(input: String, string: String, file: File = File(".")) {
 
 tailrec fun ask(message: String, yes: () -> Unit) {
     print("$message [y/n]: ")
+    System.out.flush()
     val line = readLine()?.toLowerCase()?.trim() ?: "n"
     when (line) {
         "y", "yes" -> yes()
