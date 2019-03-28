@@ -58,41 +58,33 @@
       (mpm-resolve-generate-result' (empty-tree-map compare-symbol) result))))
 
 (def mpm-resolve-generate-result'
-  (fn resolved
-  (fn result
+  (fn resolved result
     (generate-result.match result
       (fn degenerate' (impure (pair resolved degenerate')))
       (mpm-resolve-generating mpm-resolve-generate-result' resolved)
-      (mpm-resolve-generated mpm-resolve-generate-result' resolved)))))
+      (mpm-resolve-generated mpm-resolve-generate-result' resolved))))
 
 ;; Resolves a generating with mpm.
 (def mpm-resolve-generating
-  (fn resolve
-  (fn resolved
-  (fn generating'
+  (fn resolve resolved generating'
     (then-run-with
       (mpm-resolve-dependencies resolve resolved generating' (generating.dependencies generating'))
-      (fn pair (resolve (first pair) (second pair))))))))
+      (fn pair (resolve (first pair) (second pair))))))
 
 ;; Resolves a generated with mpm.
 (def mpm-resolve-generated
-  (fn resolve
-  (fn resolved
-  (fn generated'
+  (fn resolve resolved generated'
     (with (global-env.unresolved (generated.global-env generated'))
     (fn unresolved
       (if (nil? unresolved)
         (impure (pair resolved generated'))
         (then-run-with
           (mpm-resolve-dependencies resolve resolved generated' unresolved)
-          (fn pair (resolve (first pair) (second pair)))))))))))
+          (fn pair (resolve (first pair) (second pair)))))))))
 
 ;; Resolves a list of dependencies with mpm.
 (def mpm-resolve-dependencies
-  (fn resolve
-  (fn resolved
-  (fn result
-  (fn dependencies
+  (fn resolve resolved result dependencies
     (if (nil? dependencies)
       (impure (pair resolved result))
       (with (mpm-get-ref (car dependencies))
@@ -112,4 +104,4 @@
                     (mpm-resolve-dependencies resolve
                       (first pair)
                       (second pair)
-                      (cdr dependencies))))))))))))))))))))
+                      (cdr dependencies)))))))))))))))))

@@ -2,10 +2,7 @@
 
 ;; The M repl.
 (def repl
-  (fn global-env
-  (fn heap
-  (fn index
-  (fn resolved
+  (fn global-env heap index resolved
     (then-run-with
       (then-run
         (ostream.write stdout (car (symbol >)))
@@ -31,26 +28,23 @@
                         (generated.global-env (second pair)))
                       new-heap
                       (nat.inc index)
-                      (first pair))))))))))))))))))))))
+                      (first pair)))))))))))))))))))
 
 ;; Parses a line in the repl.
 (def repl-parse
-  (fn line
-    (fn index
-      (parse-result.expr
-        (parse-expr
-          (append line linefeed)
-          (mangle-fn-name (symbol "repl") index)
-          (position index nat.1))))))
+  (fn line index
+    (parse-result.expr
+      (parse-expr
+        (append line linefeed)
+        (mangle-fn-name (symbol "repl") index)
+        (position index nat.1)))))
 
 ;; Interprets declarations in the repl.
 (def repl-interpret-declarations
-  (fn result
-    (fn heap
-      (interpret-declarations (generated.declarations result) heap))))
+  (fn result heap
+    (interpret-declarations (generated.declarations result) heap)))
 
 ;; Interprets an operation in the repl.
 (def repl-interpret-operation
-  (fn result
-    (fn heap
-      (interpret-operation (generated.operation result) heap))))
+  (fn result heap
+    (interpret-operation (generated.operation result) heap)))

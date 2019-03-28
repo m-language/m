@@ -1,12 +1,11 @@
 ;; Desugars a file.
 (def desugar-file
-  (fn in
-  (fn out
+  (fn in out
     (then-run-with (generate in)
     (fn result
       (with (desugar-declarations (generated.declarations result))
       (fn desugared
-        (file.write out desugared))))))))
+        (file.write out desugared)))))))
 
 ;; Desugars an operation.
 (def desugar-operation
@@ -34,61 +33,53 @@
 
 ;; Desugars a local variable operation
 (def desugar-local-variable-operation
-  (fn desugar-operation
-  (fn operation
-    (desugar-quote (local-variable-operation.name operation)))))
+  (fn desugar-operation operation
+    (desugar-quote (local-variable-operation.name operation))))
 
 ;; Desugars a global variable operation
 (def desugar-global-variable-operation
-  (fn desugar-operation
-  (fn operation
-    (desugar-quote (global-variable-operation.name operation)))))
+  (fn desugar-operation operation
+    (desugar-quote (global-variable-operation.name operation))))
 
 ;; Desugars a def operation.
 (def desugar-def-operation
-  (fn desugar-operation
-  (fn operation
-    (def-operation.name operation))))
+  (fn desugar-operation operation
+    (def-operation.name operation)))
 
 ;; Desugars a fn operation.
 (def desugar-fn-operation
-  (fn desugar-operation
-  (fn operation
+  (fn desugar-operation operation
     (concat (symbol "(fn ")
     (concat (desugar-quote (fn-operation.arg operation))
     (concat (symbol " ")
     (concat (desugar-operation (fn-operation.value operation))
-    (symbol ")"))))))))
+    (symbol ")")))))))
 
 ;; Desugars a symbol operation.
 (def desugar-symbol-operation
-  (fn desugar-operation
-  (fn operation
+  (fn desugar-operation operation
     (concat (symbol "(symbol ")
     (concat (desugar-quote (symbol-operation.name operation))
-    (symbol ")"))))))
+    (symbol ")")))))
 
 ;; Desugars an apply operation.
 (def desugar-apply-operation
-  (fn desugar-operation
-  (fn operation
+  (fn desugar-operation operation
     (concat (symbol "(")
     (concat (desugar-operation (apply-operation.fn operation))
     (concat (symbol " ")
     (concat (desugar-operation (apply-operation.arg operation))
-    (symbol ")"))))))))
+    (symbol ")")))))))
 
 ;; Desugars a line number operation
 (def desugar-line-number-operation
-  (fn desugar-operation
-  (fn operation
-    (desugar-operation (line-number-operation.operation operation)))))
+  (fn desugar-operation operation
+    (desugar-operation (line-number-operation.operation operation))))
 
 ;; Desugars a nil operation.
 (def desugar-nil-operation
-  (fn desugar-operation
-  (fn operation
-    (symbol "()"))))
+  (fn desugar-operation operation
+    (symbol "()")))
 
 ;; Desugars a list of declarations.
 (def desugar-declarations

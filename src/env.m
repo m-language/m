@@ -7,14 +7,12 @@
 (def local-env.def (field (symbol local-env) (symbol def)))
 
 (def local-env.with-locals
-  (fn locals
-  (fn e
-    (local-env locals (local-env.def e)))))
+  (fn locals e
+    (local-env locals (local-env.def e))))
 
 (def local-env.with-def
-  (fn def
-  (fn e
-    (local-env (local-env.locals e) def))))
+  (fn def e
+    (local-env (local-env.locals e) def)))
 
 ;; The global environment.
 (def global-env
@@ -27,24 +25,20 @@
 (def global-env.index (field (symbol global-env) (symbol index)))
 
 (def global-env.with-globals
-  (fn globals
-  (fn e
-    (global-env globals (global-env.heap e) (global-env.dependents e) (global-env.index e)))))
+  (fn globals e
+    (global-env globals (global-env.heap e) (global-env.dependents e) (global-env.index e))))
 
 (def global-env.with-heap
-  (fn heap
-  (fn e
-    (global-env (global-env.globals e) heap (global-env.dependents e) (global-env.index e)))))
+  (fn heap e
+    (global-env (global-env.globals e) heap (global-env.dependents e) (global-env.index e))))
 
-(def global-env.with-dependents 
-  (fn dependents
-  (fn e
-    (global-env (global-env.globals e) (global-env.heap e) dependents (global-env.index e)))))
+(def global-env.with-dependents
+  (fn dependents e
+    (global-env (global-env.globals e) (global-env.heap e) dependents (global-env.index e))))
 
 (def global-env.with-index
-  (fn index
-  (fn e
-    (global-env (global-env.globals e) (global-env.heap e) (global-env.dependents e) index))))
+  (fn index e
+    (global-env (global-env.globals e) (global-env.heap e) (global-env.dependents e) index)))
 
 ;; A list of unresolved variables.
 (def global-env.unresolved
@@ -64,11 +58,9 @@
 
 ;; Gets the variable with a name in an environment.
 (def env.get
-  (fn local-env
-  (fn global-env
-  (fn name
+  (fn local-env global-env name
     (with (tree-map.get (local-env.locals local-env) name)
       (fn option
         (if (some? option)
           option
-          (tree-map.get (global-env.globals global-env) name))))))))
+          (tree-map.get (global-env.globals global-env) name))))))

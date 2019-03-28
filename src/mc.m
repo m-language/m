@@ -28,14 +28,13 @@
 
 ;; Compiles a file and writes its result.
 (def compile
-  (fn in
-    (fn out
-      (then-run-with (generate in)
-      (fn result
-        (generate-result.match result
-        (fn degenerate' (error (car (degenerate.errors degenerate'))))
-        (fn generating' (error (flat-map (generating.dependencies generating') ((swap append) space))))
-        (fn generated' (write-result generated' out))))))))
+  (fn in out
+    (then-run-with (generate in)
+    (fn result
+      (generate-result.match result
+      (fn degenerate' (error (car (degenerate.errors degenerate'))))
+      (fn generating' (error (flat-map (generating.dependencies generating') ((swap append) space))))
+      (fn generated' (write-result generated' out)))))))
 
 ;; Generates a file.
 (def generate
@@ -46,11 +45,10 @@
 
 ;; Writes a generate result.
 (def write-result
-  (fn result
-    (fn out
-      (write-program out
-        (generated.operation result)
-        (generated.declarations result)))))
+  (fn result out
+    (write-program out
+      (generated.operation result)
+      (generated.declarations result))))
 
 ;; Writes a program.
 (def write-program ())
