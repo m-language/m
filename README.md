@@ -18,6 +18,6 @@ Before building on Linux, `/mpm-root` must be created as a
 temporary package root. In addition, the build files must be
 given executable permissions.
 
-    mkdir /mpm-root
-    chmod 777 /mpm-root
-    chmod +x build.sh clean.sh repl.sh
+    sudo mkdir /mpm-root
+    sudo chmod 777 /mpm-root
+    sudo chmod +x build.sh clean.sh repl.sh
