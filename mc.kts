@@ -50,6 +50,16 @@ val mStdlib = File("../m-stdlib")
 val mJvm = File("../m-jvm")
 val mJvmJar = File(mJvm, "build/libs/m-jvm-0.1.0.jar")
 
+fun mCompile(input: String, output: String) {
+    println("Compiling $input with m-compiler")
+    exec("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss16m mc $input $output")
+}
+
+fun mJvmCompile(input: String, output: String) {
+    println("Compiling $input with m-jvm")
+    exec("java -classpath $mJvmJar -Xss4m io.github.m.Compiler $input $output")
+}
+
 fun help() {
     println("""
         mc.kts help  -- Displays this help message
@@ -81,17 +91,7 @@ fun build() {
     println("Building m-jvm jar")
     exec("gradle fatJar", mJvm)
 
-    val mJvmCompile = { input: String, output: String ->
-        println("Compiling $input with m-jvm")
-        exec("java -classpath $mJvmJar -Xss4m io.github.m.Compiler $input $output")
-    }
-
     mJvmCompile("mc.m", bin.path)
-
-    val mCompile = { input: String, output: String ->
-        println("Compiling $input with m-compiler")
-        exec("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss16m mc $input $output")
-    }
 
     mCompile("mc.m", bin.path)
     mCompile("mc.m", bin.path)
@@ -121,9 +121,16 @@ fun repl() {
     if (code != 0) exit("REPL failed with exit code $code")
 }
 
+fun test() {
+    build()
+    println("Running tests")
+    execM("src", "!mc-test")
+}
+
 when (args[0]) {
     "help" -> help()
     "clean" -> clean()
     "build" -> build()
     "repl" -> repl()
+    "test" -> test()
 }

@@ -14,6 +14,7 @@
 (def apply (fn f (fn x (f x))))
 (def with (swap apply))
 (def impure (fn x (fn f (f x))))
+(def mc-test (impure ()))
 (def then-run-with (fn p (fn f (p f))))
 (def then-run (fn p1 (fn p2 ((then-run-with p1) (const p2)))))
 (def run-with (fn p (fn f ((then-run-with p) ((compose impure) f)))))

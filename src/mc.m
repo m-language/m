@@ -54,3 +54,7 @@
 
 ;; Writes a program.
 (def write-program ())
+
+;; Tests the M compiler.
+(def mc-test
+  (impure ()))
