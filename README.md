@@ -1,8 +1,10 @@
-# m-compiler
+M-Compiler
+==========
 
 The compiler for the M programming language.
 
-## Building
+Building
+--------
 
 Building the compiler requires Java, Kotlin, and Gradle to be installed.
 In addition, [the M jvm backend](https://github.com/m-language/m-jvm) 
@@ -21,3 +23,10 @@ given executable permissions.
     sudo mkdir /mpm-root
     sudo chmod 777 /mpm-root
     sudo chmod +x build.sh clean.sh repl.sh
+
+Usage
+-----
+
+    mc                  -- Starts the M repl.
+    mc <input>          -- Starts the M repl with an input file preloaded.
+    mc <input> <output> -- Compiles input and writes the result to the output directory. 
