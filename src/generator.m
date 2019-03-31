@@ -155,7 +155,7 @@
               (with
                 (generated
                   (def-operation name (expr.path value) (generated.operation generated'))
-                  (cons declaration (generated.declarations generated'))
+                  (append (generated.declarations generated') declaration)
                   ((swap global-env.with-heap) (generated.global-env generated')
                     (interpret-def-declaration declaration (global-env.heap (generated.global-env generated')))))
               (fn result1
