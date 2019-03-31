@@ -129,7 +129,7 @@
         (parse-identifier-literal-expr (cdr input) path (next-char position) (next-char position) ())
       (if (char.= head semicolon)
         (parse-comment parse-expr (cdr input) path (next-char position))
-      (if (newline? head)
+      (if (char.= head linefeed)
         (parse-expr (cdr input) path (next-line position))
       (if (whitespace? head)
         (parse-expr (cdr input) path (next-char position))
