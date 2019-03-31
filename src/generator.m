@@ -330,8 +330,7 @@
               (generate-macro?-expr expr fn args local-env global-env)))
           (with (unnull option)
           (fn variable
-            (if (and (global-variable? variable)
-                     (fn "" (global-variable.macro? variable)))
+            (if (& (global-variable? variable) (global-variable.macro? variable))
               (generate-macro-apply-expr generate-expr expr name args local-env global-env)
               (generate-apply-expr generate-expr fn args local-env global-env)))))))))))
 
@@ -359,12 +358,6 @@
         (if (identifier-expr? (car exprs))
           (with (identifier-expr.name (car exprs))
           (fn name
-            (if (list.= char.= name (symbol->list (symbol if)))
-              (generate-if-expr generate-expr
-                (cadr exprs)
-                (caddr exprs)
-                (cadddr exprs)
-                local-env global-env)
             (if (list.= char.= name (symbol->list (symbol fn)))
               (generate-fn-expr generate-expr
                 (map (init (cdr exprs)) identifier-expr.name)
@@ -388,7 +381,7 @@
                 expr
                 (car exprs)
                 (cdr exprs)
-                local-env global-env))))))))
+                local-env global-env)))))))
           (generate-apply-expr generate-expr
             (car exprs)
             (cdr exprs)

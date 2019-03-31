@@ -9,15 +9,11 @@
 ;; True if a character an identifier separator.
 (def separator?
   (fn char
-    (or (whitespace? char)
-        (fn ""
-          (or (char.= char open-parentheses)
-              (fn ""
-                (or (char.= char close-parentheses)
-                    (fn ""
-                      (or (char.= char semicolon)
-                          (fn ""
-                            (char.= char quote)))))))))))
+    (| (whitespace? char)
+    (| (char.= char open-parentheses)
+    (| (char.= char close-parentheses)
+    (| (char.= char semicolon)
+      (char.= char quote)))))))
 
 ;; A position in a file.
 (def position
@@ -54,8 +50,7 @@
 ;; Parses an M commment.
 (def parse-comment
   (fn parse-expr input path position
-    (if (or (nil? input)
-            (fn "" (newline? (car input))))
+    (if (| (nil? input) (newline? (car input)))
       (parse-expr input path position)
       (parse-comment parse-expr (cdr input) path position))))
 

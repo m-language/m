@@ -113,8 +113,7 @@
 ;; Quotes a variable with invalid characters.
 (def desugar-quote
   (fn name
-    (if (or (desugar-should-quote? name)
-            (fn "" (nil? name)))
+    (if (| (desugar-should-quote? name) (nil? name))
       (with
         (flat-map name
           (fn char

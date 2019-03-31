@@ -1,5 +1,4 @@
 import java.io.File
-import kotlin.concurrent.thread
 
 fun exit(message: String = "Terminating build") {
     System.err.println(message)
@@ -25,7 +24,8 @@ fun exec(string: String, file: File = File(".")) {
 
 fun execM(input: String, string: String, file: File = File(".")) {
     val exec = ProcessBuilder("java -classpath ${bin.absolutePath}${File.pathSeparator}${mJvmJar.absolutePath} -Xss16m mc $input".split(' ').toList())
-            .redirectError(ProcessBuilder.Redirect.INHERIT).directory(file.absoluteFile).start()
+            .redirectError(ProcessBuilder.Redirect.INHERIT)
+            .directory(file.absoluteFile).start()
     exec.outputStream.write("$string\n\n".toByteArray())
     exec.outputStream.flush()
     val code = exec.waitFor()
@@ -94,33 +94,25 @@ fun build() {
 
     mJvmCompile("mc.m", bin.path)
 
-    val compileStdLib = thread {
-        println("Compiling m-stdlib")
+    println("Compiling m-stdlib")
 
-        if (!mStdlib.exists()) {
-            val mStdlibGit = "https://github.com/m-language/m-stdlib.git"
-            ask("$mStdlib does not exist, would you like to clone it from $mStdlibGit?") {
-                exec("git clone $mStdlibGit", File(".."))
-            }
+    if (!mStdlib.exists()) {
+        val mStdlibGit = "https://github.com/m-language/m-stdlib.git"
+        ask("$mStdlib does not exist, would you like to clone it from $mStdlibGit?") {
+            exec("git clone $mStdlibGit", File(".."))
         }
-
-        execM("../m-compiler/mc.m", "!(mpm-put (file.child file.local-file (symbol src)))", mStdlib)
     }
+
+    execM("../m-compiler/mc.m", "!(mpm-put (file.child file.local-file (symbol src)))", mStdlib)
 
     mCompile("mc.m", bin.path)
     mCompile("mc.m", bin.path)
 
-    compileStdLib.join()
-
-    val regenerateMc = thread {
-        println("Regenerating mc.m")
-        execM("src", "!(desugar-file (file.child file.local-file (symbol src)) (file.child file.local-file (symbol mc.m)))")
-    }
+    println("Regenerating mc.m")
+    execM("src", "!(desugar-file (file.child file.local-file (symbol src)) (file.child file.local-file (symbol mc.m)))")
 
     mCompile("src", bin.path)
     mCompile("src", bin.path)
-
-    regenerateMc.join()
 }
 
 fun repl() {
