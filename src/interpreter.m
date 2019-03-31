@@ -58,8 +58,9 @@
       ((heap.get heap (fn-operation.name operation))
         (concat
           (map (fn-operation.closures operation)
-            (fn closure (interpret-operation' closure stack heap))))
-          (cons arg stack)))))
+            (fn closure
+              (interpret-operation' closure stack heap)))
+          (cons arg stack))))))
 
 ;; Interprets a symbol operation.
 (def interpret-symbol-operation
@@ -116,7 +117,7 @@
   (fn declaration heap name
     (if (symbol.= name (fn-declaration.name declaration))
       (some
-        (fn stack heap'
+        (fn heap' stack
           (interpret-operation'
             (fn-declaration.value declaration)
             stack
