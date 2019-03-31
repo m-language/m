@@ -68,7 +68,7 @@
 (def mpm-resolve-generating
   (fn resolve resolved generating'
     (then-run-with
-      (mpm-resolve-dependencies resolve resolved generating' (generating.dependencies generating'))
+      (mpm-resolve-dependencies resolve resolved generating' (generating.dependencies generating') false)
       (fn pair (resolve (first pair) (second pair))))))
 
 ;; Resolves a generated with mpm.
@@ -79,24 +79,30 @@
       (if (nil? unresolved)
         (impure (pair resolved generated'))
         (then-run-with
-          (mpm-resolve-dependencies resolve resolved generated' unresolved)
+          (mpm-resolve-dependencies resolve resolved generated' unresolved false)
           (fn pair (resolve (first pair) (second pair)))))))))
 
 ;; Resolves a list of dependencies with mpm.
 (def mpm-resolve-dependencies
-  (fn resolve resolved result dependencies
+  (fn resolve resolved result dependencies indef
     (if (nil? dependencies)
-      (impure (pair resolved result))
+      (with
+        (if indef result
+          (degenerate
+            (symbol.+ (symbol "Could not find ")
+              (flat-map dependencies ((swap append) space)))
+            (generate-result.global-env result)))
+      (fn result (impure (pair resolved result))))
       (with (mpm-get-ref (car dependencies))
       (fn ref-file
         (then-run-with (file.exists? ref-file)
         (fn is-ref
           (if (not is-ref)
-            (mpm-resolve-dependencies resolve resolved result (cdr dependencies))
+            (mpm-resolve-dependencies resolve resolved result (cdr dependencies) indef)
             (then-run-with (file.read ref-file)
             (fn ref
               (if (some? (tree-map.get resolved ref))
-                (mpm-resolve-dependencies resolve resolved result (cdr dependencies))
+                (mpm-resolve-dependencies resolve resolved result (cdr dependencies) true)
                 (then-run-with (parse-file (mpm-get-src ref) () true)
                 (fn exprs
                   (then-run-with (resolve (tree-map.put resolved ref true) (generate-exprs' exprs result))
@@ -104,4 +110,5 @@
                     (mpm-resolve-dependencies resolve
                       (first pair)
                       (second pair)
-                      (cdr dependencies)))))))))))))))))
+                      (cdr dependencies)
+                      true))))))))))))))))
