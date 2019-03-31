@@ -49,9 +49,9 @@
 
 ;; Converts a list to an expression.
 (def list->expr
-  (fn either
+  (fn expr either
     (either
       (fn name
-        (identifier-expr name () start-position start-position))
+        (identifier-expr name (expr.path expr) (expr.start expr) (expr.end expr)))
       (fn list
-        (list-expr (map list list->expr) () start-position start-position)))))
+        (list-expr (map list (list->expr expr)) (expr.path expr) (expr.start expr) (expr.end expr))))))

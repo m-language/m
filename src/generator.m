@@ -342,10 +342,10 @@
     (fn function
       (generate-expr
         (list-expr
-          (map (function (map args expr->list)) list->expr)
-          (identifier-expr.path expr)
-          (identifier-expr.start expr)
-          (identifier-expr.end expr))
+          (map (function (map args expr->list)) (list->expr expr))
+          (list-expr.path expr)
+          (list-expr.start expr)
+          (list-expr.end expr))
         local-env
         global-env)))))
 
