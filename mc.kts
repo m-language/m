@@ -109,15 +109,15 @@ fun build() {
     mCompile("mc.m", bin.path)
 
     println("Regenerating mc.m")
-    execM("src", "!(desugar-file (file.child file.local-file (symbol src)) (file.child file.local-file (symbol mc.m)))")
+    execM("m-compiler", "!(desugar-file (file.child file.local-file (symbol m-compiler)) (file.child file.local-file (symbol mc.m)))")
 
-    mCompile("src", bin.path)
-    mCompile("src", bin.path)
+    mCompile("m-compiler", bin.path)
+    mCompile("m-compiler", bin.path)
 }
 
 fun repl() {
     build()
-    val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss16m mc src".split(' ').toList()).inheritIO().start()
+    val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss16m mc m-compiler".split(' ').toList()).inheritIO().start()
     val code = exec.waitFor()
     if (code != 0) exit("REPL failed with exit code $code")
 }
@@ -125,7 +125,7 @@ fun repl() {
 fun test() {
     build()
     println("Running tests")
-    execM("src", "!mc-test")
+    execM("m-compiler", "!mc-test")
 }
 
 when (args[0]) {
