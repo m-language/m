@@ -52,7 +52,7 @@ val mJvm = File("../m-jvm")
 val mJvmJar = File(mJvm, "build/libs/m-jvm-0.1.0.jar")
 
 fun mCompile(input: String, output: String) {
-    println("Compiling $input with m-compiler")
+    println("Compiling $input with mc")
     exec("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss16m mc $input $output")
 }
 
@@ -94,30 +94,22 @@ fun build() {
 
     mJvmCompile("mc.m", bin.path)
 
-    println("Compiling m-stdlib")
-
-    if (!mStdlib.exists()) {
-        val mStdlibGit = "https://github.com/m-language/m-stdlib.git"
-        ask("$mStdlib does not exist, would you like to clone it from $mStdlibGit?") {
-            exec("git clone $mStdlibGit", File(".."))
-        }
-    }
-
-    execM("../m-compiler/mc.m", "!(mpm-put (file.child file.local-file (symbol src)))", mStdlib)
+    println("Compiling standard library")
+    execM("mc.m", "!(mpm-put (file.child file.local-file (symbol std)))")
 
     mCompile("mc.m", bin.path)
     mCompile("mc.m", bin.path)
 
     println("Regenerating mc.m")
-    execM("m-compiler", "!(desugar-file (file.child file.local-file (symbol m-compiler)) (file.child file.local-file (symbol mc.m)))")
+    execM("mc", "!(desugar-file (file.child file.local-file (symbol mc)) (file.child file.local-file (symbol mc.m)))")
 
-    mCompile("m-compiler", bin.path)
-    mCompile("m-compiler", bin.path)
+    mCompile("mc", bin.path)
+    mCompile("mc", bin.path)
 }
 
 fun repl() {
     build()
-    val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss16m mc m-compiler".split(' ').toList()).inheritIO().start()
+    val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss16m mc mc".split(' ').toList()).inheritIO().start()
     val code = exec.waitFor()
     if (code != 0) exit("REPL failed with exit code $code")
 }
@@ -125,7 +117,7 @@ fun repl() {
 fun test() {
     build()
     println("Running tests")
-    execM("m-compiler", "!mc-test")
+    execM("mc", "!mc-test")
 }
 
 when (args[0]) {
