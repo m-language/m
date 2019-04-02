@@ -1,4 +1,4 @@
-M-Compiler
+M Language
 ==========
 
 The compiler for the M programming language.
