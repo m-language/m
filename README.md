@@ -1,7 +1,7 @@
 M Language
 ==========
 
-The compiler for the M programming language.
+The compiler for [the M programming language](https://m-language.github.io/).
 
 Building
 --------
