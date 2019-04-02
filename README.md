@@ -1,7 +1,7 @@
 M Language
 ==========
 
-TThe M programming language](https://m-language.github.io/), a minimal Lisp for the JVM, JS, and Native.
+The M programming language](https://m-language.github.io/), a minimal Lisp for the JVM, JS, and Native.
 
 Building
 --------
