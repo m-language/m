@@ -2,7 +2,7 @@ M Language
 ==========
 
 The compiler for [the M programming language](https://m-language.github.io/), 
-a minimal lisp which compiles to the JVM, JS, and Native.
+a minimal Lisp which compiles to the JVM, JS, and Native.
 
 Building
 --------
