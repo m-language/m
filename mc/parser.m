@@ -1,11 +1,3 @@
-;; The escape code of a character.
-(def escape
-  (fn char
-    (if (char.= char letter-t) tab
-    (if (char.= char letter-n) linefeed
-    (if (char.= char letter-r) carriage-return
-      char)))))
-
 ;; True if a character an identifier separator.
 (def separator?
   (fn char
@@ -54,35 +46,40 @@
       (parse-expr input path position)
       (parse-comment parse-expr (cdr input) path position))))
 
-;; Parses an M identifier literal expression given an input.
-(def parse-identifier-literal-expr
+;; Parses a single quote identifier literal expr.
+(def parse-single-quote
   (fn input path start end acc
     (with (car input)
     (fn head
       (if (char.= head quote)
         (parse-result
           (cdr input)
-          (identifier-expr (reverse acc) path start end))
-      (if (char.= head backslash)
-        (parse-identifier-literal-expr
-          (cddr input)
-          path
-          start
-          (next-char (next-char end))
-          (cons (escape (cadr input)) acc))
+          (identifier-expr (reverse acc) path start (next-char end)))
       (if (newline? head)
-        (parse-identifier-literal-expr
-          (cdr input)
-          path
-          start
-          (next-line end)
-          (cons head acc))
-        (parse-identifier-literal-expr
-          (cdr input)
-          path
-          start
-          (next-char end)
-          (cons head acc)))))))))
+        (parse-single-quote (cdr input) path start (next-line end) (cons head acc))
+        (parse-single-quote (cdr input) path start (next-char end) (cons head acc))))))))
+
+;; Parses a double quote identifier literal expr.
+(def parse-double-quote
+  (fn input path start end acc
+    (with (car input)
+    (fn head
+      (if (char.= head quote)
+        (if (char.= (cadr input) quote)
+          (parse-result
+            (cddr input)
+            (identifier-expr (reverse acc) path start (next-char (next-char end))))
+          (parse-double-quote (cdr input) path start (next-char end) (cons quote acc)))
+      (if (newline? head)
+        (parse-double-quote (cdr input) path start (next-line end) (cons head acc))
+        (parse-double-quote (cdr input) path start (next-char end) (cons head acc))))))))
+
+;; Parses an M identifier literal expression given an input.
+(def parse-identifier-literal-expr
+  (fn input path start end acc
+    (if (char.= (car input) quote)
+      (parse-double-quote (cdr input) path start (next-char end) acc)
+      (parse-single-quote input path start end acc))))
 
 ;; Parses an M identifier expression given an input.
 (def parse-identifier-expr
@@ -90,12 +87,7 @@
     (if (separator? (car input))
       (parse-result input
         (identifier-expr (reverse acc) path start end))
-      (parse-identifier-expr
-        (cdr input)
-        path
-        start
-        (next-char end)
-        (cons (car input) acc)))))
+      (parse-identifier-expr (cdr input) path start (next-char end) (cons (car input) acc)))))
 
 ;; Parses an M list expression given an input.
 (def parse-list-expr
@@ -158,10 +150,8 @@
           (fold child-files (impure ())
             (fn acc child
               (then-run-with
-                (parse-file
-                  child
-                  (if init
-                    ()
+                (parse-file child
+                  (if init ()
                     (concat path (append (file.name file) slash)))
                   false)
               (fn parse

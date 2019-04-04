@@ -22,39 +22,32 @@
 (def semicolon (car (symbol ";")))
 
 ;; The literal character ".".
-(def dot (car (symbol ".")))
+(def dot (car (symbol .)))
 
-;; The literal character "\"".
-(def quote (car (symbol "\"")))
+;; The literal character """.
+(def quote (car (symbol """ "")))
 
 ;; The literal character "/".
-(def slash (car (symbol "/")))
+(def slash (car (symbol /)))
 
-;; The literal character "\\".
-(def backslash (car (symbol "\\")))
+;; The literal character "\".
+(def backslash (car (symbol \)))
 
-;; The literal character " ".
+;; The literal character "\s".
 (def space (car (symbol " ")))
 
 ;; The literal character "\t".
-(def tab (car (symbol "\t")))
+(def tab (car (symbol ""	"")))
 
 ;; The literal character "\n".
-(def linefeed (car (symbol "\n")))
+(def linefeed (car (symbol "
+")))
 
 ;; The literal character "\r".
-(def carriage-return (car (symbol "\r")))
+(def carriage-return (car (symbol "
+")))
 
-;; The literal character "t".
-(def letter-t (car (symbol "t")))
-
-;; The literal character "n".
-(def letter-n (car (symbol "n")))
-
-;; The literal character "r".
-(def letter-r (car (symbol "r")))
-
-;; True if a character is "\n".
+;; True if a character is "\r" or "\n".
 (def newline?
   (fn char
     (| (char.= char linefeed)

@@ -209,7 +209,7 @@
               (list-expr
                 (list3
                   (identifier-expr (symbol fn) (expr.path true-expr) (expr.start true-expr) (expr.end true-expr))
-                  (identifier-expr (symbol "") (expr.path true-expr) (expr.start true-expr) (expr.end true-expr))
+                  (identifier-expr () (expr.path true-expr) (expr.start true-expr) (expr.end true-expr))
                   true-expr)
                 (expr.path true-expr)
                 (expr.start true-expr)
@@ -217,7 +217,7 @@
               (list-expr
                 (list3
                   (identifier-expr (symbol fn) (expr.path false-expr) (expr.start false-expr) (expr.end false-expr))
-                  (identifier-expr (symbol "") (expr.path false-expr) (expr.start false-expr) (expr.end false-expr))
+                  (identifier-expr () (expr.path false-expr) (expr.start false-expr) (expr.end false-expr))
                   false-expr)
                 (expr.path false-expr)
                 (expr.start false-expr)

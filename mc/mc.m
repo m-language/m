@@ -1,7 +1,7 @@
 ;; The main function for the M compiler.
-(def ""
+(def """"
   (fn args
-    (if (nil? args) (empty-repl ())
+    (if (nil? args) empty-repl
     (with (file.child file.local-file (car args))
     (fn in
       (if (nil? (cdr args)) (run-repl in)
@@ -12,8 +12,7 @@
 
 ;; Runs the m repl with no declarations.
 (def empty-repl
-  (fn ""
-    (repl default-global-env empty-heap nat.1 (empty-tree-map compare-symbol))))
+  (repl default-global-env empty-heap nat.1 (empty-tree-map compare-symbol)))
 
 ;; Runs the m repl.
 (def run-repl

@@ -8,7 +8,7 @@
 ;; A function which always returns the same result.
 (def const
   (fn x
-    (fn "" x)))
+    (fn """" x)))
 
 ;; Composes two functions.
 (def compose

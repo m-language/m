@@ -108,20 +108,17 @@
     (append (symbol ")") linefeed)))))))
 
 ;; Desugars a fn declaration.
-(def desugar-fn-declaration (const (symbol "")))
+(def desugar-fn-declaration (const ()))
 
 ;; Quotes a variable with invalid characters.
 (def desugar-quote
   (fn name
     (if (| (desugar-should-quote? name) (nil? name))
-      (with
-        (flat-map name
-          (fn char
-            (if (char.= char quote) (symbol "\\\"")
-            (if (char.= char backslash) (symbol "\\\\")
-            (list1 char)))))
-      (fn escaped
-        (cons quote (append escaped quote))))
+      (cons quote
+        (cons quote
+          ((swap append) quote
+            ((swap append) quote
+              name))))
       name)))
 
 ;; Tests if a name should be quoted
