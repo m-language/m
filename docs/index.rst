@@ -1,11 +1,11 @@
-Welcome to M Language's documentation!
-======================================
+Welcome to the M Programming Language's documentation!
+======================================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
 
-
+   tutorial/index
+   reference
 
 Indices and tables
 ==================
