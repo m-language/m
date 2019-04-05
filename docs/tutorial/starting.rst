@@ -37,7 +37,7 @@ Before building M-JVM, you will need:
 - Gradle version 4.4 or higher.
 
 Once these are installed, simply run ``./build`` or ``./build.bat`` to build
-the compiler.
+the compiler. Then you can start the compiler with ``./mc`` or ``./mc.bat``.
 
 Building M-JS
 =============
@@ -48,3 +48,17 @@ Building M-Native
 =================
 
 TODO
+
+Using the M Compiler
+====================
+
+Once the M compiler is built, it can be ran with the following arguments:
+
+.. code-block:: bash
+
+    mc                  -- Starts the repl.
+    mc <input>          -- Compiles <input> and starts the repl with it loaded.
+    mc <input> <output> -- Compiles <input> and writes the result to the directory <output>
+
+The input file can be a file or a directory; if it is a directory, all child
+files with the extension ``.m`` will be loaded recursively.
