@@ -40,7 +40,7 @@ the `reference <../reference.html>`_ covers everything you need to know, while
 `The M Specification <https://github.com/m-language/m-spec/raw/master/m.pdf>`_
 provides the formal syntax and semantics.
 
-Otherwise, `continue on <hello.html>`_.
+Otherwise, `continue on <starting.html>`_.
 
 Intended Audience
 =================

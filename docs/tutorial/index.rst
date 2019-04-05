@@ -8,4 +8,4 @@ The M Tutorial
    :maxdepth: 1
 
    intro
-   hello
+   starting
