@@ -66,7 +66,7 @@ fun help() {
         mc.kts help  -- Displays this help message
         mc.kts clean -- Cleans the M compiler
         mc.kts build -- Builds the M compiler
-        mc.kts repl  -- Launches the M repl
+        mc.kts mc    -- Runs the m compiler with the given arguments.
     """.trimIndent())
 }
 
@@ -107,11 +107,12 @@ fun build() {
     mCompile("mc", bin.path)
 }
 
-fun repl() {
+fun mc() {
     build()
-    val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss16m mc mc".split(' ').toList()).inheritIO().start()
+    val args = args.joinToString(separator = " ", prefix = "", postfix = "")
+    val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss16m mc $args".split(' ').toList()).inheritIO().start()
     val code = exec.waitFor()
-    if (code != 0) exit("REPL failed with exit code $code")
+    if (code != 0) exit("mc failed with exit code $code")
 }
 
 fun test() {
@@ -124,6 +125,6 @@ when (args[0]) {
     "help" -> help()
     "clean" -> clean()
     "build" -> build()
-    "repl" -> repl()
+    "mc" -> mc()
     "test" -> test()
 }
