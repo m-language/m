@@ -58,7 +58,7 @@ Once the M compiler is built, it can be ran with the following arguments:
 
     mc                  -- Starts the repl.
     mc <input>          -- Compiles <input> and starts the repl with it loaded.
-    mc <input> <output> -- Compiles <input> and writes the result to the directory <output>
+    mc <input> <output> -- Compiles <input> and writes the result to the directory <output>.
 
 The input file can be a file or a directory; if it is a directory, all child
 files with the extension ``.m`` will be loaded recursively.
