@@ -27,7 +27,7 @@ Usage
 -----
 
 Depending on the backend, mc may be a jar file, a js file, an 
-executable, or any other target language that may change its usage.
+executable, or any other target language, which may change its usage.
 
     mc                  -- Starts the M repl.
     mc <input>          -- Starts the M repl with an input file preloaded.
