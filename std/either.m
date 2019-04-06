@@ -9,14 +9,14 @@
 ;; Creates a left either.
 (def left
   (fn value
-    (fn first """"
-      (first value))))
+    (fn f _
+      (f value))))
 
 ;; Creates a right either.
 (def right
   (fn value
-    (fn """" second
-      (second value))))
+    (fn _ f
+      (f value))))
 
 ;; True if an either is left.
 (def left?

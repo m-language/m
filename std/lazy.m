@@ -4,7 +4,7 @@
 (macro delay
   (fn expr
     (cons (left (symbol fn))
-    (cons (left (symbol """"))
+    (cons (left (symbol _))
       expr))))
 
 ;; Macro which forces the delayed evaluation of an expression.

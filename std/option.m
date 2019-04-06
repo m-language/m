@@ -10,7 +10,7 @@
 (def some right)
 
 ;; The singleton null value.
-(def null (left ()))
+(def null (left false))
 
 ;; Tests if an option has a value.
 (def some? right?)
@@ -18,7 +18,7 @@
 ;; Tests if an option is null.
 (def null? left?)
 
-;; The value of an option, or `()` if it is null.
+;; The value of an option, or false if it is null.
 (def unnull
   (fn either
     (either id id)))
