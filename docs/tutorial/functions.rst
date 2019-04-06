@@ -19,10 +19,10 @@ arguments is a list of argument names and value is the value of the function.
 
 .. code-block:: lisp
 
-    ;; The identity function, a function which always returns its argument.
+    ;; The identity function which always returns its argument.
     (fn x x)
 
-    ;; The constant function, a function which ignores its second argument.
+    ;; The constant function which ignores its second argument.
     (fn x _ x)
 
 Application
