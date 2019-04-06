@@ -7,7 +7,7 @@ Functions
 Unlike most programming languages, functions are completely fundamental to M.
 Every data type in M is represented as a function, even typically intrinsic ones
 like structs and integers. These representations will be covered in
-`data types <data.html>`_, but for now it is enough to know that functions are
+`data types <datatypes.html>`_, but for now it is enough to know that functions are
 the singular object in M.
 
 Functions in M are pure, meaning that they return the same result for the same
