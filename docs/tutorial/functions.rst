@@ -38,8 +38,8 @@ and arguments is a list of arguments to the function.
     ;; True
     (not false)
 
-    ;; False
-    (and true false)
+    ;; 4
+    (+ (nat 1) (nat 3))
 
 Functions are applied eagerly, so their arguments are always evaluated before
 the function, but an argument evaluation order is not specified.
