@@ -9,3 +9,4 @@ The M Tutorial
 
    intro
    starting
+   functions
