@@ -49,7 +49,7 @@ natural number.
     (def inc
       (fn n
         (fn f x
-          (f (n f x))))
+          (f (n f x)))))
 
 Products
 ========
