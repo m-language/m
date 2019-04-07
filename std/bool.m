@@ -7,10 +7,10 @@
 ;;; implementation of booleans.
 
 ;; The singleton truthy value, a function which ignores its second argument.
-(def true (id const))
+(def true (fn x _ x))
 
 ;; The singleton falsy value, a function which ignores its first argument.
-(def false (const id))
+(def false (fn _ x x))
 
 ;; True if both arguments are true.
 (def and
