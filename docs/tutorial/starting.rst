@@ -27,6 +27,18 @@ all permissions which M can use.
 Since Windows' root directory has all permissions by default, the M compiler
 will create ``mpm-root`` on its own.
 
+Setting up the M Compiler
+=========================
+
+The M compiler does not need any special setup to work; simply clone
+`The M Compiler <https://github.com/m-language/m-language>`_ in the directory
+of your choice.
+
+.. code-block:: bash
+
+    git clone https://github.com/m-language/m-language.git
+
+
 Building M-JVM
 ==============
 
