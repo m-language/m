@@ -12,3 +12,4 @@ The M Tutorial
    functions
    definitions
    datatypes
+   macros

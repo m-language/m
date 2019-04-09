@@ -6,7 +6,7 @@ Introduction
 
 The fundamental philosophy of the M programming language is that simplicity is
 as important as expressiveness; or, put another way, that a program which cannot
-be reasoned about is barely better then no program at all. Many features of
+be reasoned about is barely better than no program at all. Many features of
 modern programming languages complicate programs unnecessarily, and combining
 these features increases this complexity exponentially. For the programmer, this
 means time wasted trying to figure out what a program even does (or worse, being

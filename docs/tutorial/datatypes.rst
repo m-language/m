@@ -117,4 +117,4 @@ are some examples:
 - option a = either a bool
 - list a = either bool (pair a (list a))
 - string = list char
-- struct = pair string (string -> *)
+- struct = pair string (string -> any)
