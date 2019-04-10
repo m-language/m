@@ -4,7 +4,7 @@
 ;; The result of generating an expression with unresolved dependencies.
 (def generating
   (new-data (symbol generating)
-    (list3 (symbol dependencies) (symbol global-env) (symbol continue))))
+    (list (symbol dependencies) (symbol global-env) (symbol continue))))
 
 (def generating.dependencies (field (symbol generating) (symbol dependencies)))
 (def generating.global-env (field (symbol generating) (symbol global-env)))
@@ -14,7 +14,7 @@
 ;; The result of generating an expression without unresolved dependencies.
 (def generated
   (new-data (symbol generated)
-    (list3 (symbol operation) (symbol declarations) (symbol global-env))))
+    (list (symbol operation) (symbol declarations) (symbol global-env))))
 
 (def generated.operation (field (symbol generated) (symbol operation)))
 (def generated.declarations (field (symbol generated) (symbol declarations)))
@@ -24,7 +24,7 @@
 ;; The result of generating an invalid expression.
 (def degenerate
   (new-data (symbol degenerate)
-    (list2 (symbol errors) (symbol global-env))))
+    (list (symbol errors) (symbol global-env))))
 
 (def degenerate.errors (field (symbol degenerate) (symbol errors)))
 (def degenerate.global-env (field (symbol degenerate) (symbol global-env)))
@@ -138,7 +138,7 @@
 (def generate-global-expr
   (fn macro? generate-expr name value local-env global-env
     (if (some? (tree-map.get (global-env.globals global-env) name))
-      (degenerate (list1 (concat name (symbol " has already been defined"))) global-env)
+      (degenerate (list (concat name (symbol " has already been defined"))) global-env)
       (with
         ((swap global-env.with-globals) global-env
           (tree-map.put (global-env.globals global-env) name
@@ -184,7 +184,7 @@
     (fn option
       (if (some? option)
         (generated (generate-identifier-expr' (unnull option)) () global-env)
-        (generating (list1 name) global-env
+        (generating (list name) global-env
           (fn global-env
             (generate-identifier-expr name local-env global-env))))))))
 
@@ -208,11 +208,11 @@
   (fn generate-expr cond-expr true-expr false-expr local-env global-env
     (generate-expr
       (list-expr
-        (list2
+        (list
           (list-expr
-            (list3 cond-expr
+            (list cond-expr
               (list-expr
-                (list3
+                (list
                   (identifier-expr (symbol fn) (expr.path true-expr) (expr.start true-expr) (expr.end true-expr))
                   (identifier-expr () (expr.path true-expr) (expr.start true-expr) (expr.end true-expr))
                   true-expr)
@@ -220,7 +220,7 @@
                 (expr.start true-expr)
                 (expr.end true-expr))
               (list-expr
-                (list3
+                (list
                   (identifier-expr (symbol fn) (expr.path false-expr) (expr.start false-expr) (expr.end false-expr))
                   (identifier-expr () (expr.path false-expr) (expr.start false-expr) (expr.end false-expr))
                   false-expr)
@@ -244,7 +244,7 @@
       (generate-fn-expr' generate-expr (car names) value local-env global-env)
       (with
         (list-expr
-          (list3
+          (list
             (identifier-expr (symbol fn) (expr.path value) (expr.start value) (expr.end value))
             (identifier-expr (last names) (expr.path value) (expr.start value) (expr.end value))
             value)
@@ -330,7 +330,7 @@
       (with (env.get local-env global-env name)
       (fn option
         (if (null? option)
-          (generating (list1 name) global-env
+          (generating (list name) global-env
             (fn global-env
               (generate-macro?-expr expr fn args local-env global-env)))
           (with (unnull option)

@@ -30,26 +30,26 @@
 ;; Macro for and which delays the second argument.
 (macro &
   (fn expr
-    (list3
+    (list
       (left (symbol and))
       (car expr)
-      (right (cons (left (symbol delay)) (list1 (cadr expr)))))))
+      (right (cons (left (symbol delay)) (list (cadr expr)))))))
 
 ;; Macro for or which delays the second argument.
 (macro |
   (fn expr
-    (list3
+    (list
       (left (symbol or))
       (car expr)
-      (right (cons (left (symbol delay)) (list1 (cadr expr)))))))
+      (right (cons (left (symbol delay)) (list (cadr expr)))))))
 
 ;; Macro for control flow.
 (macro if
   (fn expr
-    (list2
+    (list
       (left (symbol force))
       (right
-        (list3
+        (list
           (car expr)
-          (right (cons (left (symbol delay)) (list1 (cadr expr))))
-          (right (cons (left (symbol delay)) (list1 (caddr expr)))))))))
+          (right (cons (left (symbol delay)) (list (cadr expr))))
+          (right (cons (left (symbol delay)) (list (caddr expr)))))))))

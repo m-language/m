@@ -1,7 +1,7 @@
 ;; Operation for a local variable.
 (def local-variable-operation
   (new-data (symbol local-variable-operation)
-    (list2 (symbol name) (symbol index))))
+    (list (symbol name) (symbol index))))
 
 (def local-variable-operation.name (field (symbol local-variable-operation) (symbol name)))
 (def local-variable-operation.index (field (symbol local-variable-operation) (symbol index)))
@@ -9,7 +9,7 @@
 ;; Operation for a global variable.
 (def global-variable-operation
   (new-data (symbol global-variable-operation)
-    (list2 (symbol name) (symbol path))))
+    (list (symbol name) (symbol path))))
 
 (def global-variable-operation.name (field (symbol global-variable-operation) (symbol name)))
 (def global-variable-operation.path (field (symbol global-variable-operation) (symbol path)))
@@ -17,7 +17,7 @@
 ;; An if operation.
 (def if-operation
   (new-data (symbol if-operation)
-    (list3 (symbol cond) (symbol true) (symbol false))))
+    (list (symbol cond) (symbol true) (symbol false))))
 
 (def if-operation.cond (field (symbol if-operation) (symbol cond)))
 (def if-operation.true (field (symbol if-operation) (symbol true)))
@@ -26,7 +26,7 @@
 ;; A def operation.
 (def def-operation
   (new-data (symbol def-operation)
-    (list3 (symbol name) (symbol path) (symbol value))))
+    (list (symbol name) (symbol path) (symbol value))))
 
 (def def-operation.name (field (symbol def-operation) (symbol name)))
 (def def-operation.path (field (symbol def-operation) (symbol path)))
@@ -35,7 +35,7 @@
 ;; A function operation.
 (def fn-operation
   (new-data (symbol fn-operation)
-    (list5 (symbol path) (symbol name) (symbol arg) (symbol value) (symbol closures))))
+    (list (symbol path) (symbol name) (symbol arg) (symbol value) (symbol closures))))
 
 (def fn-operation.path (field (symbol fn-operation) (symbol path)))
 (def fn-operation.name (field (symbol fn-operation) (symbol name)))
@@ -46,14 +46,14 @@
 ;; A symbol operation.
 (def symbol-operation
   (new-data (symbol symbol-operation)
-    (list1 (symbol name))))
+    (list (symbol name))))
 
 (def symbol-operation.name (field (symbol symbol-operation) (symbol name)))
 
 ;; An apply operation.
 (def apply-operation
   (new-data (symbol apply-operation)
-    (list2 (symbol fn) (symbol arg))))
+    (list (symbol fn) (symbol arg))))
 
 (def apply-operation.fn (field (symbol apply-operation) (symbol fn)))
 (def apply-operation.arg (field (symbol apply-operation) (symbol arg)))
@@ -61,7 +61,7 @@
 ;; Marks an operation with a line number.
 (def line-number-operation
   (new-data (symbol line-number-operation)
-    (list2 (symbol operation) (symbol line))))
+    (list (symbol operation) (symbol line))))
 
 (def line-number-operation.operation (field (symbol line-number-operation) (symbol operation)))
 (def line-number-operation.line (field (symbol line-number-operation) (symbol line)))

@@ -10,4 +10,4 @@
 ;; Macro which forces the delayed evaluation of an expression.
 (macro force
   (fn expr
-    (cons (car expr) (list1 (right ())))))
+    (list (car expr) (right ()))))

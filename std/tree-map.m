@@ -1,7 +1,7 @@
 ;; A node in a tree map.
 (def tree-map-node
   (new-data (symbol tree-map-node)
-    (list4 (symbol left) (symbol right) (symbol key) (symbol value))))
+    (list (symbol left) (symbol right) (symbol key) (symbol value))))
 
 (def tree-map-node.left (field (symbol tree-map-node) (symbol left)))
 (def tree-map-node.right (field (symbol tree-map-node) (symbol right)))
@@ -17,7 +17,7 @@
 ;; A tree map.
 (def tree-map
   (new-data (symbol tree-map)
-    (list2 (symbol node) (symbol compare))))
+    (list (symbol node) (symbol compare))))
 
 (def tree-map.node (field (symbol tree-map) (symbol node)))
 (def tree-map.compare (field (symbol tree-map) (symbol compare)))

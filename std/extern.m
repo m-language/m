@@ -5,7 +5,7 @@
 ;; Creates an external definition with a given name.
 (macro extern
   (fn expr
-    (list3
+    (list
       (left (symbol def))
       (car expr)
       (car expr))))

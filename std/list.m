@@ -40,35 +40,15 @@
       (const (const (const false)))
       true)))
 
-;; Creates a list with a single element.
-(def list1
-  (fn a
-    (cons a ())))
-
-;; Creates a list with two elements.
-(def list2
-  (fn a b
-    (cons a (list1 b))))
-
-;; Creates a list with three elements.
-(def list3
-  (fn a b c
-    (cons a (list2 b c))))
-
-;; Creates a list with four elements.
-(def list4
-  (fn a b c d
-    (cons a (list3 b c d))))
-
-;; Creates a list with five elements.
-(def list5
-  (fn a b c d e
-    (cons a (list4 b c d e))))
-
-;; Creates a list with six elements.
-(def list6
-  (fn a b c d e f
-    (cons a (list5 b c d e f))))
+;; Creates a literal list.
+(macro list
+  (fn expr
+    (((nil? expr) (const ())
+      (fn _
+        (cons (left (symbol cons))
+        (cons (car expr)
+        (cons (right ((id list) (cdr expr)))
+          ()))))) ())))
 
 ;; The initial elements of a list.
 (def init
@@ -87,7 +67,7 @@
 (def append
   (fn list elem
     (if (nil? list)
-      (list1 elem)
+      (cons elem ())
       (cons (car list) (append (cdr list) elem)))))
 
 ;; Concatenates two lists.

@@ -1,7 +1,7 @@
 ;; An expression representing an M identifier.
 (def identifier-expr
   (new-data (symbol identifier-expr)
-    (list4 (symbol name) (symbol path) (symbol start) (symbol end))))
+    (list (symbol name) (symbol path) (symbol start) (symbol end))))
 
 (def identifier-expr? (is? (symbol identifier-expr)))
 
@@ -13,7 +13,7 @@
 ;; An expression representing an M list.
 (def list-expr
   (new-data (symbol list-expr)
-    (list4 (symbol exprs) (symbol path) (symbol start) (symbol end))))
+    (list (symbol exprs) (symbol path) (symbol start) (symbol end))))
 
 (def list-expr? (is? (symbol list-expr)))
 

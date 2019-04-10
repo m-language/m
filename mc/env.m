@@ -1,7 +1,7 @@
 ;; The local environment.
 (def local-env
   (new-data (symbol local-env)
-    (list2 (symbol locals) (symbol def))))
+    (list (symbol locals) (symbol def))))
 
 (def local-env.locals (field (symbol local-env) (symbol locals)))
 (def local-env.def (field (symbol local-env) (symbol def)))
@@ -17,7 +17,7 @@
 ;; The global environment.
 (def global-env
   (new-data (symbol global-env)
-    (list4 (symbol globals) (symbol heap) (symbol dependents) (symbol index))))
+    (list (symbol globals) (symbol heap) (symbol dependents) (symbol index))))
 
 (def global-env.globals (field (symbol global-env) (symbol globals)))
 (def global-env.heap (field (symbol global-env) (symbol heap)))

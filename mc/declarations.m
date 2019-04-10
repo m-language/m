@@ -1,7 +1,7 @@
 ;; A def declaration.
 (def def-declaration
   (new-data (symbol def-declaration)
-    (list3 (symbol name) (symbol path) (symbol value))))
+    (list (symbol name) (symbol path) (symbol value))))
 
 (def def-declaration.name (field (symbol def-declaration) (symbol name)))
 (def def-declaration.path (field (symbol def-declaration) (symbol path)))
@@ -11,7 +11,7 @@
 ;; A function declaration.
 (def fn-declaration
   (new-data (symbol fn-declaration)
-    (list4 (symbol name) (symbol path) (symbol closures) (symbol value))))
+    (list (symbol name) (symbol path) (symbol closures) (symbol value))))
 
 (def fn-declaration.name (field (symbol fn-declaration) (symbol name)))
 (def fn-declaration.path (field (symbol fn-declaration) (symbol path)))
