@@ -50,7 +50,7 @@
       (generated.declarations result))))
 
 ;; Writes a program.
-(def write-program ())
+(extern write-program)
 
 ;; Tests the M compiler.
 (def mc-test

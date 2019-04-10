@@ -1,5 +1,5 @@
 ;; The root file of the local mpm storage.
-(def mpm-root mpm-root)
+(extern mpm-root)
 
 ;; The root file of the local mpm reference storage.
 (def mpm-ref-root (file.child mpm-root (symbol ref)))

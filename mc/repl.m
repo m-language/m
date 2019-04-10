@@ -1,4 +1,4 @@
-(def debug ())
+(extern debug)
 
 ;; The M repl.
 (def repl

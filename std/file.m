@@ -1,31 +1,31 @@
 ;;; File.m
 
 ;; The root file for this program.
-(def file.local-file file.local-file)
+(extern file.local-file)
 
 ;; The name of a file.
-(def file.name file.name)
+(extern file.name)
 
 ;; The name of a file without its extension.
-(def file.name-without-extension file.name-without-extension)
+(extern file.name-without-extension)
 
 ;; The child of a file given a name.
-(def file.child file.child)
+(extern file.child)
 
 ;; Tests if a file exists.
-(def file.exists? file.exists?)
+(extern file.exists?)
 
 ;; Reads the contents of a file as a list of characters.
-(def file.read file.read)
+(extern file.read)
 
 ;; Writes a list of characters to a file.
-(def file.write file.write)
+(extern file.write)
 
 ;; True if a file is a directory.
-(def file.directory? file.directory?)
+(extern file.directory?)
 
 ;; A list of child files.
-(def file.child-files file.child-files)
+(extern file.child-files)
 
 ;; Copys a file.
-(def file.copy file.copy)
+(extern file.copy)

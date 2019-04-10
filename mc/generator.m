@@ -100,6 +100,27 @@
           global-env
           f)))))
 
+;; Converts a generating to a generated.
+(def generating->generated
+  (fn generating' operation global-env continue
+    (generated operation ()
+      ((swap global-env.with-dependents) global-env
+        (with (global-env.dependents (generating.global-env generating'))
+        (fn dependents
+          (with (car (generating.dependencies generating'))
+          (fn dependency
+            (tree-map.put dependents dependency
+              (fn global-env
+                (if (null? (tree-map.get dependents dependency))
+                  (continue global-env)
+                  (with ((unnull (tree-map.get dependents dependency)) global-env)
+                  (fn result1
+                    (with (continue (generate-result.global-env result1))
+                    (fn result2
+                      (generate-result.combine result1 result2
+                        (generate-result.global-env result2)
+                        false))))))))))))))))
+
 ;; The set of closures in an expression.
 (def closures
   (fn local-env
@@ -126,27 +147,11 @@
         (generate-result.match (generate-expr value (local-env.with-def name local-env) new-global-env)
         (fn degenerate' degenerate')
         (fn generating'
-          (generated
+          (generating->generated generating'
             (def-operation name (expr.path value) nil-operation)
-            ()
-            ((swap global-env.with-dependents) global-env
-              (with (global-env.dependents (generating.global-env generating'))
-              (fn dependents
-                (with (car (generating.dependencies generating'))
-                (fn dependency
-                  (tree-map.put dependents dependency
-                    (fn global-env
-                      (if (null? (tree-map.get dependents dependency))
-                        (generate-global-expr macro? generate-expr name value local-env global-env)
-                        (with ((unnull (tree-map.get dependents dependency)) global-env)
-                        (fn result1
-                          (with
-                            (generate-global-expr macro? generate-expr name value local-env
-                              (generate-result.global-env result1))
-                          (fn result2
-                            (generate-result.combine result1 result2
-                              (generate-result.global-env result2)
-                              false)))))))))))))))
+            global-env
+            (fn global-env
+              (generate-global-expr macro? generate-expr name value local-env global-env))))
         (fn generated'
           (with (def-declaration name (expr.path value) (generated.operation generated'))
           (fn declaration
@@ -411,7 +416,16 @@
 (def generate-exprs'
   (fn exprs result
     (if (nil? exprs) result
-    (with (generate-expr (car exprs) default-local-env (generate-result.global-env result))
+    (with
+      (generate-result.match
+        (generate-expr (car exprs) default-local-env (generate-result.global-env result))
+        (fn degenerate' degenerate')
+        (fn generating'
+          (generating->generated generating' nil-operation
+            (generate-result.global-env result)
+            (fn global-env
+              (generate-expr (car exprs) default-local-env global-env))))
+        (fn generated' generated'))
     (fn car-result
       (generate-exprs' (cdr exprs)
         (generate-result.combine result car-result

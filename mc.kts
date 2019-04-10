@@ -94,17 +94,17 @@ fun build() {
 
     mJvmCompile("mc.m", bin.path)
 
+    mCompile("mc.m", bin.path)
+    mCompile("mc.m", bin.path)
+
     println("Compiling standard library")
     execM("mc.m", "!(mpm-put (file.child file.local-file (symbol std)))")
 
-    mCompile("mc.m", bin.path)
-    mCompile("mc.m", bin.path)
+    mCompile("mc", bin.path)
+    mCompile("mc", bin.path)
 
     println("Regenerating mc.m")
     execM("mc", "!(desugar-file (file.child file.local-file (symbol mc)) (file.child file.local-file (symbol mc.m)))")
-
-    mCompile("mc", bin.path)
-    mCompile("mc", bin.path)
 }
 
 fun mc() {
