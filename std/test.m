@@ -9,5 +9,16 @@
 
 ;; Creates a failed test.
 (def fail
-  (fn message
-    (right (list message))))
+  (fn messages
+    (right messages)))
+
+;; Runs a list of tests.
+(def run-tests
+  (fn tests _
+    ((fold tests success
+      (fn state test
+        ((force test) id
+          (fn fail1
+            (state (const fail1)
+              (fn fail2
+                (fail (concat fail1 fail2)))))))))))

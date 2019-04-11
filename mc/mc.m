@@ -54,4 +54,10 @@
 
 ;; Tests the M compiler.
 (def mc-test
-  (impure ()))
+  ((force (apply-vararg run-tests))
+    (fn success (ostream.writeln stdout (symbol "Tests successful")))
+    (fn fail
+      (fold fail (impure ())
+        (fn process message
+          (then-run process
+            (ostream.writeln stderr message)))))))
