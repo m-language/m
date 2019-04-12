@@ -345,11 +345,7 @@
     (with (heap.get (global-env.heap global-env) name)
     (fn function
       (generate-expr
-        (list-expr
-          (map (function (map args expr->list)) (list->expr expr))
-          (list-expr.path expr)
-          (list-expr.start expr)
-          (list-expr.end expr))
+        (list->expr expr (function (map args expr->list)))
         local-env
         global-env)))))
 

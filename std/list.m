@@ -43,12 +43,13 @@
 ;; Creates a literal list.
 (macro list
   (fn expr
-    (((nil? expr) (const ())
-      (fn _
-        (cons (left (symbol cons))
-        (cons (car expr)
-        (cons (right ((id list) (cdr expr)))
-          ()))))) ())))
+    (expr.list
+      (((nil? expr) (const ())
+        (fn _
+          (cons (expr.symbol (symbol cons))
+          (cons (car expr)
+          (cons ((id list) (cdr expr))
+            ()))))) ()))))
 
 ;; The initial elements of a list.
 (def init

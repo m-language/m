@@ -3,11 +3,12 @@
 ;; Macro which delays the evaluation of an expression.
 (macro delay
   (fn expr
-    (cons (left (symbol fn))
-    (cons (left (symbol _))
-      expr))))
+    (expr.list
+      (cons (expr.symbol (symbol fn))
+      (cons (expr.symbol (symbol _))
+        expr)))))
 
 ;; Macro which forces the delayed evaluation of an expression.
 (macro force
   (fn expr
-    (list (car expr) (right ()))))
+    (apply-vararg expr.list (car expr) (right ()))))
