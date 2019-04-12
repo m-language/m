@@ -25,11 +25,13 @@ fun exec(string: String, file: File = File(".")) {
 fun execM(input: String, string: String, file: File = File(".")) {
     val exec = ProcessBuilder("java -classpath ${bin.absolutePath}${File.pathSeparator}${mJvmJar.absolutePath} -Xss16m mc $input".split(' ').toList())
             .redirectError(ProcessBuilder.Redirect.INHERIT)
+            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .directory(file.absoluteFile).start()
     exec.outputStream.write("$string\n\n".toByteArray())
     exec.outputStream.flush()
     val code = exec.waitFor()
     if (code != 0) exit("Command $string failed with exit code $code")
+    else println()
 }
 
 tailrec fun ask(message: String, yes: () -> Unit) {
@@ -118,7 +120,7 @@ fun mc() {
 fun test() {
     build()
     println("Running tests")
-    execM("mc", "!mc-test")
+    execM("mc", "!(run-test mc:test)")
 }
 
 when (args[0]) {

@@ -8,3 +8,5 @@
 
 ;; The standard input stream.
 (extern stdin)
+
+(extern debug)

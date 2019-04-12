@@ -1,5 +1,3 @@
-(extern debug)
-
 ;; The M repl.
 (def repl
   (fn global-env heap index resolved
