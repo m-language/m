@@ -107,4 +107,4 @@ please [contact me personally](https://github.com/aedans) and I'll add it to the
 organization.
 
 If you want to help M succeed but don't want to contribute code, please consider
-starring this repository to help others like you find it.
+starring this repository to help others find it.
