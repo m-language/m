@@ -56,4 +56,6 @@
 (def mc:test
   (apply-vararg combine-tests 
     bool:test
-    char:test))
+    char:test
+    either:test
+    lazy:test))
