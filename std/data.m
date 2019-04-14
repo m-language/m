@@ -1,7 +1,7 @@
 ;;; Data.m
 ;;;
 ;;; An implementation of generic data structures whose type is encoded as a
-;;; symbol, and whose contents are encoded as a function from a symbol to the
+;;; symbol and whose contents are encoded as a function from a symbol to the
 ;;; value of the field with that symbol.
 ;;;
 ;;; All definitions in this file are optimized using the backend's native
