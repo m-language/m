@@ -59,3 +59,12 @@
     (| (char.= char space)
     (| (char.= char tab)
        (newline? char)))))
+
+;; Tests M characters.
+(def char:test
+  (apply-vararg combine-tests
+    (assert-not (char.= linefeed carriage-return))
+    (assert     (newline? linefeed))
+    (assert     (newline? carriage-return))
+    (assert     (whitespace? space))
+    (assert     (whitespace? tab))))

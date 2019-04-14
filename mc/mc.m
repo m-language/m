@@ -54,4 +54,6 @@
 
 ;; Tests the M compiler.
 (def mc:test
-  (apply-vararg combine-tests bool:test))
+  (apply-vararg combine-tests 
+    bool:test
+    char:test))
