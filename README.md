@@ -18,7 +18,7 @@ Second, install the plugin for the editor of your choice
 [idea](https://github.com/m-language/intellij-m)).
 
 For more detailed installation instructions, view
-[the getting started guide](https://m-language.readthedocs.io/en/latest/tutorial/starting.html)
+[the getting started guide](https://m-language.readthedocs.io/en/latest/tutorial/starting.html).
 
 What it looks like
 ----------------------
@@ -86,7 +86,7 @@ and the specification can be found
 [here](https://github.com/m-language/m-spec/raw/master/m.pdf)
 (also available as
 [markdown](https://github.com/m-language/m-spec/blob/master/m.md) and
-[html](https://m-language.github.io/m-spec/m.html)
+[html](https://m-language.github.io/m-spec/m.html)).
 
 Current State
 -------------
