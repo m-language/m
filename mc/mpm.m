@@ -23,16 +23,14 @@
 
 ;; Puts all declarations in mpm-root as references.
 (defn mpm-put-refs declarations
-  (with (filter declarations def-declaration?)
-  (fn def-declarations
+  (let def-declarations (filter declarations def-declaration?)
     (fold def-declarations (impure ())
-      (fn process
-        (fn declaration
-          (then-run process
-            (file.write
-              (file.child mpm-ref-root
-                (normalize (def-declaration.name declaration)))
-              (def-declaration.path declaration)))))))))
+      (fn process declaration
+        (then-run process
+          (file.write
+            (file.child mpm-ref-root
+              (normalize (def-declaration.name declaration)))
+            (def-declaration.path declaration)))))))
 
 ;; Puts all sources in mpm-root.
 (defn mpm-put-srcs in
@@ -65,26 +63,24 @@
 
 ;; Resolves a generated with mpm.
 (defn mpm-resolve-generated resolve resolved generated'
-  (with (global-env.unresolved (generated.global-env generated'))
-  (fn unresolved
+  (let unresolved (global-env.unresolved (generated.global-env generated'))
     (if (nil? unresolved)
       (impure (pair resolved generated'))
       (then-run-with
         (mpm-resolve-dependencies resolve resolved generated' unresolved false)
-        (fn pair (resolve (first pair) (second pair))))))))
+        (fn pair (resolve (first pair) (second pair)))))))
 
 ;; Resolves a list of dependencies with mpm.
 (defn mpm-resolve-dependencies resolve resolved result dependencies indef
   (if (nil? dependencies)
-    (with
+    (let result
       (if indef result
         (degenerate
           (symbol.+ (symbol "Could not find ")
             (flat-map dependencies ((swap append) space)))
           (generate-result.global-env result)))
-    (fn result (impure (pair resolved result))))
-    (with (mpm-get-ref (car dependencies))
-    (fn ref-file
+      (impure (pair resolved result)))
+    (let ref-file (mpm-get-ref (car dependencies))
       (then-run-with (file.exists? ref-file)
       (fn is-ref
         (if (not is-ref)
@@ -101,4 +97,4 @@
                     (first pair)
                     (second pair)
                     (cdr dependencies)
-                    true)))))))))))))))
+                    true))))))))))))))

@@ -1,13 +1,11 @@
 ;; The main function for the M compiler.
 (defn """" args
   (if (nil? args) empty-repl
-  (with (file.child file.local-file (car args))
-  (fn in
+  (let in (file.child file.local-file (car args))
     (if (nil? (cdr args)) (run-repl in)
-    (with (file.child file.local-file (cadr args))
-    (fn out
+    (let out (file.child file.local-file (cadr args))
       (if (nil? (cddr args)) (compile in out)
-      (error (symbol "Usage: mc <in> <out>"))))))))))
+      (error (symbol "Usage: mc <in> <out>"))))))))
 
 ;; Runs the m repl with no declarations.
 (def empty-repl

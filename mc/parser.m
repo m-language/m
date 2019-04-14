@@ -44,20 +44,18 @@
 
 ;; Parses a single quote identifier literal expr.
 (defn parse-single-quote input path start end acc
-  (with (car input)
-  (fn head
+  (let head (car input)
     (if (char.= head quote)
       (parse-result
         (cdr input)
         (identifier-expr (reverse acc) path start (next-char end)))
     (if (newline? head)
       (parse-single-quote (cdr input) path start (next-line end) (cons head acc))
-      (parse-single-quote (cdr input) path start (next-char end) (cons head acc)))))))
+      (parse-single-quote (cdr input) path start (next-char end) (cons head acc))))))
 
 ;; Parses a double quote identifier literal expr.
 (defn parse-double-quote input path start end acc
-  (with (car input)
-  (fn head
+  (let head (car input)
     (if (char.= head quote)
       (if (char.= (cadr input) quote)
         (parse-result
@@ -66,7 +64,7 @@
         (parse-double-quote (cdr input) path start (next-char end) (cons quote acc)))
     (if (newline? head)
       (parse-double-quote (cdr input) path start (next-line end) (cons head acc))
-      (parse-double-quote (cdr input) path start (next-char end) (cons head acc)))))))
+      (parse-double-quote (cdr input) path start (next-char end) (cons head acc))))))
 
 ;; Parses an M identifier literal expression given an input.
 (defn parse-identifier-literal-expr input path start end acc
@@ -87,19 +85,17 @@
     (parse-result
       (cdr input)
       (list-expr (reverse acc) path start end))
-    (with (parse-expr input path end)
-      (fn result
-        (parse-list-expr parse-expr
-          (parse-result.rest result)
-          path
-          start
-          (expr.end (parse-result.expr result))
-          (cons (parse-result.expr result) acc))))))
+    (let result (parse-expr input path end)
+      (parse-list-expr parse-expr
+        (parse-result.rest result)
+        path
+        start
+        (expr.end (parse-result.expr result))
+        (cons (parse-result.expr result) acc)))))
 
 ;; Parses an M expression given an input.
 (defn parse-expr input path position
-  (with (car input)
-  (fn head
+  (let head (car input)
     (if (char.= head open-parentheses)
       (parse-list-expr parse-expr (cdr input) path (next-char position) (next-char position) ())
     (if (char.= head quote)
@@ -110,7 +106,7 @@
       (parse-expr (cdr input) path (next-line position))
     (if (whitespace? head)
       (parse-expr (cdr input) path (next-char position))
-      (parse-identifier-expr input path position position ())))))))))
+      (parse-identifier-expr input path position position ()))))))))
 
 ;; Parses an M program given an input.
 (defn parse input path position acc
@@ -120,13 +116,12 @@
     (parse (cdr input) path (next-line position) acc)
   (if (whitespace? (car input))
     (parse (cdr input) path (next-char position) acc)
-    (with (parse-expr input path position)
-    (fn result
+    (let result (parse-expr input path position)
       (parse
         (parse-result.rest result)
         path
         (expr.end (parse-result.expr result))
-        (cons (parse-result.expr result) acc))))))))
+        (cons (parse-result.expr result) acc)))))))
 
 ;; Parses an M program given a file.
 (defn parse-file file path init

@@ -4,27 +4,26 @@
 
 ;; Interprets an operation with a stack.
 (defn interpret-operation' operation stack heap
-  ((with (type-name operation)
-    (fn type
-      (if (symbol.= type (symbol local-variable-operation))
-        interpret-local-variable-operation
-      (if (symbol.= type (symbol global-variable-operation))
-        interpret-global-variable-operation
-      (if (symbol.= type (symbol if-operation))
-        interpret-if-operation
-      (if (symbol.= type (symbol def-operation))
-        interpret-def-operation
-      (if (symbol.= type (symbol fn-operation))
-        interpret-fn-operation
-      (if (symbol.= type (symbol symbol-operation))
-        interpret-symbol-operation
-      (if (symbol.= type (symbol apply-operation))
-        interpret-apply-operation
-      (if (symbol.= type (symbol line-number-operation))
-        interpret-line-number-operation
-      (if (symbol.= type (symbol nil-operation))
-        interpret-nil-operation
-        (error (symbol "...")))))))))))))
+  ((let type (type-name operation)
+    (if (symbol.= type (symbol local-variable-operation))
+      interpret-local-variable-operation
+    (if (symbol.= type (symbol global-variable-operation))
+      interpret-global-variable-operation
+    (if (symbol.= type (symbol if-operation))
+      interpret-if-operation
+    (if (symbol.= type (symbol def-operation))
+      interpret-def-operation
+    (if (symbol.= type (symbol fn-operation))
+      interpret-fn-operation
+    (if (symbol.= type (symbol symbol-operation))
+      interpret-symbol-operation
+    (if (symbol.= type (symbol apply-operation))
+      interpret-apply-operation
+    (if (symbol.= type (symbol line-number-operation))
+      interpret-line-number-operation
+    (if (symbol.= type (symbol nil-operation))
+      interpret-nil-operation
+      (error (symbol "..."))))))))))))
     interpret-operation' operation stack heap))
 
 ;; Interprets a local variable operation.
@@ -80,14 +79,12 @@
 
 ;; Interprets a declaration.
 (defn interpret-declaration declaration heap
-  ((with (type-name declaration)
-    (fn type
-      (if (symbol.= type (symbol def-declaration))
-        interpret-def-declaration
-      (if (symbol.= type (symbol fn-declaration))
-        interpret-fn-declaration
-        (error (symbol "..."))))))
-  (type-name declaration)
+  ((let type (type-name declaration)
+    (if (symbol.= type (symbol def-declaration))
+      interpret-def-declaration
+    (if (symbol.= type (symbol fn-declaration))
+      interpret-fn-declaration
+      (error (symbol "...")))))
     declaration heap))
 
 ;; Interprets a def declaration.
@@ -114,14 +111,12 @@
 
 ;; Adds two heaps.
 (defn heap.+ heap1 heap2 name
-  (with (heap1 name)
-  (fn value
-    (if (some? value) value (heap2 name)))))
+  (let value (heap1 name)
+    (if (some? value) value (heap2 name))))
 
 ;; Gets a value in a heap.
 (defn heap.get heap name
-  (with (heap name)
-  (fn value
+  (let value (heap name)
     (if (null? value)
       (error (concat (symbol->list (symbol "Could not find ")) name))
-      ((unnull value) heap)))))
+      ((unnull value) heap))))

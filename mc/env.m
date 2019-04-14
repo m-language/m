@@ -57,8 +57,7 @@
 
 ;; Gets the variable with a name in an environment.
 (defn env.get local-env global-env name
-  (with (tree-map.get (local-env.locals local-env) name)
-    (fn option
-      (if (some? option)
-        option
-        (tree-map.get (global-env.globals global-env) name)))))
+  (let option (tree-map.get (local-env.locals local-env) name)
+    (if (some? option)
+      option
+      (tree-map.get (global-env.globals global-env) name))))

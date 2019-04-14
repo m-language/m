@@ -97,21 +97,17 @@
 (defn generating->generated generating' operation global-env continue
   (generated operation ()
     ((swap global-env.with-dependents) global-env
-      (with (global-env.dependents (generating.global-env generating'))
-      (fn dependents
-        (with (car (generating.dependencies generating'))
-        (fn dependency
-          (tree-map.put dependents dependency
-            (fn global-env
-              (if (null? (tree-map.get dependents dependency))
-                (continue global-env)
-                (with ((unnull (tree-map.get dependents dependency)) global-env)
-                (fn result1
-                  (with (continue (generate-result.global-env result1))
-                  (fn result2
-                    (generate-result.combine result1 result2
-                      (generate-result.global-env result2)
-                      false)))))))))))))))
+      (let dependents (global-env.dependents (generating.global-env generating'))
+           dependency (car (generating.dependencies generating'))
+        (tree-map.put dependents dependency
+          (fn global-env
+            (if (null? (tree-map.get dependents dependency))
+              (continue global-env)
+              (let result1 ((unnull (tree-map.get dependents dependency)) global-env)
+                   result2 (continue (generate-result.global-env result1))
+                (generate-result.combine result1 result2
+                  (generate-result.global-env result2)
+                  false)))))))))
 
 ;; The set of closures in an expression.
 (defn closures local-env
@@ -128,11 +124,10 @@
 (defn generate-global-expr macro? generate-expr name value local-env global-env
   (if (some? (tree-map.get (global-env.globals global-env) name))
     (degenerate (list (concat name (symbol " has already been defined"))) global-env)
-    (with
+    (let new-global-env
       ((swap global-env.with-globals) global-env
         (tree-map.put (global-env.globals global-env) name
           (global-variable name (expr.path value) macro?)))
-    (fn new-global-env
       (generate-result.match (generate-expr value (local-env.with-def name local-env) new-global-env)
       (fn degenerate' degenerate')
       (fn generating'
@@ -142,23 +137,21 @@
           (fn global-env
             (generate-global-expr macro? generate-expr name value local-env global-env))))
       (fn generated'
-        (with (def-declaration name (expr.path value) (generated.operation generated'))
-        (fn declaration
-          (with (tree-map.get (global-env.dependents (generated.global-env generated')) name)
-          (fn generating?
-            (with
-              (generated
-                (def-operation name (expr.path value) (generated.operation generated'))
-                (append (generated.declarations generated') declaration)
-                ((swap global-env.with-heap) (generated.global-env generated')
-                  (interpret-def-declaration declaration (global-env.heap (generated.global-env generated')))))
-            (fn result1
-              (if (null? generating?) result1
-                (with ((unnull generating?) (generated.global-env result1))
-                (fn result2
-                  (generated.combine result1 result2
-                    (generate-result.global-env result2)
-                    true))))))))))))))))
+        (let declaration (def-declaration name (expr.path value) (generated.operation generated'))
+             generating? (tree-map.get (global-env.dependents (generated.global-env generated')) name)
+             result1 (generate-global-expr' name value declaration generated')
+             result2 ((unnull generating?) (generated.global-env result1))
+          (if (null? generating?) result1
+            (generated.combine result1 result2
+              (generate-result.global-env result2)
+              true))))))))
+
+(defn generate-global-expr' name value declaration generated'
+  (generated
+    (def-operation name (expr.path value) (generated.operation generated'))
+    (append (generated.declarations generated') declaration)
+    ((swap global-env.with-heap) (generated.global-env generated')
+      (interpret-def-declaration declaration (global-env.heap (generated.global-env generated'))))))
 
 ;; Generates a def expression.
 (def generate-def-expr (generate-global-expr false))
@@ -168,13 +161,12 @@
 
 ;; Generates an identifier expression.
 (defn generate-identifier-expr name local-env global-env
-  (with (env.get local-env global-env name)
-  (fn option
+  (let option (env.get local-env global-env name)
     (if (some? option)
       (generated (generate-identifier-expr' (unnull option)) () global-env)
       (generating (list name) global-env
         (fn global-env
-          (generate-identifier-expr name local-env global-env)))))))
+          (generate-identifier-expr name local-env global-env))))))
 
 (defn generate-identifier-expr' variable
   (if (global-variable? variable)
@@ -226,7 +218,7 @@
 (defn generate-fn-expr generate-expr names value local-env global-env
   (if (nil? (cdr names))
     (generate-fn-expr' generate-expr (car names) value local-env global-env)
-    (with
+    (let new-value
       (list-expr
         (list
           (identifier-expr (symbol fn) (expr.path value) (expr.start value) (expr.end value))
@@ -235,43 +227,38 @@
         (expr.path value)
         (expr.start value)
         (expr.end value))
-    (fn new-value
-      (generate-fn-expr generate-expr (init names) new-value local-env global-env)))))
+      (generate-fn-expr generate-expr (init names) new-value local-env global-env))))
 
 (defn generate-fn-expr' generate-expr name value local-env global-env
-  (with (mangle-fn-name (local-env.def local-env) (global-env.index global-env))
-  (fn mangled-name
-    (with (global-env.with-index (nat.+ nat.1 (global-env.index global-env)) global-env)
-    (fn new-global-env
-      (with (map (tree-map->list (closures local-env value)) first)
-      (fn closures
-        (generate-result.match
-          (generate-expr value
-            (local-env.with-locals (generate-fn-expr-closures closures name local-env)
-              (local-env.with-def mangled-name local-env))
-            new-global-env)
-        (fn degenerate' degenerate')
-        (fn generating'
-          (generating (generating.dependencies generating') (generating.global-env generating')
-            (fn global-env
-              (generate-fn-expr' name value local-env global-env))))
-        (fn generated'
-          (with (fn-declaration mangled-name (expr.path value) closures (generated.operation generated'))
-          (fn declaration
-            (generated
-              (fn-operation
-                (expr.path value)
-                mangled-name
-                name
-                (generated.operation generated')
-                (map closures
-                  (fn closure
-                    (generate-identifier-expr'
-                      (unnull (env.get local-env (generated.global-env generated') closure))))))
-              (append (generated.declarations generated') declaration)
-              ((swap global-env.with-heap) (generated.global-env generated')
-                (interpret-fn-declaration declaration
-                  (global-env.heap (generated.global-env generated'))))))))))))))))
+  (let mangled-name (mangle-fn-name (local-env.def local-env) (global-env.index global-env))
+       new-global-env (global-env.with-index (nat.+ nat.1 (global-env.index global-env)) global-env)
+       closures (map (tree-map->list (closures local-env value)) first)
+    (generate-result.match
+      (generate-expr value
+        (local-env.with-locals (generate-fn-expr-closures closures name local-env)
+          (local-env.with-def mangled-name local-env))
+        new-global-env)
+    (fn degenerate' degenerate')
+    (fn generating'
+      (generating (generating.dependencies generating') (generating.global-env generating')
+        (fn global-env
+          (generate-fn-expr' name value local-env global-env))))
+    (fn generated'
+      (let declaration (fn-declaration mangled-name (expr.path value) closures (generated.operation generated'))
+        (generated
+          (fn-operation
+            (expr.path value)
+            mangled-name
+            name
+            (generated.operation generated')
+            (map closures
+              (fn closure
+                (generate-identifier-expr'
+                  (unnull (env.get local-env (generated.global-env generated') closure))))))
+          (append (generated.declarations generated') declaration)
+          ((swap global-env.with-heap) (generated.global-env generated')
+            (interpret-fn-declaration declaration
+              (global-env.heap (generated.global-env generated'))))))))))
 
 (defn generate-fn-expr-closures closures name local-env
   (second
@@ -288,13 +275,11 @@
 
 ;; Generates an apply expression.
 (defn generate-apply-expr generate-expr fn args local-env global-env
-  (with (generate-expr fn local-env global-env)
-  (fn fn-result
+  (let fn-result (generate-expr fn local-env global-env)
     (fold args fn-result
       (fn fn-result arg
-        (with (generate-expr arg local-env (generate-result.global-env fn-result))
-        (fn arg-result
-          (generate-apply-expr' fn-result arg-result))))))))
+        (let arg-result (generate-expr arg local-env (generate-result.global-env fn-result))
+          (generate-apply-expr' fn-result arg-result))))))
 
 (defn generate-apply-expr' fn-result arg-result
   (generate-result.combine fn-result arg-result
@@ -303,38 +288,32 @@
 
 ;; Generates an expression which may be a macro.
 (defn generate-macro?-expr generate-expr expr fn args local-env global-env
-  (with (identifier-expr.name fn)
-  (fn name
-    (with (env.get local-env global-env name)
-    (fn option
-      (if (null? option)
-        (generating (list name) global-env
-          (fn global-env
-            (generate-macro?-expr expr fn args local-env global-env)))
-        (with (unnull option)
-        (fn variable
-          (if (& (global-variable? variable) (global-variable.macro? variable))
-            (generate-macro-apply-expr generate-expr expr name args local-env global-env)
-            (generate-apply-expr generate-expr fn args local-env global-env))))))))))
+  (let name (identifier-expr.name fn)
+       option (env.get local-env global-env name)
+    (if (null? option)
+      (generating (list name) global-env
+        (fn global-env
+          (generate-macro?-expr expr fn args local-env global-env)))
+      (let variable (unnull option)
+        (if (& (global-variable? variable) (global-variable.macro? variable))
+          (generate-macro-apply-expr generate-expr expr name args local-env global-env)
+          (generate-apply-expr generate-expr fn args local-env global-env))))))
 
 ;; Generates a macro application expression.
 (defn generate-macro-apply-expr generate-expr expr name args local-env global-env
-  (with (heap.get (global-env.heap global-env) name)
-  (fn function
+  (let function (heap.get (global-env.heap global-env) name)
     (generate-expr
       (list->expr expr (function (map args expr->list)))
       local-env
-      global-env))))
+      global-env)))
 
 ;; Generates a list expression.
 (defn generate-list-expr generate-expr expr local-env global-env
-  (with (list-expr.exprs expr)
-  (fn exprs
+  (let exprs (list-expr.exprs expr)
     (if (nil? exprs)
       (generate-nil local-env global-env)
       (if (identifier-expr? (car exprs))
-        (with (identifier-expr.name (car exprs))
-        (fn name
+        (let name (identifier-expr.name (car exprs))
           (if (list.= char.= name (symbol->list (symbol fn)))
             (generate-fn-expr generate-expr
               (map (init (cdr exprs)) identifier-expr.name)
@@ -358,11 +337,11 @@
               expr
               (car exprs)
               (cdr exprs)
-              local-env global-env)))))))
+              local-env global-env))))))
         (generate-apply-expr generate-expr
           (car exprs)
           (cdr exprs)
-          local-env global-env))))))
+          local-env global-env)))))
 
 ;; Generates an expression.
 (defn generate-expr expr local-env global-env
@@ -385,7 +364,7 @@
 
 (defn generate-exprs' exprs result
   (if (nil? exprs) result
-  (with
+  (let car-result
     (generate-result.match
       (generate-expr (car exprs) default-local-env (generate-result.global-env result))
       (fn degenerate' degenerate')
@@ -395,8 +374,7 @@
           (fn global-env
             (generate-expr (car exprs) default-local-env global-env))))
       (fn generated' generated'))
-  (fn car-result
     (generate-exprs' (cdr exprs)
       (generate-result.combine result car-result
         (generate-result.global-env car-result)
-        true))))))
+        true)))))

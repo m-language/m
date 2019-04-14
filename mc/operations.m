@@ -72,8 +72,7 @@
 ;; Folds over an operation.
 (defn operation.fold operation acc f
   (f
-    (with (type-name operation)
-    (fn type
+    (let type (type-name operation)
       (if (symbol.= type (symbol local-variable-operation))
         acc
       (if (symbol.= type (symbol global-variable-operation))
@@ -98,5 +97,5 @@
         (operation.fold (line-number-operation.operation operation) acc f)
       (if (symbol.= type (symbol nil-operation))
         acc
-        (error (symbol "...")))))))))))))
+        (error (symbol "..."))))))))))))
     operation))
