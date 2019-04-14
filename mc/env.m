@@ -41,12 +41,11 @@
     (global-env (global-env.globals e) (global-env.heap e) (global-env.dependents e) index)))
 
 ;; A list of unresolved variables.
-(def global-env.unresolved
-  (fn global-env
-    (filter
-      (map (tree-map->list (global-env.dependents global-env)) first)
-      (fn dependent
-        (null? (tree-map.get (global-env.globals global-env) dependent))))))
+(defn global-env.unresolved global-env
+  (filter
+    (map (tree-map->list (global-env.dependents global-env)) first)
+    (fn dependent
+      (null? (tree-map.get (global-env.globals global-env) dependent)))))
 
 ;; The default global M environment.
 (def default-global-env
@@ -57,10 +56,9 @@
   (local-env (empty-tree-map compare-symbol) ()))
 
 ;; Gets the variable with a name in an environment.
-(def env.get
-  (fn local-env global-env name
-    (with (tree-map.get (local-env.locals local-env) name)
-      (fn option
-        (if (some? option)
-          option
-          (tree-map.get (global-env.globals global-env) name))))))
+(defn env.get local-env global-env name
+  (with (tree-map.get (local-env.locals local-env) name)
+    (fn option
+      (if (some? option)
+        option
+        (tree-map.get (global-env.globals global-env) name)))))

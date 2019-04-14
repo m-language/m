@@ -15,6 +15,5 @@
 (def symbol.+ concat)
 
 ;; Compares symbols.
-(def compare-symbol 
-  (fn a b
-    (compare-list compare-char a b)))
+(defn compare-symbol a b
+  (compare-list compare-char a b))

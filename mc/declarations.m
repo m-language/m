@@ -20,15 +20,13 @@
 (def fn-declaration? (is? (symbol fn-declaration)))
 
 ;; The name of a declaration.
-(def declaration.name
-  (fn declaration
-    (if (def-declaration? declaration)
-      (def-declaration.name declaration)
-      (fn-declaration.name declaration))))
+(defn declaration.name declaration
+  (if (def-declaration? declaration)
+    (def-declaration.name declaration)
+    (fn-declaration.name declaration)))
 
 ;; The value of a declaration.
-(def declaration.value
-  (fn declaration
-    (if (def-declaration? declaration)
-      (def-declaration.value declaration)
-      (fn-declaration.value declaration))))
+(defn declaration.value declaration
+  (if (def-declaration? declaration)
+    (def-declaration.value declaration)
+    (fn-declaration.value declaration)))

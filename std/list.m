@@ -52,93 +52,80 @@
             ()))))) ()))))
 
 ;; The initial elements of a list.
-(def init
-  (fn list
-    (if (nil? (cdr list)) ()
-      (cons (car list) (init (cdr list))))))
+(defn init list
+  (if (nil? (cdr list)) ()
+    (cons (car list) (init (cdr list)))))
 
 ;; The last element of a list.
-(def last
-  (fn list
-    (if (nil? (cdr list))
-      (car list)
-      (last (cdr list)))))
+(defn last list
+  (if (nil? (cdr list))
+    (car list)
+    (last (cdr list))))
 
 ;; Appends an element to a list.
-(def append
-  (fn list elem
-    (if (nil? list)
-      (cons elem ())
-      (cons (car list) (append (cdr list) elem)))))
+(defn append list elem
+  (if (nil? list)
+    (cons elem ())
+    (cons (car list) (append (cdr list) elem))))
 
 ;; Concatenates two lists.
-(def concat
-  (fn a b
-    (if (nil? a) b
-      (cons (car a) (concat (cdr a) b)))))
+(defn concat a b
+  (if (nil? a) b
+    (cons (car a) (concat (cdr a) b))))
 
 ;; Gets the nth element of a list.
-(def get
-  (fn list n
-    (if (nat.0? n)
-      (car list)
-      (get (cdr list) (nat.dec n)))))
+(defn get list n
+  (if (nat.0? n)
+    (car list)
+    (get (cdr list) (nat.dec n))))
 
 ;; Maps a list with a function.
-(def map
-  (fn list f
-    (if (nil? list) ()
-      (cons (f (car list)) (map (cdr list) f)))))
+(defn map list f
+  (if (nil? list) ()
+    (cons (f (car list)) (map (cdr list) f))))
 
 ;; Flat maps a list with a function.
-(def flat-map
-  (fn list f
-    (if (nil? list) ()
-      (concat (f (car list)) (flat-map (cdr list) f)))))
+(defn flat-map list f
+  (if (nil? list) ()
+    (concat (f (car list)) (flat-map (cdr list) f))))
 
 ;; Filters a list with a function.
-(def filter
-  (fn list f
-    (if (nil? list) ()
-      (if (f (car list))
-        (cons (car list) (filter (cdr list) f))
-        (filter (cdr list) f)))))
+(defn filter list f
+  (if (nil? list) ()
+    (if (f (car list))
+      (cons (car list) (filter (cdr list) f))
+      (filter (cdr list) f))))
 
 ;; Folds a list with an accumulator and a function.
-(def fold
-  (fn list acc f
-    (if (nil? list) acc
-      (fold (cdr list) (f acc (car list)) f))))
+(defn fold list acc f
+  (if (nil? list) acc
+    (fold (cdr list) (f acc (car list)) f)))
 
 ;; Implementation of reverse.
-(def reverse'
-  (fn list acc
-    (if (nil? list) acc
-      (reverse'
-        (cdr list)
-        (cons (car list) acc)))))
+(defn reverse' list acc
+  (if (nil? list) acc
+    (reverse'
+      (cdr list)
+      (cons (car list) acc))))
 
 ;; Reverses a list.
-(def reverse
-  (fn list
-    (reverse' list ())))
+(defn reverse list
+  (reverse' list ()))
 
 ;; Tests if two lists are equal are equal given its element's equality function.
-(def list.=
-  (fn f a b
-    (if (nil? a) (nil? b)
-    (if (nil? b) false
-      (& (f (car a) (car b))
-         (list.= f (cdr a) (cdr b)))))))
+(defn list.= f a b
+  (if (nil? a) (nil? b)
+  (if (nil? b) false
+    (& (f (car a) (car b))
+       (list.= f (cdr a) (cdr b))))))
 
 ;; Compares two lists given a compare function.
-(def compare-list
-  (fn compare a b
-    (if (& (nil? a) (nil? b)) compare=
-    (if (nil? a) compare<
-    (if (nil? b) compare>
-      (with (compare (car a) (car b))
-      (fn compare-result
-        (if (compare=? compare-result)
-          (compare-list compare (cdr a) (cdr b))
-          compare-result))))))))
+(defn compare-list compare a b
+  (if (& (nil? a) (nil? b)) compare=
+  (if (nil? a) compare<
+  (if (nil? b) compare>
+    (with (compare (car a) (car b))
+    (fn compare-result
+      (if (compare=? compare-result)
+        (compare-list compare (cdr a) (cdr b))
+        compare-result)))))))

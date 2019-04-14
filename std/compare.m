@@ -17,17 +17,15 @@
 (def compare>? (is? (symbol compare>)))
 
 ;; Folds over the result of a compare.
-(def fold-compare
-  (fn compare < > =
-    (if (compare<? compare) (< compare)
-    (if (compare>? compare) (> compare)
-      (= compare)))))
+(defn fold-compare compare < > =
+  (if (compare<? compare) (< compare)
+  (if (compare>? compare) (> compare)
+    (= compare))))
 
 ;; Creates a test for a compare.
-(def test-compare
-  (fn compare min max
-    (apply-vararg combine-tests
-      (assert (compare<? (compare min max)))
-      (assert (compare>? (compare max min)))
-      (assert (compare=? (compare min min)))
-      (assert (compare=? (compare max max))))))
+(defn test-compare compare min max
+  (apply-vararg combine-tests
+    (assert (compare<? (compare min max)))
+    (assert (compare>? (compare max min)))
+    (assert (compare=? (compare min min)))
+    (assert (compare=? (compare max max)))))

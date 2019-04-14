@@ -19,6 +19,5 @@
 (def null? left?)
 
 ;; The value of an option, or false if it is null.
-(def unnull
-  (fn either
-    (either id id)))
+(defn unnull either
+  (either id id))

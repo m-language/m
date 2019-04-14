@@ -13,35 +13,30 @@
 (def false (fn _ x x))
 
 ;; True if both arguments are true.
-(def and
-  (fn x y
-    (if x (force y) false)))
+(defn and x y
+  (if x (force y) false))
 
 ;; True if either argument is true.
-(def or
-  (fn x y
-    (if x true (force y))))
+(defn or x y
+  (if x true (force y)))
 
 ;; True if its argument is false.
-(def not
-  (fn x
-    (if x false true)))
+(defn not x
+  (if x false true))
 
 ;; Macro for and which delays the second argument.
-(macro &
-  (fn expr
-    (apply-vararg expr.list
-      (expr.symbol (symbol and))
-      (car expr)
-      (expr.list (cons (expr.symbol (symbol delay)) (list (cadr expr)))))))
+(macrofn & expr
+  (apply-vararg expr.list
+    (expr.symbol (symbol and))
+    (car expr)
+    (expr.list (cons (expr.symbol (symbol delay)) (list (cadr expr))))))
 
 ;; Macro for or which delays the second argument.
-(macro |
-  (fn expr
-    (apply-vararg expr.list
-      (expr.symbol (symbol or))
-      (car expr)
-      (expr.list (cons (expr.symbol (symbol delay)) (list (cadr expr)))))))
+(macrofn | expr
+  (apply-vararg expr.list
+    (expr.symbol (symbol or))
+    (car expr)
+    (expr.list (cons (expr.symbol (symbol delay)) (list (cadr expr))))))
 
 ;; Macro for control flow.
 (macro if

@@ -48,22 +48,19 @@
 ")))
 
 ;; True if a character is "\r" or "\n".
-(def newline?
-  (fn char
-    (| (char.= char linefeed)
-       (char.= char carriage-return))))
+(defn newline? char
+  (| (char.= char linefeed)
+     (char.= char carriage-return)))
 
 ;; True if a character is " ", "\t", or a newline.
-(def whitespace?
-  (fn char
-    (| (char.= char space)
-    (| (char.= char tab)
-       (newline? char)))))
+(defn whitespace? char
+  (| (char.= char space)
+  (| (char.= char tab)
+     (newline? char))))
 
 ;; Compares chars.
-(def compare-char
-  (fn a b
-    (compare-nat (char->nat a) (char->nat b))))
+(defn compare-char a b
+  (compare-nat (char->nat a) (char->nat b)))
 
 ;; Character tests.
 (def char:test

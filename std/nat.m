@@ -7,63 +7,55 @@
 ;;; implementation of natural numbers.
 
 ;; The natural number 0.
-(def nat.0 (fn f x x))
+(defn nat.0 f x x)
 
 ;; The natural number 1.
-(def nat.1 (fn f x (f x)))
+(defn nat.1 f x (f x))
 
 ;; Tests if a natural number is 0.
-(def nat.0?
-  (fn n
-    (n (const true) false)))
+(defn nat.0? n
+  (n (const true) false))
 
 ;; The successor of a natural number.
-(def nat.inc
-  (fn n
-    (fn f x
-      (f (n f x)))))
+(defn nat.inc n
+  (fn f x
+    (f (n f x))))
 
 ;; The predecessor of a natural number.
-(def nat.dec
-  (fn n
-    (fn f x
-      (n (fn g h (h (g f))) (const x) id))))
+(defn nat.dec n
+  (fn f x
+    (n (fn g h (h (g f))) (const x) id)))
 
 ;; Adds two natural numbers.
-(def nat.+
-  (fn a b
-    (if (nat.0? b) a
-      (nat.+ (nat.inc a) (nat.dec b)))))
+(defn nat.+ a b
+  (if (nat.0? b) a
+    (nat.+ (nat.inc a) (nat.dec b))))
 
 ;; Subtracts two natural numbers.
-(def nat.-
-  (fn a b
-    (if (nat.0? b) a
-      (nat.- (nat.dec a) (nat.dec b)))))
+(defn nat.- a b
+  (if (nat.0? b) a
+    (nat.- (nat.dec a) (nat.dec b))))
 
 ;; True if the first natural number is less than the second natural number.
-(def nat.<
-  (fn a b
-    (if (nat.0? a) (not (nat.0? b))
-    (if (nat.0? b) false
-      (nat.< (nat.dec a) (nat.dec b))))))
+(defn nat.< a b
+  (if (nat.0? a) (not (nat.0? b))
+  (if (nat.0? b) false
+    (nat.< (nat.dec a) (nat.dec b)))))
 
 ;; True if the first natural number is greater than the second natural number.
 (def nat.> (swap nat.<))
 
 ;; True if two natural numbers are equal.
-(def nat.=
-  (fn a b
-    (if (nat.0? a) (nat.0? b)
-    (if (nat.0? b) false
-      (nat.= (nat.dec a) (nat.dec b))))))
+(defn nat.= a b
+  (if (nat.0? a) (nat.0? b)
+  (if (nat.0? b) false
+    (nat.= (nat.dec a) (nat.dec b)))))
 
 ;; Compares nats.
-(def compare-nat
-  (fn a b
-    (if (nat.> a b) compare>
-    (if (nat.< a b) compare<
-      compare=))))
+(defn compare-nat a b
+  (if (nat.> a b) compare>
+  (if (nat.< a b) compare<
+    compare=)))
 
 ;; Natural tests.
 (def nat:test

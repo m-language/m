@@ -6,10 +6,9 @@
     (ostream char)))
 
 ;; Writes a line to an ostream.
-(def ostream.writeln
-  (fn ostream line
-    (if (nil? line)
-      (ostream.write ostream linefeed)
-      (then-run
-        (ostream.write ostream (car line))
-        (ostream.writeln ostream (cdr line))))))
+(defn ostream.writeln ostream line
+  (if (nil? line)
+    (ostream.write ostream linefeed)
+    (then-run
+      (ostream.write ostream (car line))
+      (ostream.writeln ostream (cdr line)))))
