@@ -38,11 +38,10 @@
 
 ;; Puts a file in mpm.
 (defn mpm-put in
-  (then-run-with (generate in)
-  (fn result
+  (do result (generate in)
     (then-run
       (mpm-put-refs (generated.declarations result))
-      (mpm-put-srcs in)))))
+      (mpm-put-srcs in))))
 
 ;; Resolves a generate result with mpm.
 (defn mpm-resolve-generate-result result
@@ -81,20 +80,16 @@
           (generate-result.global-env result)))
       (impure (pair resolved result)))
     (let ref-file (mpm-get-ref (car dependencies))
-      (then-run-with (file.exists? ref-file)
-      (fn is-ref
+      (do is-ref (file.exists? ref-file)
         (if (not is-ref)
           (mpm-resolve-dependencies resolve resolved result (cdr dependencies) indef)
-          (then-run-with (file.read ref-file)
-          (fn ref
+          (do ref (file.read ref-file)
             (if (some? (tree-map.get resolved ref))
               (mpm-resolve-dependencies resolve resolved result (cdr dependencies) true)
-              (then-run-with (parse-file (mpm-get-src ref) () true)
-              (fn exprs
-                (then-run-with (resolve (tree-map.put resolved ref true) (generate-exprs' exprs result))
-                (fn pair
-                  (mpm-resolve-dependencies resolve
-                    (first pair)
-                    (second pair)
-                    (cdr dependencies)
-                    true))))))))))))))
+              (do exprs (parse-file (mpm-get-src ref) () true)
+                  pair (resolve (tree-map.put resolved ref true) (generate-exprs' exprs result))
+                (mpm-resolve-dependencies resolve
+                  (first pair)
+                  (second pair)
+                  (cdr dependencies)
+                  true)))))))))

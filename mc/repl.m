@@ -1,16 +1,14 @@
 ;; The M repl.
 (defn repl global-env heap index resolved
-  (then-run-with
+  (do line
     (then-run
       (ostream.write stdout (car (symbol >)))
       (istream.readln stdin))
-  (fn line
     (if (symbol.= (filter line (compose not whitespace?)) ())
       (impure ())
       (let !? (char.= (car line) (car (symbol "!")))
            expr (repl-parse (concat (symbol "(def it ") (append (if !? (cdr line) line) close-parentheses)) index)
-        (then-run-with (mpm-resolve-generate-result' resolved (generate-expr expr default-local-env global-env))
-        (fn pair
+        (do pair (mpm-resolve-generate-result' resolved (generate-expr expr default-local-env global-env))
           (let new-heap (repl-interpret-declarations (second pair) heap)
                value (repl-interpret-operation (second pair) new-heap)
             ((if !? then-run-with with) value
@@ -21,7 +19,7 @@
                   (generated.global-env (second pair)))
                 new-heap
                 (nat.inc index)
-                (first pair))))))))))))
+                (first pair))))))))))
 
 ;; Parses a line in the repl.
 (defn repl-parse line index

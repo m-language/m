@@ -1,9 +1,8 @@
 ;; Desugars a file.
 (defn desugar-file in out
-  (then-run-with (generate in)
-  (fn result
+  (do result (generate in)
     (let desugared (desugar-declarations (generated.declarations result))
-      (file.write out desugared)))))
+      (file.write out desugared))))
 
 ;; Desugars an operation.
 (defn desugar-operation operation

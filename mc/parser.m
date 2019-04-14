@@ -125,26 +125,20 @@
 
 ;; Parses an M program given a file.
 (defn parse-file file path init
-  (then-run-with (file.directory? file)
-  (fn directory?
+  (do directory? (file.directory? file)
     (if directory?
-      (then-run-with (file.child-files file)
-      (fn child-files
+      (do child-files (file.child-files file)
         (fold child-files (impure ())
           (fn acc child
-            (then-run-with
-              (parse-file child
-                (if init ()
-                  (concat path (append (file.name file) slash)))
-                false)
-            (fn parse
-              (run-with acc
-              (fn exprs
-                (concat exprs parse)))))))))
-      (run-with (file.read file)
-      (fn chars
-        (parse
-          chars
-          (concat path (file.name-without-extension file))
-          (position nat.1 nat.1)
-          ())))))))
+            (do parse
+                  (parse-file child
+                    (if init () (concat path (append (file.name file) slash)))
+                    false)
+                exprs acc
+              (impure (concat exprs parse))))))
+      (do chars (file.read file)
+        (impure
+          (parse chars
+            (concat path (file.name-without-extension file))
+            (position nat.1 nat.1)
+            ()))))))

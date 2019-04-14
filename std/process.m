@@ -15,3 +15,17 @@
 ;; Runs a function in a process.
 (defn run-with p f
   (then-run-with p (compose impure f)))
+
+;; Macro for running processes.
+(macrofn do expr
+  (if (nil? (cdr expr)) (expr.list expr)
+    (apply-vararg expr.list
+      (expr.symbol (symbol then-run-with))
+      (cadr expr)
+      (apply-vararg expr.list
+        (expr.symbol (symbol fn))
+        (car expr)
+        (expr.list
+          (cons
+            (expr.symbol (symbol do))
+            (cddr expr)))))))

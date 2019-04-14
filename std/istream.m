@@ -5,10 +5,8 @@
 
 ;; Reads a line from an istream.
 (defn istream.readln istream
- (then-run-with istream
- (fn char
-   (if (newline? char)
-     (impure ())
-     (run-with (istream.readln istream)
-     (fn line
-       (cons char line)))))))
+  (do char istream
+    (if (newline? char)
+      (impure ())
+      (do line (istream.readln istream)
+        (impure (cons char line))))))
