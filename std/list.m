@@ -130,3 +130,15 @@
     (if (nil? b) false
       (& (f (car a) (car b))
          (list.= f (cdr a) (cdr b)))))))
+
+;; Compares two lists given a compare function.
+(def compare-list
+  (fn compare a b
+    (if (& (nil? a) (nil? b)) compare=
+    (if (nil? a) compare<
+    (if (nil? b) compare>
+      (with (compare (car a) (car b))
+      (fn compare-result
+        (if (compare=? compare-result)
+          (compare-list compare (cdr a) (cdr b))
+          compare-result))))))))

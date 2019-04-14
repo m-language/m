@@ -53,7 +53,7 @@
         (expr.list (cons (expr.symbol (symbol delay)) (list (cadr expr))))
         (expr.list (cons (expr.symbol (symbol delay)) (list (caddr expr))))))))
 
-;; Tests M booleans.
+;; Boolean tests.
 (def bool:test
   (apply-vararg combine-tests
     (assert     true)

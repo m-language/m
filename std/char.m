@@ -60,11 +60,17 @@
     (| (char.= char tab)
        (newline? char)))))
 
-;; Tests M characters.
+;; Compares chars.
+(def compare-char
+  (fn a b
+    (compare-nat (char->nat a) (char->nat b))))
+
+;; Character tests.
 (def char:test
   (apply-vararg combine-tests
     (assert-not (char.= linefeed carriage-return))
     (assert     (newline? linefeed))
     (assert     (newline? carriage-return))
     (assert     (whitespace? space))
-    (assert     (whitespace? tab))))
+    (assert     (whitespace? tab))
+    (test-compare compare-char linefeed carriage-return)))

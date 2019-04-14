@@ -13,3 +13,8 @@
 
 ;; Adds two symbols.
 (def symbol.+ concat)
+
+;; Compares symbols.
+(def compare-symbol 
+  (fn a b
+    (compare-list compare-char a b)))

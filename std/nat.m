@@ -57,3 +57,10 @@
     (if (nat.0? a) (nat.0? b)
     (if (nat.0? b) false
       (nat.= (nat.dec a) (nat.dec b))))))
+
+;; Compares nats.
+(def compare-nat
+  (fn a b
+    (if (nat.> a b) compare>
+    (if (nat.< a b) compare<
+      compare=))))
