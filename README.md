@@ -54,7 +54,7 @@ What it looks like
 
 ;; Natural numbers are defined in nat.m
 (def inc (+ 1))
-(def dec (- 1))
+(def dec ((swap -) 1))
 
 ;; Lists are defined in list.m
 (defn sum list
