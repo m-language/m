@@ -58,4 +58,5 @@
     bool:test
     char:test
     either:test
-    lazy:test))
+    lazy:test
+    nat:test))
