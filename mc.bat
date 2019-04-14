@@ -1,1 +1,1 @@
-kotlinc -script mc.kts mc %*
+@kotlinc -script mc.kts mc %*

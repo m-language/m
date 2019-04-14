@@ -1,1 +1,1 @@
-kotlinc -script mc.kts clean
+@kotlinc -script mc.kts clean

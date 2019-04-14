@@ -1,1 +1,1 @@
-kotlinc -script mc.kts build
+@kotlinc -script mc.kts build

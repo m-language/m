@@ -1,1 +1,1 @@
-kotlinc -script mc.kts test
+@kotlinc -script mc.kts test
