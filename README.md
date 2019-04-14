@@ -20,7 +20,7 @@ Second, install the plugin for the editor of your choice
 For more detailed installation instructions, view
 [the getting started guide](https://m-language.readthedocs.io/en/latest/tutorial/starting.html)
 
-What does it look like
+What it looks like
 ----------------------
 
 ```lisp
@@ -82,7 +82,7 @@ What does it look like
 
 For more information, an in-depth tutorial can be found
 [here](https://m-language.readthedocs.io/en/latest/tutorial/index.html),
-and the mathematical specification can be found
+and the specification can be found
 [here](https://github.com/m-language/m-spec/raw/master/m.pdf)
 (also available as
 [markdown](https://github.com/m-language/m-spec/blob/master/m.md) and
