@@ -1,4 +1,6 @@
 ;;; Error.m
 
-;; Exits the M program given an error.
-(extern error)
+;; Creates an M error given a message, a function which ignores its argument
+;; and returns itself.
+(defn error message
+  (delay (error message)))

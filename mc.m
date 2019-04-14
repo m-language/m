@@ -186,7 +186,7 @@
 (def compare<? (is? (symbol compare<)))
 (def compare>? (is? (symbol compare>)))
 (def fold-compare (fn compare (fn < (fn > (fn = ((((compare<? compare) (fn _ (< compare))) (fn _ ((((compare>? compare) (fn _ (> compare))) (fn _ (= compare))) ()))) ()))))))
-(def error error)
+(def error (fn message (fn _ (error message))))
 (def heap.get (fn heap (fn name ((with (heap name)) (fn value ((((null? value) (fn _ (error ((concat (symbol->list (symbol ""Could not find ""))) name)))) (fn _ ((unnull value) heap))) ()))))))
 (def generate-result.match (fn result (fn degenerate' (fn generating' (fn generated' ((((generated? result) (fn _ (generated' result))) (fn _ ((((generating? result) (fn _ (generating' result))) (fn _ ((((degenerate? result) (fn _ (degenerate' result))) (fn _ (error (symbol ...)))) ()))) ()))) ()))))))
 (def as (fn type (fn data (((((is? type) data) (fn _ data)) (fn _ (error ((concat (symbol->list (symbol ""Could not cast ""))) ((concat (symbol->list (type-name data))) ((concat (symbol->list (symbol "" to ""))) (symbol->list type))))))) ()))))
