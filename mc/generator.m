@@ -181,39 +181,6 @@
 (defn generate-nil local-env global-env
   (generated nil-operation () global-env))
 
-;; Generates an if expression.
-(defn generate-if-expr generate-expr cond-expr true-expr false-expr local-env global-env
-  (generate-expr
-    (list-expr
-      (list
-        (list-expr
-          (list cond-expr
-            (list-expr
-              (list
-                (identifier-expr (symbol fn) (expr.path true-expr) (expr.start true-expr) (expr.end true-expr))
-                (identifier-expr () (expr.path true-expr) (expr.start true-expr) (expr.end true-expr))
-                true-expr)
-              (expr.path true-expr)
-              (expr.start true-expr)
-              (expr.end true-expr))
-            (list-expr
-              (list
-                (identifier-expr (symbol fn) (expr.path false-expr) (expr.start false-expr) (expr.end false-expr))
-                (identifier-expr () (expr.path false-expr) (expr.start false-expr) (expr.end false-expr))
-                false-expr)
-              (expr.path false-expr)
-              (expr.start false-expr)
-              (expr.end false-expr)))
-          (expr.path cond-expr)
-          (expr.start cond-expr)
-          (expr.end cond-expr))
-        (list-expr () (expr.path cond-expr) (expr.start cond-expr) (expr.start cond-expr)))
-      (expr.path cond-expr)
-      (expr.start cond-expr)
-      (expr.end cond-expr))
-    local-env
-    global-env))
-
 ;; Generates a fn expression.
 (defn generate-fn-expr generate-expr names value local-env global-env
   (if (nil? (cdr names))
