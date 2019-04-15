@@ -124,14 +124,17 @@
         (cons (parse-result.expr result) acc)))))))
 
 ;; Parses an M program given a file.
-(defn parse-file file path init
+(defn parse-file file
+  (parse-file' file () true))
+
+(defn parse-file' file path init
   (do directory? (file.directory? file)
     (if directory?
       (do child-files (file.child-files file)
         (fold child-files (impure ())
           (fn acc child
             (do parse
-                  (parse-file child
+                  (parse-file' child
                     (if init () (concat path (append (file.name file) slash)))
                     false)
                 exprs acc

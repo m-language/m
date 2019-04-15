@@ -53,9 +53,9 @@ val mStdlib = File("../m-stdlib")
 val mJvm = File("../m-jvm")
 val mJvmJar = File(mJvm, "build/libs/m-jvm-0.1.0.jar")
 
-fun mCompile(input: String, output: String) {
-    println("Compiling $input with mc")
-    exec("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss16m mc $input $output")
+fun mCompile(version: String, backend: String, input: String, output: String) {
+    println("Compiling $input to $backend with $version")
+    execM(version, "!(compile $backend-backend (file.child file.local-file (symbol \"$input\")) (file.child file.local-file (symbol \"$output\")))")
 }
 
 fun mJvmCompile(input: String, output: String) {
@@ -95,18 +95,17 @@ fun build() {
     exec("gradle fatJar", mJvm)
 
     mJvmCompile("mc.m", bin.path)
-
-    mCompile("mc.m", bin.path)
-    mCompile("mc.m", bin.path)
+    
+    mCompile("mc.m", "jvm", "mc.m", bin.path)
+    mCompile("mc.m", "jvm", "mc.m", bin.path)
 
     println("Compiling standard library")
     execM("mc.m", "!(mpm-put (file.child file.local-file (symbol std)))")
 
-    mCompile("mc", bin.path)
-    mCompile("mc", bin.path)
+    mCompile("mc", "jvm", "mc", bin.path)
+    mCompile("mc", "jvm", "mc", bin.path)
 
-    println("Regenerating mc.m")
-    execM("mc", "!(desugar-file (file.child file.local-file (symbol mc)) (file.child file.local-file (symbol mc.m)))")
+    mCompile("mc", "m", "mc", "mc.m")
 }
 
 fun mc() {

@@ -1,8 +1,7 @@
-;; Desugars a file.
-(defn desugar-file in out
-  (do result (generate in)
-    (let desugared (desugar-declarations (generated.declarations result))
-      (file.write out desugared))))
+;; The M backend for M.
+(defn m-backend out operation declarations
+  (let desugared (desugar-declarations declarations)
+    (file.write out desugared)))
 
 ;; Desugars an operation.
 (defn desugar-operation operation

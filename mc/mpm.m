@@ -10,7 +10,7 @@
 ;; Replaces all special symbols.
 (def normalize id)
 
-;; Retrieves all special symbols
+;; Retrieves all special symbols.
 (def unnormalize id)
 
 ;; Gets the reference file in mpm-root given a name.
@@ -38,7 +38,8 @@
 
 ;; Puts a file in mpm.
 (defn mpm-put in
-  (do result (generate in)
+  (do exprs (parse-file in)
+      result (generate exprs)
     (then-run
       (mpm-put-refs (generated.declarations result))
       (mpm-put-srcs in))))
@@ -86,7 +87,7 @@
           (do ref (file.read ref-file)
             (if (some? (tree-map.get resolved ref))
               (mpm-resolve-dependencies resolve resolved result (cdr dependencies) true)
-              (do exprs (parse-file (mpm-get-src ref) () true)
+              (do exprs (parse-file (mpm-get-src ref))
                   pair (resolve (tree-map.put resolved ref true) (generate-exprs' exprs result))
                 (mpm-resolve-dependencies resolve
                   (first pair)

@@ -12,9 +12,3 @@
 (macro force
   (fn expr
     (apply-vararg expr.list (car expr) (right ()))))
-
-;; Lazy tests.
-(def lazy:test
-  (apply-vararg combine-tests
-    (assert     (force (delay true)))
-    (assert-not (force (delay false)))))

@@ -56,12 +56,3 @@
   (if (nat.> a b) compare>
   (if (nat.< a b) compare<
     compare=)))
-
-;; Natural tests.
-(def nat:test
-  (apply-vararg combine-tests
-    (assert     (nat.0? nat.0))
-    (assert-not (nat.0? nat.1))
-    (assert     (nat.0? (nat.dec nat.1)))
-    (assert-not (nat.0? (nat.inc nat.0)))
-    (test-compare compare-nat nat.0 nat.1)))

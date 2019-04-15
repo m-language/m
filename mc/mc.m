@@ -1,52 +1,29 @@
-;; The main function for the M compiler.
+;; The main function for M.
 (defn """" args
-  (if (nil? args) empty-repl
-  (let in (file.child file.local-file (car args))
-    (if (nil? (cdr args)) (run-repl in)
-    (let out (file.child file.local-file (cadr args))
-      (if (nil? (cddr args)) (compile in out)
-      (error (symbol "Usage: mc <in> <out>"))))))))
+  (let file (file.child file.local-file (car args))
+    (do exprs (parse-file file)
+        result (generate exprs)
+      (repl
+        (generated.global-env result)
+        (interpret-declarations (generated.declarations result) empty-heap)
+        nat.1
+        (empty-tree-map compare-symbol)))))
 
-;; Runs the m repl with no declarations.
-(def empty-repl
-  (repl default-global-env empty-heap nat.1 (empty-tree-map compare-symbol)))
+;; Compiles a file.
+(defn compile backend in out
+  (do exprs (parse-file in)
+      result (generate exprs) 
+    (write-result backend result out)))
 
-;; Runs the m repl.
-(defn run-repl in
-  (do result (generate in)
-    (repl
-      (generated.global-env result)
-      (interpret-declarations (generated.declarations result) empty-heap)
-      nat.1
-      (empty-tree-map compare-symbol))))
-
-;; Compiles a file and writes its result.
-(defn compile in out
-  (do result (generate in)
-    (generate-result.match result
-    (fn degenerate' (error (car (degenerate.errors degenerate'))))
-    (fn generating' (error (flat-map (generating.dependencies generating') ((swap append) space))))
-    (fn generated' (write-result generated' out)))))
-
-;; Generates a file.
-(defn generate in
-  (do exprs (parse-file in () true)
-    (mpm-resolve-generate-result (generate-exprs exprs default-global-env))))
+;; Generates list of expressions.
+(defn generate exprs
+  (mpm-resolve-generate-result (generate-exprs exprs default-global-env)))
 
 ;; Writes a generate result.
-(defn write-result result out
-  (write-program out
-    (generated.operation result)
-    (generated.declarations result)))
+(defn write-result backend result out
+  (generate-result.match result
+  (fn degenerate' (impure (error (car (degenerate.errors degenerate')))))
+  (fn generating' (impure (error (flat-map (generating.dependencies generating') ((swap append) space)))))
+  (fn generated' (backend out (generated.operation generated') (generated.declarations generated')))))
 
-;; Writes a program.
-(extern write-program)
-
-;; Tests the M compiler.
-(def mc:test
-  (apply-vararg combine-tests 
-    bool:test
-    char:test
-    either:test
-    lazy:test
-    nat:test))
+(def mc:test (delay success))

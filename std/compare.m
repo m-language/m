@@ -21,11 +21,3 @@
   (if (compare<? compare) (< compare)
   (if (compare>? compare) (> compare)
     (= compare))))
-
-;; Creates a test for a compare.
-(defn test-compare compare min max
-  (apply-vararg combine-tests
-    (assert (compare<? (compare min max)))
-    (assert (compare>? (compare max min)))
-    (assert (compare=? (compare min min)))
-    (assert (compare=? (compare max max)))))

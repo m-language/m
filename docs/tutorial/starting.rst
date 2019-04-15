@@ -75,13 +75,7 @@ TODO
 Using the M Compiler
 ====================
 
-Once the M compiler is built, it can be ran with the following arguments:
-
-.. code-block:: bash
-
-    mc                  -- Starts the repl.
-    mc <input>          -- Compiles <input> and starts the repl with it loaded.
-    mc <input> <output> -- Compiles <input> and writes the result to the directory <output>.
-
-The input file can be a file or a directory; if it is a directory, all child
-files with the extension ``.m`` will be loaded recursively.
+Once the M compiler is built, running it will open the repl. Files can be 
+provided as command line arguments to the repl. These file can be a directory,
+in which case all child files with the extension ``.m`` will be loaded
+recursively.

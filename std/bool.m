@@ -47,19 +47,3 @@
         (car expr)
         (expr.list (cons (expr.symbol (symbol delay)) (list (cadr expr))))
         (expr.list (cons (expr.symbol (symbol delay)) (list (caddr expr))))))))
-
-;; Boolean tests.
-(def bool:test
-  (apply-vararg combine-tests
-    (assert     true)
-    (assert-not false)
-    (assert     (not false))
-    (assert-not (not true))
-    (assert     (& true true))
-    (assert-not (& true false))
-    (assert-not (& false true))
-    (assert-not (& false false))
-    (assert     (| true true))
-    (assert     (| true false))
-    (assert     (| false true))
-    (assert-not (| false false))))
