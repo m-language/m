@@ -173,7 +173,7 @@
 (def desugar-should-quote? (fn name ((((nil? name) (fn _ false)) (fn _ ((with (car name)) (fn char (((((char.= char) quote) (fn _ true)) (fn _ (((((char.= char) backslash) (fn _ true)) (fn _ (((((char.= char) open-parentheses) (fn _ true)) (fn _ (((((char.= char) close-parentheses) (fn _ true)) (fn _ (((((char.= char) semicolon) (fn _ true)) (fn _ ((((whitespace? char) (fn _ true)) (fn _ (desugar-should-quote? (cdr name)))) ()))) ()))) ()))) ()))) ()))) ()))))) ())))
 (def desugar-quote (fn name (((((or (desugar-should-quote? name)) (fn _ (nil? name))) (fn _ ((cons quote) ((cons quote) (((swap append) quote) (((swap append) quote) name)))))) (fn _ name)) ())))
 (def istream.read id)
-(def istream.readln (fn istream ((then-run-with istream) (fn char ((((newline? char) (fn _ (impure ()))) (fn _ ((then-run-with (istream.readln istream)) (fn line (impure ((cons char) line)))))) ())))))
+(def istream.readln (fn istream ((then-run-with istream) (fn char (((((char.= linefeed) char) (fn _ (impure ()))) (fn _ ((then-run-with (istream.readln istream)) (fn line (impure ((((newline? char) (fn _ line)) (fn _ ((cons char) line))) ())))))) ())))))
 (def compare= (object (symbol compare=)))
 (def compare< (object (symbol compare<)))
 (def compare> (object (symbol compare>)))

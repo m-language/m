@@ -6,7 +6,7 @@
 ;; Reads a line from an istream.
 (defn istream.readln istream
   (do char istream
-    (if (newline? char)
+    (if (char.= linefeed char)
       (impure ())
       (do line (istream.readln istream)
-        (impure (cons char line))))))
+        (impure (if (newline? char) line (cons char line)))))))
