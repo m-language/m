@@ -1,5 +1,16 @@
 ;; The main function for M.
 (defn """" args
+  (let mode (car args)
+    (if (symbol.= mode (symbol repl))
+      (run-repl (cdr args))
+    (if (symbol.= mode (symbol compile))
+      (run-compile (cdr args))
+    (if (symbol.= mode (symbol mpm-put))
+      (run-mpm-put (cdr args))
+      (error (concat (symbol "Could not find mode ") mode)))))))
+
+;; Runs the M repl.
+(defn run-repl args
   (let file (file.child file.local-file (car args))
     (do exprs (parse-file file)
         result (generate exprs)
@@ -9,11 +20,29 @@
         nat.1
         (empty-tree-map compare-symbol)))))
 
-;; Compiles a file.
-(defn compile backend in out
-  (do exprs (parse-file in)
-      result (generate exprs) 
-    (write-result backend result out)))
+;; Runs the M compiler.
+(defn run-compile args
+  (let backend (get-backend (car args))
+       in (file.child file.local-file (cadr args))
+       out (file.child file.local-file (caddr args))
+    (do exprs (parse-file in)
+        result (generate exprs)
+      (write-result backend result out))))
+
+;; Runs mpm-put.
+(defn run-mpm-put args
+  (let file (file.child file.local-file (car args))
+    (do exprs (parse-file file)
+        result (generate exprs)
+      (then-run
+        (mpm-put-refs (generated.declarations result))
+        (mpm-put-srcs file)))))
+  
+;; Gets the backend given a name.
+(defn get-backend name
+  (if (symbol.= name (symbol m)) m-backend
+  (if (symbol.= name (symbol jvm)) jvm-backend
+    (error (concat (symbol "Could not find backend ") name)))))
 
 ;; Generates list of expressions.
 (defn generate exprs

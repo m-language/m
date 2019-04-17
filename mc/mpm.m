@@ -36,14 +36,6 @@
 (defn mpm-put-srcs in
   (file.copy in mpm-src-root))
 
-;; Puts a file in mpm.
-(defn mpm-put in
-  (do exprs (parse-file in)
-      result (generate exprs)
-    (then-run
-      (mpm-put-refs (generated.declarations result))
-      (mpm-put-srcs in))))
-
 ;; Resolves a generate result with mpm.
 (defn mpm-resolve-generate-result result
   ((swap run-with) second

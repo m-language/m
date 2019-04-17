@@ -22,16 +22,17 @@ fun exec(string: String, file: File = File(".")) {
     if (code != 0) exit("Command $string failed with exit code $code")
 }
 
-fun execM(input: String, string: String, file: File = File(".")) {
-    val exec = ProcessBuilder("java -classpath ${bin.absolutePath}${File.pathSeparator}${mJvmJar.absolutePath} -Xss16m mc $input".split(' ').toList())
+fun execM(args: String, string: String = "", file: File = File(".")) {
+    val exec = ProcessBuilder("java -classpath ${bin.absolutePath}${File.pathSeparator}${mJvmJar.absolutePath} -Xss16m mc $args".split(' ').toList())
             .redirectError(ProcessBuilder.Redirect.INHERIT)
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .directory(file.absoluteFile).start()
-    exec.outputStream.write("$string\n\n".toByteArray())
-    exec.outputStream.flush()
+    if (string != "") {
+        exec.outputStream.write("$string\n\n".toByteArray())
+        exec.outputStream.flush()
+    }
     val code = exec.waitFor()
     if (code != 0) exit("Command $string failed with exit code $code")
-    else println()
 }
 
 tailrec fun ask(message: String, yes: () -> Unit) {
@@ -53,9 +54,9 @@ val mStdlib = File("../m-stdlib")
 val mJvm = File("../m-jvm")
 val mJvmJar = File(mJvm, "build/libs/m-jvm-0.1.0.jar")
 
-fun mCompile(version: String, backend: String, input: String, output: String) {
-    println("Compiling $input to $backend with $version")
-    execM(version, "!(compile $backend-backend (file.child file.local-file (symbol \"$input\")) (file.child file.local-file (symbol \"$output\")))")
+fun mCompile(backend: String, input: String, output: String) {
+    println("Compiling $input to $backend")
+    execM("compile $backend $input $output")
 }
 
 fun mJvmCompile(input: String, output: String) {
@@ -96,16 +97,16 @@ fun build() {
 
     mJvmCompile("mc.m", bin.path)
     
-    mCompile("mc.m", "jvm", "mc.m", bin.path)
-    mCompile("mc.m", "jvm", "mc.m", bin.path)
+    mCompile("jvm", "mc.m", bin.path)
+    mCompile("jvm", "mc.m", bin.path)
 
     println("Compiling standard library")
-    execM("mc.m", "!(mpm-put (file.child file.local-file (symbol std)))")
+    execM("mpm-put std")
 
-    mCompile("mc", "jvm", "mc", bin.path)
-    mCompile("mc", "jvm", "mc", bin.path)
+    mCompile("jvm", "mc", bin.path)
+    mCompile("jvm", "mc", bin.path)
 
-    mCompile("mc", "m", "mc", "mc.m")
+    mCompile("m", "mc", "mc.m")
 }
 
 fun mc() {
@@ -119,7 +120,7 @@ fun mc() {
 fun test() {
     build()
     println("Running tests")
-    execM("mc", "!(run-test mc:test)")
+    execM("repl mc", "!(run-test mc:test)")
 }
 
 when (args[0]) {

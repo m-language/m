@@ -75,7 +75,10 @@ TODO
 Using the M Compiler
 ====================
 
-Once the M compiler is built, running it will open the repl. Files can be 
-provided as command line arguments to the repl. These file can be a directory,
-in which case all child files with the extension ``.m`` will be loaded
-recursively.
+Once the M compiler is built, it can be ran with the following arguments.
+
+-- code-block:: bash
+
+    mc compile <backend> <in> <out> -- Compiles a file
+    mc repl <in>                    -- Runs the M repl
+    mc mpm-put <in>                 -- Puts a file in mpm
