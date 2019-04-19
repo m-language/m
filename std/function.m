@@ -1,6 +1,6 @@
 ;;; Function.m
 ;;;
-;;; Various higher order functions which have no external dependencies.
+;;; Various generic functions.
 
 ;; The identity function.
 (def id (fn x x))

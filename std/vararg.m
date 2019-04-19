@@ -2,11 +2,11 @@
 
 ;; Applies a function to a variadic number of arguments.
 (macro apply-vararg
-  (fn expr
+  (fn exprs
     (expr.list
       (list
-        (car expr)
+        (car exprs)
         (expr.list
           (cons
             (expr.symbol (symbol list))
-            (cdr expr)))))))
+            (cdr exprs)))))))

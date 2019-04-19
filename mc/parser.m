@@ -1,4 +1,4 @@
-;; True if a character an identifier separator.
+;; True if a character an symbol separator.
 (defn separator? char
   (| (whitespace? char)
   (| (char.= char open-parentheses)
@@ -42,42 +42,42 @@
     (parse-expr input path position)
     (parse-comment parse-expr (cdr input) path position)))
 
-;; Parses a single quote identifier literal expr.
+;; Parses a single quote symbol literal expr.
 (defn parse-single-quote input path start end acc
   (let head (car input)
     (if (char.= head quote)
       (parse-result
         (cdr input)
-        (identifier-expr (reverse acc) path start (next-char end)))
+        (symbol-expr (reverse acc) path start (next-char end)))
     (if (newline? head)
       (parse-single-quote (cdr input) path start (next-line end) (cons head acc))
       (parse-single-quote (cdr input) path start (next-char end) (cons head acc))))))
 
-;; Parses a double quote identifier literal expr.
+;; Parses a double quote symbol literal expr.
 (defn parse-double-quote input path start end acc
   (let head (car input)
     (if (char.= head quote)
       (if (char.= (cadr input) quote)
         (parse-result
           (cddr input)
-          (identifier-expr (reverse acc) path start (next-char (next-char end))))
+          (symbol-expr (reverse acc) path start (next-char (next-char end))))
         (parse-double-quote (cdr input) path start (next-char end) (cons quote acc)))
     (if (newline? head)
       (parse-double-quote (cdr input) path start (next-line end) (cons head acc))
       (parse-double-quote (cdr input) path start (next-char end) (cons head acc))))))
 
-;; Parses an M identifier literal expression given an input.
-(defn parse-identifier-literal-expr input path start end acc
+;; Parses an M symbol literal expression given an input.
+(defn parse-symbol-literal-expr input path start end acc
   (if (char.= (car input) quote)
     (parse-double-quote (cdr input) path start (next-char end) acc)
     (parse-single-quote input path start end acc)))
 
-;; Parses an M identifier expression given an input.
-(defn parse-identifier-expr input path start end acc
+;; Parses an M symbol expression given an input.
+(defn parse-symbol-expr input path start end acc
   (if (separator? (car input))
     (parse-result input
-      (identifier-expr (reverse acc) path start end))
-    (parse-identifier-expr (cdr input) path start (next-char end) (cons (car input) acc))))
+      (symbol-expr (reverse acc) path start end))
+    (parse-symbol-expr (cdr input) path start (next-char end) (cons (car input) acc))))
 
 ;; Parses an M list expression given an input.
 (defn parse-list-expr parse-expr input path start end acc
@@ -99,14 +99,14 @@
     (if (char.= head open-parentheses)
       (parse-list-expr parse-expr (cdr input) path (next-char position) (next-char position) ())
     (if (char.= head quote)
-      (parse-identifier-literal-expr (cdr input) path (next-char position) (next-char position) ())
+      (parse-symbol-literal-expr (cdr input) path (next-char position) (next-char position) ())
     (if (char.= head semicolon)
       (parse-comment parse-expr (cdr input) path (next-char position))
     (if (char.= head linefeed)
       (parse-expr (cdr input) path (next-line position))
     (if (whitespace? head)
       (parse-expr (cdr input) path (next-char position))
-      (parse-identifier-expr input path position position ()))))))))
+      (parse-symbol-expr input path position position ()))))))))
 
 ;; Parses an M program given an input.
 (defn parse input path position acc

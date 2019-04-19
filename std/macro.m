@@ -1,45 +1,48 @@
 ;;; Macro.m
 ;;;
-;;; Various macros which have no external dependencies.
+;;; Various generic macros.
+
+(def expr.symbol left)
+(def expr.list right)
 
 ;; Macro for defining macro functions.
 (macro macrofn
-  (fn expr
+  (fn exprs
     (apply-vararg expr.list
       (expr.symbol (symbol macro))
-      (car expr)
+      (car exprs)
       (expr.list
         (cons 
           (expr.symbol (symbol fn))
-          (cdr expr))))))
+          (cdr exprs))))))
 
 ;; Macro for defining functions.
-(macrofn defn expr
+(macrofn defn exprs
   (apply-vararg expr.list
     (expr.symbol (symbol def))
-    (car expr)
+    (car exprs)
     (expr.list
       (cons 
         (expr.symbol (symbol fn))
-        (cdr expr)))))
+        (cdr exprs)))))
 
 ;; Macro for defining local variables.
-(macrofn let expr
-  (if (nil? (cdr expr)) (expr.list expr)
+(macrofn let exprs
+  (if (nil? (cdr exprs)) (expr.list exprs)
     (apply-vararg expr.list
       (expr.symbol (symbol with))
-      (cadr expr)
+      (cadr exprs)
       (apply-vararg expr.list
         (expr.symbol (symbol fn))
-        (car expr)
+        (car exprs)
         (expr.list
           (cons 
             (expr.symbol (symbol let))
-            (cddr expr)))))))
+            (cddr exprs)))))))
 
 ;; Creates an external definition with a given name.
-(macrofn extern expr
+(macrofn extern exprs
   (apply-vararg expr.list
     (expr.symbol (symbol def))
-    (car expr)
-    (car expr)))
+    (car exprs)
+    (car exprs)))

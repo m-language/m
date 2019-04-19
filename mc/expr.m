@@ -1,14 +1,14 @@
-;; An expression representing an M identifier.
-(def identifier-expr
-  (new-data (symbol identifier-expr)
+;; An expression representing an M symbol.
+(def symbol-expr
+  (new-data (symbol symbol-expr)
     (list (symbol name) (symbol path) (symbol start) (symbol end))))
 
-(def identifier-expr? (is? (symbol identifier-expr)))
+(def symbol-expr? (is? (symbol symbol-expr)))
 
-(def identifier-expr.name (field (symbol identifier-expr) (symbol name)))
-(def identifier-expr.path (field (symbol identifier-expr) (symbol path)))
-(def identifier-expr.start (field (symbol identifier-expr) (symbol start)))
-(def identifier-expr.end (field (symbol identifier-expr) (symbol end)))
+(def symbol-expr.name (field (symbol symbol-expr) (symbol name)))
+(def symbol-expr.path (field (symbol symbol-expr) (symbol path)))
+(def symbol-expr.start (field (symbol symbol-expr) (symbol start)))
+(def symbol-expr.end (field (symbol symbol-expr) (symbol end)))
 
 ;; An expression representing an M list.
 (def list-expr
@@ -25,28 +25,26 @@
 (defn expr.path expr
   (if (list-expr? expr)
     (list-expr.path expr)
-    (identifier-expr.path expr)))
+    (symbol-expr.path expr)))
 
 (defn expr.start expr
   (if (list-expr? expr)
     (list-expr.start expr)
-    (identifier-expr.start expr)))
+    (symbol-expr.start expr)))
 
 (defn expr.end expr
  (if (list-expr? expr)
    (list-expr.end expr)
-   (identifier-expr.end expr)))
+   (symbol-expr.end expr)))
 
 ;; Converts an expression to a list.
 (defn expr->list expr
-  (if (identifier-expr? expr)
-    (left (identifier-expr.name expr))
+  (if (symbol-expr? expr)
+    (left (symbol-expr.name expr))
     (right (map (list-expr.exprs expr) expr->list))))
 
 ;; Converts a list to an expression.
 (defn list->expr expr either
   (either
-    (fn name
-      (identifier-expr name (expr.path expr) (expr.start expr) (expr.end expr)))
-    (fn list
-      (list-expr (map list (list->expr expr)) (expr.path expr) (expr.start expr) (expr.end expr)))))
+    (fn name (symbol-expr name (expr.path expr) (expr.start expr) (expr.end expr)))
+    (fn list (list-expr (map list (list->expr expr)) (expr.path expr) (expr.start expr) (expr.end expr)))))

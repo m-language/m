@@ -114,10 +114,10 @@
   (closures' local-env (empty-tree-map compare-symbol)))
 
 (defn closures' local-env acc expr
-  (if (identifier-expr? expr)
-    (if (null? (tree-map.get (local-env.locals local-env) (identifier-expr.name expr)))
+  (if (symbol-expr? expr)
+    (if (null? (tree-map.get (local-env.locals local-env) (symbol-expr.name expr)))
       acc
-      (tree-map.put acc (identifier-expr.name expr) true))
+      (tree-map.put acc (symbol-expr.name expr) true))
     (fold (list-expr.exprs expr) acc (closures' local-env))))
 
 ;; Generates a global expression.
@@ -159,16 +159,16 @@
 ;; Generates a macro expression.
 (def generate-macro-expr (generate-global-expr true))
 
-;; Generates an identifier expression.
-(defn generate-identifier-expr name local-env global-env
+;; Generates a symbol expression.
+(defn generate-symbol-expr name local-env global-env
   (let option (env.get local-env global-env name)
     (if (some? option)
-      (generated (generate-identifier-expr' (unnull option)) () global-env)
+      (generated (generate-symbol-expr' (unnull option)) () global-env)
       (generating (list name) global-env
         (fn global-env
-          (generate-identifier-expr name local-env global-env))))))
+          (generate-symbol-expr name local-env global-env))))))
 
-(defn generate-identifier-expr' variable
+(defn generate-symbol-expr' variable
   (if (global-variable? variable)
     (global-variable-operation
       (global-variable.name variable)
@@ -188,8 +188,8 @@
     (let new-value
       (list-expr
         (list
-          (identifier-expr (symbol fn) (expr.path value) (expr.start value) (expr.end value))
-          (identifier-expr (last names) (expr.path value) (expr.start value) (expr.end value))
+          (symbol-expr (symbol fn) (expr.path value) (expr.start value) (expr.end value))
+          (symbol-expr (last names) (expr.path value) (expr.start value) (expr.end value))
           value)
         (expr.path value)
         (expr.start value)
@@ -220,7 +220,7 @@
             (generated.operation generated')
             (map closures
               (fn closure
-                (generate-identifier-expr'
+                (generate-symbol-expr'
                   (unnull (env.get local-env (generated.global-env generated') closure))))))
           (append (generated.declarations generated') declaration)
           ((swap global-env.with-heap) (generated.global-env generated')
@@ -236,8 +236,8 @@
           (tree-map.put (second vars) closure
             (local-variable closure (first vars))))))))
 
-;; Generates a symbol expression.
-(defn generate-symbol-expr name local-env global-env
+;; Generates a symbol literal expression.
+(defn generate-symbol-literal-expr name local-env global-env
   (generated (symbol-operation name) () global-env))
 
 ;; Generates an apply expression.
@@ -255,7 +255,7 @@
 
 ;; Generates an expression which may be a macro.
 (defn generate-macro?-expr generate-expr expr fn args local-env global-env
-  (let name (identifier-expr.name fn)
+  (let name (symbol-expr.name fn)
        option (env.get local-env global-env name)
     (if (null? option)
       (generating (list name) global-env
@@ -279,26 +279,26 @@
   (let exprs (list-expr.exprs expr)
     (if (nil? exprs)
       (generate-nil local-env global-env)
-      (if (identifier-expr? (car exprs))
-        (let name (identifier-expr.name (car exprs))
+      (if (symbol-expr? (car exprs))
+        (let name (symbol-expr.name (car exprs))
           (if (list.= char.= name (symbol->list (symbol fn)))
             (generate-fn-expr generate-expr
-              (map (init (cdr exprs)) identifier-expr.name)
+              (map (init (cdr exprs)) symbol-expr.name)
               (last exprs)
               local-env global-env)
           (if (list.= char.= name (symbol->list (symbol def)))
             (generate-def-expr generate-expr
-              (identifier-expr.name (cadr exprs))
+              (symbol-expr.name (cadr exprs))
               (caddr exprs)
               local-env global-env)
           (if (list.= char.= name (symbol->list (symbol macro)))
             (generate-macro-expr generate-expr
-              (identifier-expr.name (cadr exprs))
+              (symbol-expr.name (cadr exprs))
               (caddr exprs)
               local-env global-env)
           (if (list.= char.= name (symbol->list (symbol symbol)))
-            (generate-symbol-expr
-              (identifier-expr.name (cadr exprs))
+            (generate-symbol-literal-expr
+              (symbol-expr.name (cadr exprs))
               local-env global-env)
             (generate-macro?-expr generate-expr
               expr
@@ -313,8 +313,8 @@
 ;; Generates an expression.
 (defn generate-expr expr local-env global-env
   (generate-result.match
-    (if (identifier-expr? expr)
-      (generate-identifier-expr (identifier-expr.name expr) local-env global-env)
+    (if (symbol-expr? expr)
+      (generate-symbol-expr (symbol-expr.name expr) local-env global-env)
       (generate-list-expr generate-expr expr local-env global-env))
   (fn degenerate' degenerate')
   (fn generating' generating')

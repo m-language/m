@@ -17,15 +17,15 @@
   (then-run-with p (compose impure f)))
 
 ;; Macro for running processes.
-(macrofn do expr
-  (if (nil? (cdr expr)) (expr.list expr)
+(macrofn do exprs
+  (if (nil? (cdr exprs)) (expr.list exprs)
     (apply-vararg expr.list
       (expr.symbol (symbol then-run-with))
-      (cadr expr)
+      (cadr exprs)
       (apply-vararg expr.list
         (expr.symbol (symbol fn))
-        (car expr)
+        (car exprs)
         (expr.list
           (cons
             (expr.symbol (symbol do))
-            (cddr expr)))))))
+            (cddr exprs)))))))
