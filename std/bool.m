@@ -26,24 +26,24 @@
 
 ;; Macro for and which delays the second argument.
 (macrofn & exprs
-  (apply-vararg expr.list
-    (expr.symbol (symbol and))
+  (apply-vararg list-expr0
+    (symbol-expr0 (symbol and))
     (car exprs)
-    (expr.list (cons (expr.symbol (symbol delay)) (list (cadr exprs))))))
+    (list-expr0 (cons (symbol-expr0 (symbol delay)) (list (cadr exprs))))))
 
 ;; Macro for or which delays the second argument.
 (macrofn | exprs
-  (apply-vararg expr.list
-    (expr.symbol (symbol or))
+  (apply-vararg list-expr0
+    (symbol-expr0 (symbol or))
     (car exprs)
-    (expr.list (cons (expr.symbol (symbol delay)) (list (cadr exprs))))))
+    (list-expr0 (cons (symbol-expr0 (symbol delay)) (list (cadr exprs))))))
 
 ;; Macro for control flow.
 (macro if
   (fn exprs
-    (apply-vararg expr.list
-      (expr.symbol (symbol force))
-      (apply-vararg expr.list
+    (apply-vararg list-expr0
+      (symbol-expr0 (symbol force))
+      (apply-vararg list-expr0
         (car exprs)
-        (expr.list (cons (expr.symbol (symbol delay)) (list (cadr exprs))))
-        (expr.list (cons (expr.symbol (symbol delay)) (list (caddr exprs))))))))
+        (list-expr0 (cons (symbol-expr0 (symbol delay)) (list (cadr exprs))))
+        (list-expr0 (cons (symbol-expr0 (symbol delay)) (list (caddr exprs))))))))

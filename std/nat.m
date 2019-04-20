@@ -7,10 +7,10 @@
 ;;; implementation of natural numbers.
 
 ;; The natural number 0.
-(defn nat.0 f x x)
+(def nat.0 (fn f x x))
 
 ;; The natural number 1.
-(defn nat.1 f x (f x))
+(def nat.1 (fn f x (f x)))
 
 ;; Tests if a natural number is 0.
 (defn nat.0? n

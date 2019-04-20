@@ -27,11 +27,3 @@
 (def right?
   (fn either
     (either (const false) (const true))))
-
-;; Either tests.
-(def either:test
-  (apply-vararg combine-tests
-    (assert     (left? (left ())))
-    (assert     (right? (right ())))
-    (assert-not (left? (right ())))
-    (assert-not (right? (left ())))))

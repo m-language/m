@@ -43,10 +43,10 @@
 ;; Creates a literal list.
 (macro list
   (fn exprs
-    (expr.list
+    (list-expr0
       (((nil? exprs) (const ())
         (fn _
-          (cons (expr.symbol (symbol cons))
+          (cons (symbol-expr0 (symbol cons))
           (cons (car exprs)
           (cons ((id list) (cdr exprs))
             ()))))) ()))))

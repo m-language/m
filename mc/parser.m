@@ -6,28 +6,6 @@
   (| (char.= char semicolon)
     (char.= char quote))))))
 
-;; A position in a file.
-(def position
-  (new-data (symbol position)
-    (list (symbol line) (symbol char))))
-
-(def position.line (field (symbol position) (symbol line)))
-(def position.char (field (symbol position) (symbol char)))
-
-(def start-position (position nat.1 nat.1))
-
-;; The position of the next char.
-(defn next-char p
-  (position
-    (position.line p)
-    (nat.+ nat.1 (position.char p))))
-
-;; The position of the next line.
-(defn next-line p
-  (position
-    (nat.+ nat.1 (position.line p))
-    nat.1))
-
 ;; The result of parsing an expression.
 (def parse-result
   (new-data (symbol parse-result)
