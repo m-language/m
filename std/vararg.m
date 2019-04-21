@@ -3,10 +3,10 @@
 ;; Applies a function to a variadic number of arguments.
 (macro apply-vararg
   (fn exprs
-    (list-expr0
+    (macro/list
       (list
         (car exprs)
-        (list-expr0
+        (macro/list
           (cons
-            (symbol-expr0 (symbol list))
+            (macro/symbol (symbol list))
             (cdr exprs)))))))

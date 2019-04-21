@@ -270,7 +270,7 @@
 (defn generate-macro-apply-expr generate-expr expr name args local-env global-env
   (let function (heap.get (global-env.heap global-env) name)
     (generate-expr
-      (list->expr expr (function (map args expr->list)))
+      (expr.with-path (expr.path expr) (function args))
       local-env
       global-env)))
 

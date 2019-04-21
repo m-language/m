@@ -42,19 +42,19 @@
 
 ;; Asserts that a condition is true.
 (macrofn assert exprs
-  (apply-vararg list-expr0
-    (symbol-expr0 (symbol delay))
-    (apply-vararg list-expr0
-      (symbol-expr0 (symbol test-condition))
+  (apply-vararg macro/list
+    (macro/symbol (symbol delay))
+    (apply-vararg macro/list
+      (macro/symbol (symbol test-condition))
       (car exprs)
-      (apply-vararg list-expr0
-        (symbol-expr0 (symbol symbol))
-        (symbol-expr0 (symbol "Assertion failed"))))))
+      (apply-vararg macro/list
+        (macro/symbol (symbol symbol))
+        (macro/symbol (symbol "Assertion failed"))))))
 
 ;; Asserts that a condition is true.
 (macrofn assert-not exprs
-  (apply-vararg list-expr0
-    (symbol-expr0 (symbol assert))
-    (apply-vararg list-expr0
-      (symbol-expr0 (symbol not))
+  (apply-vararg macro/list
+    (macro/symbol (symbol assert))
+    (apply-vararg macro/list
+      (macro/symbol (symbol not))
       (car exprs))))

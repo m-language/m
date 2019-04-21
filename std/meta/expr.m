@@ -35,41 +35,32 @@
    (list-expr.end expr)
    (symbol-expr.end expr)))
 
-; (def symbol-expr0
-;   (fn name
-;     (symbol-expr name (symbol expr.m) start-position start-position)))
-
-; (def list-expr0
-;   (fn exprs
-;     (list-expr exprs (symbol expr.m) start-position start-position)))
-
-; ;; Creates a symbol expression.
-; (macro macro/symbol
-;   (fn exprs
-;     (list-expr0
-;       (cons (symbol-expr0 (symbol symbol-expr0))
-;       (cons (car exprs)
-;         ())))))
-
-; ;; Creates a list expression.
-; (macro macro/list
-;   (fn exprs
-;     (list-expr0
-;       (cons (symbol-expr0 (symbol list-expr0))
-;       (cons (car exprs)
-;         ())))))
-
-(def symbol-expr0 left)
-(def list-expr0 right)
-
-;; Converts an expression to a list.
-(defn expr->list expr
+;; Changes the path of an expr.
+(defn expr.with-path path expr
   (if (symbol-expr? expr)
-    (left (symbol-expr.name expr))
-    (right (map (list-expr.exprs expr) expr->list))))
+    (symbol-expr (symbol-expr.name expr) path (symbol-expr.start expr) (symbol-expr.end expr))
+    (list-expr (map (list-expr.exprs expr) (expr.with-path path)) path (list-expr.start expr) (list-expr.end expr))))
 
-;; Converts a list to an expression.
-(defn list->expr expr either
-  (either
-    (fn name (symbol-expr name (expr.path expr) (expr.start expr) (expr.end expr)))
-    (fn list (list-expr (map list (list->expr expr)) (expr.path expr) (expr.start expr) (expr.end expr)))))
+(def symbol-expr0
+  (fn name
+    (symbol-expr name (symbol expr.m) start-position start-position)))
+
+(def list-expr0
+  (fn exprs
+    (list-expr exprs (symbol expr.m) start-position start-position)))
+
+;; Creates a symbol expression.
+(macro macro/symbol
+  (fn exprs
+    (list-expr0
+      (cons (symbol-expr0 (symbol symbol-expr0))
+      (cons (car exprs)
+        ())))))
+
+;; Creates a list expression.
+(macro macro/list
+  (fn exprs
+    (list-expr0
+      (cons (symbol-expr0 (symbol list-expr0))
+      (cons (car exprs)
+        ())))))
