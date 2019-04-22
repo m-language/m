@@ -7,31 +7,19 @@ Functions
 Unlike most programming languages, functions are completely fundamental to M.
 Every data type in M is represented as a function, even typically intrinsic ones
 like structs and integers. These representations will be covered in
-`data types <datatypes.html>`_, but for now it is enough to know that functions are
-the singular object in M.
+`data types <datatypes.html>`_, but for now it is enough to know that functions 
+are the singular object type in M.
 
 Functions in M are pure, meaning that they return the same result for the same
 input, and only ever take one argument (multi-argument functions are provided as
 syntax sugar).
 
-Function expressions are of the form ``(fn <arguments...> <value>)``, where
-arguments is a list of argument names and value is the value of the function.
+Function Application
+====================
 
-.. code-block:: lisp
-
-    ;; The identity function which always returns its argument.
-    (fn x x)
-
-    ;; The constant function which ignores its second argument.
-    (fn x _ x)
-
-Application
-===========
-
-Of course, functions themselves do nothing; application is needed to achieve
-any computation. Application expressions are of the form
-``(<function> <arguments...>)``, where function is the function to be applied
-and arguments is a list of arguments to the function.
+Application expressions are of the form ``(<function> <arguments...>)``, where 
+function is the function to be applied and arguments is a list of arguments to 
+the function.
 
 .. code-block:: lisp
 
@@ -43,6 +31,20 @@ and arguments is a list of arguments to the function.
 
 Functions are applied eagerly, so their arguments are always evaluated before
 the function, but an argument evaluation order is not specified.
+
+Function Abstraction
+====================
+
+Function expressions are of the form ``(fn <arguments...> <value>)``, where
+arguments is a list of argument names and value is the value of the function.
+
+.. code-block:: lisp
+
+    ;; The identity function which always returns its argument.
+    (fn x x)
+
+    ;; The constant function which ignores its second argument.
+    (fn x _ x)
 
 Closures
 ========
