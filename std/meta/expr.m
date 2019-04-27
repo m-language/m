@@ -50,7 +50,7 @@
     (list-expr exprs (symbol expr.m) start-position start-position)))
 
 ;; Creates a symbol expression.
-(macro macro/symbol
+(macro expr/symbol
   (fn exprs
     (list-expr0
       (cons (symbol-expr0 (symbol symbol-expr0))
@@ -58,7 +58,7 @@
         ())))))
 
 ;; Creates a list expression.
-(macro macro/list
+(macro expr/list
   (fn exprs
     (list-expr0
       (cons (symbol-expr0 (symbol list-expr0))

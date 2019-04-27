@@ -2,14 +2,14 @@
 
 ;; Macro for defining local variables.
 (macrofn let exprs
-  (if (nil? (cdr exprs)) (macro/list exprs)
-    (apply-vararg macro/list
-      (macro/symbol (symbol with))
+  (if (nil? (cdr exprs)) (expr/list exprs)
+    (apply-vararg expr/list
+      (expr/symbol (symbol with))
       (cadr exprs)
-      (apply-vararg macro/list
-        (macro/symbol (symbol fn))
+      (apply-vararg expr/list
+        (expr/symbol (symbol fn))
         (car exprs)
-        (macro/list
+        (expr/list
           (cons 
-            (macro/symbol (symbol let))
+            (expr/symbol (symbol let))
             (cddr exprs)))))))

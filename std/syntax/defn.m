@@ -5,20 +5,20 @@
 ;; Macro for defining macro functions.
 (macro macrofn
   (fn exprs
-    (apply-vararg macro/list
-      (macro/symbol (symbol macro))
+    (apply-vararg expr/list
+      (expr/symbol (symbol macro))
       (car exprs)
-      (macro/list
+      (expr/list
         (cons 
-          (macro/symbol (symbol fn))
+          (expr/symbol (symbol fn))
           (cdr exprs))))))
 
 ;; Macro for defining functions.
 (macrofn defn exprs
-  (apply-vararg macro/list
-    (macro/symbol (symbol def))
+  (apply-vararg expr/list
+    (expr/symbol (symbol def))
     (car exprs)
-    (macro/list
+    (expr/list
       (cons 
-        (macro/symbol (symbol fn))
+        (expr/symbol (symbol fn))
         (cdr exprs)))))

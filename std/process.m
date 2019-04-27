@@ -18,14 +18,14 @@
 
 ;; Macro for running processes.
 (macrofn do exprs
-  (if (nil? (cdr exprs)) (macro/list exprs)
-    (apply-vararg macro/list
-      (macro/symbol (symbol then-run-with))
+  (if (nil? (cdr exprs)) (expr/list exprs)
+    (apply-vararg expr/list
+      (expr/symbol (symbol then-run-with))
       (cadr exprs)
-      (apply-vararg macro/list
-        (macro/symbol (symbol fn))
+      (apply-vararg expr/list
+        (expr/symbol (symbol fn))
         (car exprs)
-        (macro/list
+        (expr/list
           (cons
-            (macro/symbol (symbol do))
+            (expr/symbol (symbol do))
             (cddr exprs)))))))
