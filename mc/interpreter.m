@@ -109,11 +109,6 @@
 ;; The empty heap for the interpreter.
 (def empty-heap (const null))
 
-;; Adds two heaps.
-(defn heap.+ heap1 heap2 name
-  (let value (heap1 name)
-    (if (some? value) value (heap2 name))))
-
 ;; Gets a value in a heap.
 (defn heap.get heap name
   (let value (heap name)
