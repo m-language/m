@@ -41,7 +41,7 @@
   (if condition success (fail message)))
 
 ;; Asserts that a condition is true.
-(macrofn assert exprs
+(macrofn assert env exprs
   (apply-vararg expr/list
     (expr/symbol (symbol delay))
     (apply-vararg expr/list
@@ -52,7 +52,7 @@
         (expr/symbol (symbol "Assertion failed"))))))
 
 ;; Asserts that a condition is true.
-(macrofn assert-not exprs
+(macrofn assert-not env exprs
   (apply-vararg expr/list
     (expr/symbol (symbol assert))
     (apply-vararg expr/list

@@ -1,7 +1,7 @@
 ;;; Let.m
 
 ;; Macro for defining local variables.
-(macrofn let exprs
+(macrofn let env exprs
   (if (nil? (cdr exprs)) (expr/list exprs)
     (apply-vararg expr/list
       (expr/symbol (symbol with))

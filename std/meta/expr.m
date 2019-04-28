@@ -51,7 +51,7 @@
 
 ;; Creates a symbol expression.
 (macro expr/symbol
-  (fn exprs
+  (fn env exprs
     (list-expr0
       (cons (symbol-expr0 (symbol symbol-expr0))
       (cons (car exprs)
@@ -59,7 +59,7 @@
 
 ;; Creates a list expression.
 (macro expr/list
-  (fn exprs
+  (fn env exprs
     (list-expr0
       (cons (symbol-expr0 (symbol list-expr0))
       (cons (car exprs)

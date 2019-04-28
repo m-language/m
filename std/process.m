@@ -17,7 +17,7 @@
   (then-run-with p (compose impure f)))
 
 ;; Macro for running processes.
-(macrofn do exprs
+(macrofn do env exprs
   (if (nil? (cdr exprs)) (expr/list exprs)
     (apply-vararg expr/list
       (expr/symbol (symbol then-run-with))

@@ -4,7 +4,7 @@
 
 ;; Macro for defining macro functions.
 (macro macrofn
-  (fn exprs
+  (fn env exprs
     (apply-vararg expr/list
       (expr/symbol (symbol macro))
       (car exprs)
@@ -14,7 +14,7 @@
           (cdr exprs))))))
 
 ;; Macro for defining functions.
-(macrofn defn exprs
+(macrofn defn env exprs
   (apply-vararg expr/list
     (expr/symbol (symbol def))
     (car exprs)

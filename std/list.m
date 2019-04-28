@@ -42,13 +42,13 @@
 
 ;; Creates a literal list.
 (macro list
-  (fn exprs
+  (fn env exprs
     (expr/list
       (((nil? exprs) (const ())
         (fn _
           (cons (expr/symbol (symbol cons))
           (cons (car exprs)
-          (cons ((id list) (cdr exprs))
+          (cons ((id list env) (cdr exprs))
             ()))))) ()))))
 
 ;; The initial elements of a list.

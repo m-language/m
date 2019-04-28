@@ -269,8 +269,9 @@
 ;; Generates a macro application expression.
 (defn generate-macro-apply-expr generate-expr expr name args local-env global-env
   (let function (heap.get (global-env.heap global-env) name)
+       env (global-env->env global-env)
     (generate-expr
-      (expr.with-path (expr.path expr) (function args))
+      (expr.with-path (expr.path expr) (function env args))
       local-env
       global-env)))
 

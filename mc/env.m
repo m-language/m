@@ -61,3 +61,14 @@
     (if (some? option)
       option
       (tree-map.get (global-env.globals global-env) name))))
+
+;; Converts a global env to a macro env.
+(defn global-env->env global-env
+  (fn name
+    (pair
+      (pair
+        ((global-env.heap global-env) name)
+        null)
+      ((tree-map.get (global-env.globals global-env) name)
+        (const null)
+        global-variable.macro?))))
