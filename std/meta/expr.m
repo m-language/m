@@ -41,28 +41,10 @@
     (symbol-expr (symbol-expr.name expr) path (symbol-expr.start expr) (symbol-expr.end expr))
     (list-expr (map (list-expr.exprs expr) (expr.with-path path)) path (list-expr.start expr) (list-expr.end expr))))
 
-(def symbol-expr0
+(def expr/symbol
   (fn name
     (symbol-expr name (symbol expr.m) start-position start-position)))
 
-(def list-expr0
+(def expr/list
   (fn exprs
     (list-expr exprs (symbol expr.m) start-position start-position)))
-
-;; Creates a symbol expression.
-(macro expr/symbol
-  (fn env exprs
-    (result/success
-      (list-expr0
-        (cons (symbol-expr0 (symbol symbol-expr0))
-        (cons (car exprs)
-          ()))))))
-  
-;; Creates a list expression.
-(macro expr/list
-  (fn env exprs
-    (result/success
-      (list-expr0
-        (cons (symbol-expr0 (symbol list-expr0))
-        (cons (car exprs)
-          ()))))))
