@@ -270,10 +270,19 @@
 (defn generate-macro-apply-expr generate-expr expr name args local-env global-env
   (let function (heap.get (global-env.heap global-env) name)
        env (global-env->env global-env)
-    (generate-expr
-      (expr.with-path (expr.path expr) (function env args))
-      local-env
-      global-env)))
+       result (function env args)
+    (result/match result
+      (fn new-expr
+        (generate-expr
+          (expr.with-path (expr.path expr) new-expr)
+          local-env
+          global-env))
+      (fn errors
+        (degenerate errors global-env))
+      (fn dependencies
+        (generating dependencies global-env
+          (fn global-env
+            (generate-macro-apply-expr generate-expr expr name args local-env global-env)))))))
 
 ;; Generates a list expression.
 (defn generate-list-expr generate-expr expr local-env global-env

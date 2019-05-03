@@ -43,13 +43,14 @@
 ;; Creates a literal list.
 (macro list
   (fn env exprs
-    (expr/list
-      (((nil? exprs) (const ())
-        (fn _
-          (cons (expr/symbol (symbol cons))
-          (cons (car exprs)
-          (cons ((id list env) (cdr exprs))
-            ()))))) ()))))
+    (result/success
+      (expr/list
+        (((nil? exprs) (const ())
+          (fn _
+            (cons (expr/symbol (symbol cons))
+            (cons (car exprs)
+            (cons (expr/list (cons (expr/symbol (symbol list)) (cdr exprs)))
+              ()))))) ())))))
 
 ;; The initial elements of a list.
 (defn init list

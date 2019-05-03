@@ -42,19 +42,21 @@
 
 ;; Asserts that a condition is true.
 (macrofn assert env exprs
-  (apply-vararg expr/list
-    (expr/symbol (symbol delay))
+  (result/success
     (apply-vararg expr/list
-      (expr/symbol (symbol test-condition))
-      (car exprs)
+      (expr/symbol (symbol delay))
       (apply-vararg expr/list
-        (expr/symbol (symbol symbol))
-        (expr/symbol (symbol "Assertion failed"))))))
+        (expr/symbol (symbol test-condition))
+        (car exprs)
+        (apply-vararg expr/list
+          (expr/symbol (symbol symbol))
+          (expr/symbol (symbol "Assertion failed")))))))
 
 ;; Asserts that a condition is true.
 (macrofn assert-not env exprs
-  (apply-vararg expr/list
-    (expr/symbol (symbol assert))
+  (result/success
     (apply-vararg expr/list
-      (expr/symbol (symbol not))
-      (car exprs))))
+      (expr/symbol (symbol assert))
+      (apply-vararg expr/list
+        (expr/symbol (symbol not))
+        (car exprs)))))
