@@ -31,9 +31,9 @@
     (symbol-expr.start expr)))
 
 (defn expr.end expr
- (if (list-expr? expr)
-   (list-expr.end expr)
-   (symbol-expr.end expr)))
+  (if (list-expr? expr)
+    (list-expr.end expr)
+    (symbol-expr.end expr)))
 
 ;; Changes the path of an expr.
 (defn expr.with-path path expr
