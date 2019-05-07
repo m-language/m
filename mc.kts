@@ -23,7 +23,7 @@ fun exec(string: String, file: File = File(".")) {
 }
 
 fun execM(args: String, string: String = "", file: File = File(".")) {
-    val exec = ProcessBuilder("java -classpath ${bin.absolutePath}${File.pathSeparator}${mJvmJar.absolutePath} -Xss16m mc $args".split(' ').toList())
+    val exec = ProcessBuilder("java -classpath ${bin.absolutePath}${File.pathSeparator}${mJvmJar.absolutePath} -Xss1g mc $args".split(' ').toList())
             .redirectError(ProcessBuilder.Redirect.INHERIT)
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .directory(file.absoluteFile).start()
@@ -112,7 +112,7 @@ fun build() {
 fun mc() {
     build()
     val args = args.drop(1).joinToString(separator = " ", prefix = "", postfix = "")
-    val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss16m mc $args".split(' ').toList()).inheritIO().start()
+    val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss1g mc $args".split(' ').toList()).inheritIO().start()
     val code = exec.waitFor()
     if (code != 0) exit("mc failed with exit code $code")
 }

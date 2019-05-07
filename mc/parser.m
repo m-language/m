@@ -4,102 +4,106 @@
   (| (char.= char open-parentheses)
   (| (char.= char close-parentheses)
   (| (char.= char semicolon)
-    (char.= char quote))))))
+     (char.= char quote))))))
 
-;; The result of parsing an expression.
-(def parse-result
-  (new-data (symbol parse-result)
-    (list (symbol rest) (symbol expr))))
-
-(def parse-result.rest (field (symbol parse-result) (symbol rest)))
-(def parse-result.expr (field (symbol parse-result) (symbol expr)))
-
-;; Parses an M commment.
-(defn parse-comment parse-expr input path position
+;; Parses an M comment.
+(defn parse-comment path input position continue
   (if (| (nil? input) (newline? (car input)))
-    (parse-expr input path position)
-    (parse-comment parse-expr (cdr input) path position)))
+    (continue path input position)
+    (parse-comment path (cdr input) (next-char position) continue)))
 
-;; Parses a single quote symbol literal expr.
-(defn parse-single-quote input path start end acc
+;; Parses unused characters.
+(defn parse-unused path input position continue
+  (if (nil? input)
+    (continue path input position)
+    (let head (car input)
+      (if (whitespace? head)
+        (parse-unused path (cdr input) (next-char position) continue)
+      (if (char.= head linefeed)
+        (parse-unused path (cdr input) (next-line position) continue)
+      (if (char.= head semicolon)
+        (parse-comment path (cdr input) (next-char position)
+          (fn path input position
+            (parse-unused path input position continue)))
+        (continue path input position)))))))
+
+;; Parses an M single quote.
+(defn parse-single-quote path input position continue
+  (if (nil? input)
+    (error (symbol "Unexpected end of file"))
+    (let head (car input)
+      (if (char.= head quote)
+        (continue () path (cdr input) (next-char position))
+        (parse-single-quote path (cdr input) ((if (newline? head) next-line next-char) position)
+          (fn chars path input position
+            (continue (cons head chars) path input position)))))))
+
+;; Parses an M double quote.
+(defn parse-double-quote path input position continue
+  (if (nil? input)
+    (error (symbol "Unexpected end of file"))
+    (let head (car input)
+      (if (& (char.= head quote) (char.= (cadr input) quote))
+        (continue () path (cddr input) (next-char (next-char position)))
+        (parse-double-quote path (cdr input) ((if (newline? head) next-line next-char) position)
+          (fn chars path input position
+            (continue (cons head chars) path input position)))))))
+
+;; Parses an M symbol literal.
+(defn parse-symbol-literal path input position continue
+  (if (nil? input)
+    (error (symbol "Unexpected end of file"))
+    (if (char.= (car input) quote)
+      (parse-double-quote path (cdr input) (next-char position) continue)
+      (parse-single-quote path input position continue))))
+
+;; Parses an M symbol
+(defn parse-symbol path input position continue
   (let head (car input)
-    (if (char.= head quote)
-      (parse-result
-        (cdr input)
-        (symbol-expr (reverse acc) path start (next-char end)))
-    (if (newline? head)
-      (parse-single-quote (cdr input) path start (next-line end) (cons head acc))
-      (parse-single-quote (cdr input) path start (next-char end) (cons head acc))))))
+    (if (| (nil? input) (separator? head))
+      (continue () path input position)
+      (parse-symbol path (cdr input) (next-char position)
+        (fn chars path input position
+          (continue (cons head chars) path input position))))))
 
-;; Parses a double quote symbol literal expr.
-(defn parse-double-quote input path start end acc
-  (let head (car input)
-    (if (char.= head quote)
-      (if (char.= (cadr input) quote)
-        (parse-result
-          (cddr input)
-          (symbol-expr (reverse acc) path start (next-char (next-char end))))
-        (parse-double-quote (cdr input) path start (next-char end) (cons quote acc)))
-    (if (newline? head)
-      (parse-double-quote (cdr input) path start (next-line end) (cons head acc))
-      (parse-double-quote (cdr input) path start (next-char end) (cons head acc))))))
+;; Parses an M list.
+(defn parse-list parse-expr path input position continue
+  (if (nil? input)
+    (error (symbol "Unexpected end of file"))
+    (if (char.= (car input) close-parentheses)
+      (continue () path (cdr input) (next-char position))
+      (parse-unused path input position
+        (fn path input position
+          (parse-expr path input position
+            (fn expr path input position
+              (parse-list parse-expr path input position
+                (fn exprs path input position
+                  (continue (cons expr exprs) path input position))))))))))
 
-;; Parses an M symbol literal expression given an input.
-(defn parse-symbol-literal-expr input path start end acc
-  (if (char.= (car input) quote)
-    (parse-double-quote (cdr input) path start (next-char end) acc)
-    (parse-single-quote input path start end acc)))
-
-;; Parses an M symbol expression given an input.
-(defn parse-symbol-expr input path start end acc
-  (if (separator? (car input))
-    (parse-result input
-      (symbol-expr (reverse acc) path start end))
-    (parse-symbol-expr (cdr input) path start (next-char end) (cons (car input) acc))))
-
-;; Parses an M list expression given an input.
-(defn parse-list-expr parse-expr input path start end acc
-  (if (char.= (car input) close-parentheses)
-    (parse-result
-      (cdr input)
-      (list-expr (reverse acc) path start end))
-    (let result (parse-expr input path end)
-      (parse-list-expr parse-expr
-        (parse-result.rest result)
-        path
-        start
-        (expr.end (parse-result.expr result))
-        (cons (parse-result.expr result) acc)))))
-
-;; Parses an M expression given an input.
-(defn parse-expr input path position
+;; Parses an M expression.
+(defn parse-expr path input position continue
   (let head (car input)
     (if (char.= head open-parentheses)
-      (parse-list-expr parse-expr (cdr input) path (next-char position) (next-char position) ())
+      (parse-list parse-expr path (cdr input) (next-char position)
+        (fn exprs path input position'
+          (continue (list-expr exprs path position position') path input position')))
     (if (char.= head quote)
-      (parse-symbol-literal-expr (cdr input) path (next-char position) (next-char position) ())
-    (if (char.= head semicolon)
-      (parse-comment parse-expr (cdr input) path (next-char position))
-    (if (char.= head linefeed)
-      (parse-expr (cdr input) path (next-line position))
-    (if (whitespace? head)
-      (parse-expr (cdr input) path (next-char position))
-      (parse-symbol-expr input path position position ()))))))))
+      (parse-symbol-literal path (cdr input) (next-char position)
+        (fn chars path input position'
+          (continue (symbol-expr chars path position position') path input position')))
+      (parse-symbol path input position
+        (fn chars path input position'
+          (continue (symbol-expr chars path position position') path input position')))))))
 
-;; Parses an M program given an input.
-(defn parse input path position acc
-  (if (nil? input)
-    (reverse acc)
-  (if (char.= linefeed (car input))
-    (parse (cdr input) path (next-line position) acc)
-  (if (whitespace? (car input))
-    (parse (cdr input) path (next-char position) acc)
-    (let result (parse-expr input path position)
-      (parse
-        (parse-result.rest result)
-        path
-        (expr.end (parse-result.expr result))
-        (cons (parse-result.expr result) acc)))))))
+;; Parses an M program.
+(defn parse path input position
+  (parse-unused path input position
+    (fn path input position
+      (if (nil? input)
+        ()
+        (parse-expr path input position
+          (fn expr path input position
+            (cons expr (parse path input position))))))))
 
 ;; Parses an M program given a file.
 (defn parse-file file
@@ -119,7 +123,7 @@
               (impure (concat exprs parse))))))
       (do chars (file.read file)
         (impure
-          (parse chars
+          (parse
             (concat path (file.name-without-extension file))
-            (position nat.1 nat.1)
-            ()))))))
+            chars
+            (position nat.1 nat.1)))))))

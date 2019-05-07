@@ -23,11 +23,12 @@
 
 ;; Parses a line in the repl.
 (defn repl-parse line index
-  (parse-result.expr
-    (parse-expr
-      (append line linefeed)
-      (mangle-fn-name (symbol "repl") index)
-      (position index nat.1))))
+  (parse-expr
+    (append line linefeed)
+    (mangle-fn-name (symbol "repl") index)
+    (position index nat.1)
+    (fn expr path input position
+      expr)))
 
 ;; Interprets declarations in the repl.
 (defn repl-interpret-declarations result heap
