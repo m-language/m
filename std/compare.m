@@ -18,6 +18,7 @@
 
 ;; Folds over the result of a compare.
 (defn fold-compare compare < > =
-  (if (compare<? compare) (< compare)
-  (if (compare>? compare) (> compare)
-    (= compare))))
+  (cond
+    (compare<? compare) (< compare)
+    (compare>? compare) (> compare)
+    (= compare)))

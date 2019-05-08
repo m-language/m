@@ -38,21 +38,24 @@
 
 ;; True if the first natural number is less than the second natural number.
 (defn nat.< a b
-  (if (nat.0? a) (not (nat.0? b))
-  (if (nat.0? b) false
-    (nat.< (nat.dec a) (nat.dec b)))))
+  (cond
+    (nat.0? a) (not (nat.0? b))
+    (nat.0? b) false
+    (nat.< (nat.dec a) (nat.dec b))))
 
 ;; True if the first natural number is greater than the second natural number.
 (def nat.> (swap nat.<))
 
 ;; True if two natural numbers are equal.
 (defn nat.= a b
-  (if (nat.0? a) (nat.0? b)
-  (if (nat.0? b) false
-    (nat.= (nat.dec a) (nat.dec b)))))
+  (cond
+    (nat.0? a) (nat.0? b)
+    (nat.0? b) false
+    (nat.= (nat.dec a) (nat.dec b))))
 
 ;; Compares nats.
 (defn compare-nat a b
-  (if (nat.> a b) compare>
-  (if (nat.< a b) compare<
-    compare=)))
+  (cond
+    (nat.> a b) compare>
+    (nat.< a b) compare<
+    compare=))

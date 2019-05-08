@@ -97,15 +97,15 @@
         (tree-map-node.key node)
         (tree-map-node.value node)))
     (fn =
-      (if (tree-map-node-nil? (tree-map-node.left node)) (tree-map-node.right node)
-      (if (tree-map-node-nil? (tree-map-node.right node)) (tree-map-node.left node)
-        (with (tree-map-node.min-node (tree-map-node.right node))
-        (fn min
+      (cond
+        (tree-map-node-nil? (tree-map-node.left node)) (tree-map-node.right node)
+        (tree-map-node-nil? (tree-map-node.right node)) (tree-map-node.left node)
+        (let min (tree-map-node.min-node (tree-map-node.right node))
           (tree-map-node
             (tree-map-node.left node)
             (tree-map-node.right (tree-map-node.remove (tree-map-node.right node) compare key))
             (tree-map-node.key min)
-            (tree-map-node.value min))))))))))
+            (tree-map-node.value min))))))))
 
 ;; Removes a key in a tree map.
 (defn tree-map.remove map key

@@ -44,7 +44,7 @@
     (fn data field
       (derive data (first field) (second field)))))
 
-;; Creates a data structure'constructor given a type and a list of field names.
+;; Creates a data structure's constructor given a type and a list of field names.
 (defn new-data type names
   (new-data' type names ()))
 

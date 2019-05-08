@@ -50,3 +50,25 @@
           (car exprs)
           (expr/list (cons (expr/symbol (symbol delay)) (list (cadr exprs))))
           (expr/list (cons (expr/symbol (symbol delay)) (list (caddr exprs)))))))))
+
+;; Macro for multi-branch if expressions, i.e
+;; (cond
+;;   condition1 value1
+;;   condition2 value2
+;;   ...
+;;   conditionN valueN
+;;   else-value)
+(macrofn cond env exprs
+  (if (nil? exprs) (result/error (symbol "No exprs passed to cond"))
+  (if (nil? (cdr exprs))
+    ; Base case: we have (cond e), so evaluates to e
+    (result/success (car exprs))
+    ; Recursive case: (cond c v ...) = (if c v (cond ...))
+    (if (nil? (cddr exprs))
+      (result/error (symbol "No else case for cond"))
+      (result/success
+        (apply-vararg expr/list
+          (expr/symbol (symbol if))
+          (car exprs)
+          (cadr exprs)
+          (expr/list (cons (expr/symbol (symbol cond)) (cddr exprs)))))))))

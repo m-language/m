@@ -114,19 +114,20 @@
   (reverse' list ()))
 
 ;; Tests if two lists are equal are equal given its element's equality function.
-(defn list.= f a b
-  (if (nil? a) (nil? b)
-  (if (nil? b) false
-    (& (f (car a) (car b))
-       (list.= f (cdr a) (cdr b))))))
+(defn list.= = a b
+  (cond
+    (nil? a) (nil? b)
+    (nil? b) false
+    (& (= (car a) (car b))
+       (list.= = (cdr a) (cdr b)))))
 
 ;; Compares two lists given a compare function.
 (defn compare-list compare a b
-  (if (& (nil? a) (nil? b)) compare=
-  (if (nil? a) compare<
-  (if (nil? b) compare>
-    (with (compare (car a) (car b))
-    (fn compare-result
+  (cond
+    (& (nil? a) (nil? b)) compare=
+    (nil? a) compare<
+    (nil? b) compare>
+    (let compare-result (compare (car a) (car b))
       (if (compare=? compare-result)
         (compare-list compare (cdr a) (cdr b))
-        compare-result)))))))
+        compare-result))))

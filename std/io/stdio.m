@@ -9,4 +9,5 @@
 ;; The standard input stream.
 (extern stdin)
 
+;; Print and return a value
 (extern debug)
