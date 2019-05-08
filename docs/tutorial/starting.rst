@@ -77,7 +77,7 @@ Using the M Compiler
 
 Once the M compiler is built, it can be ran with the following arguments.
 
--- code-block:: bash
+.. code-block:: bash
 
     mc compile <backend> <in> <out> -- Compiles a file
     mc repl <in>                    -- Runs the M repl
