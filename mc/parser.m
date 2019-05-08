@@ -17,10 +17,10 @@
   (if (nil? input)
     (continue path input position)
     (let head (car input)
-      (if (whitespace? head)
-        (parse-unused path (cdr input) (next-char position) continue)
       (if (char.= head linefeed)
         (parse-unused path (cdr input) (next-line position) continue)
+      (if (whitespace? head)
+        (parse-unused path (cdr input) (next-char position) continue)
       (if (char.= head semicolon)
         (parse-comment path (cdr input) (next-char position)
           (fn path input position
@@ -34,7 +34,7 @@
     (let head (car input)
       (if (char.= head quote)
         (continue () path (cdr input) (next-char position))
-        (parse-single-quote path (cdr input) ((if (newline? head) next-line next-char) position)
+        (parse-single-quote path (cdr input) ((if (char.= head head) next-line next-char) position)
           (fn chars path input position
             (continue (cons head chars) path input position)))))))
 
@@ -45,7 +45,7 @@
     (let head (car input)
       (if (& (char.= head quote) (char.= (cadr input) quote))
         (continue () path (cddr input) (next-char (next-char position)))
-        (parse-double-quote path (cdr input) ((if (newline? head) next-line next-char) position)
+        (parse-double-quote path (cdr input) ((if (char.= head head) next-line next-char) position)
           (fn chars path input position
             (continue (cons head chars) path input position)))))))
 
