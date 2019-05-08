@@ -8,17 +8,7 @@ possible for fast compilation and reusable optimizations.
 Getting Started
 ---------------
 
-First, create the MPM (M Package Manager) root directory with
-`sudo mkdir -m 777 /mpm-root`. Then install Java, Kotlin, and Gradle, and use
-`mc.sh` to start the REPL.
-
-Second, install the plugin for the editor of your choice
-([vscode](https://github.com/m-language/vscode-m),
-[vim](https://github.com/m-language/vim-m),
-[idea](https://github.com/m-language/intellij-m)).
-
-For more detailed installation instructions, view
-[the getting started guide](https://m-language.readthedocs.io/en/latest/tutorial/starting.html).
+See [the getting started guide](https://m-language.readthedocs.io/en/latest/tutorial/starting.html).
 
 What it looks like
 ----------------------
