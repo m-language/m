@@ -17,15 +17,16 @@
   (if (nil? input)
     (continue path input position)
     (let head (car input)
-      (if (char.= head linefeed)
-        (parse-unused path (cdr input) (next-line position) continue)
-      (if (whitespace? head)
-        (parse-unused path (cdr input) (next-char position) continue)
-      (if (char.= head semicolon)
-        (parse-comment path (cdr input) (next-char position)
-          (fn path input position
-            (parse-unused path input position continue)))
-        (continue path input position)))))))
+      (cond
+        (char.= head linefeed)
+          (parse-unused path (cdr input) (next-line position) continue)
+        (whitespace? head)
+          (parse-unused path (cdr input) (next-char position) continue)
+        (char.= head semicolon)
+          (parse-comment path (cdr input) (next-char position)
+            (fn path input position
+              (parse-unused path input position continue)))
+          (continue path input position)))))
 
 ;; Parses an M single quote.
 (defn parse-single-quote path input position continue
@@ -83,17 +84,18 @@
 ;; Parses an M expression.
 (defn parse-expr path input position continue
   (let head (car input)
-    (if (char.= head open-parentheses)
-      (parse-list parse-expr path (cdr input) (next-char position)
-        (fn exprs path input position'
-          (continue (list-expr exprs path position position') path input position')))
-    (if (char.= head quote)
-      (parse-symbol-literal path (cdr input) (next-char position)
-        (fn chars path input position'
-          (continue (symbol-expr chars path position position') path input position')))
+    (cond
+      (char.= head open-parentheses)
+        (parse-list parse-expr path (cdr input) (next-char position)
+          (fn exprs path input position'
+            (continue (list-expr exprs path position position') path input position')))
+      (char.= head quote)
+        (parse-symbol-literal path (cdr input) (next-char position)
+          (fn chars path input position'
+            (continue (symbol-expr chars path position position') path input position')))
       (parse-symbol path input position
         (fn chars path input position'
-          (continue (symbol-expr chars path position position') path input position')))))))
+          (continue (symbol-expr chars path position position') path input position'))))))
 
 ;; Parses an M program.
 (defn parse path input position

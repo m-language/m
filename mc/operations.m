@@ -73,29 +73,30 @@
 (defn operation.fold operation acc f
   (f
     (let type (type-name operation)
-      (if (symbol.= type (symbol local-variable-operation))
-        acc
-      (if (symbol.= type (symbol global-variable-operation))
-        acc
-      (if (symbol.= type (symbol if-operation))
-        (operation.fold (if-operation.false operation)
-          (operation.fold (if-operation.true operation)
-            (operation.fold (if-operation.cond operation) acc f)
+      (cond
+        (symbol.= type (symbol local-variable-operation))
+          acc
+        (symbol.= type (symbol global-variable-operation))
+          acc
+        (symbol.= type (symbol if-operation))
+          (operation.fold (if-operation.false operation)
+            (operation.fold (if-operation.true operation)
+              (operation.fold (if-operation.cond operation) acc f)
+              f)
             f)
-          f)
-      (if (symbol.= type (symbol def-operation))
-        (operation.fold (def-operation.value operation) acc f)
-      (if (symbol.= type (symbol fn-operation))
-        (operation.fold (fn-operation.value operation) acc f)
-      (if (symbol.= type (symbol symbol-operation))
-        acc
-      (if (symbol.= type (symbol apply-operation))
-        (operation.fold (apply-operation.arg operation)
-          (operation.fold (apply-operation.fn operation) acc f)
-          f)
-      (if (symbol.= type (symbol line-number-operation))
-        (operation.fold (line-number-operation.operation operation) acc f)
-      (if (symbol.= type (symbol nil-operation))
-        acc
-        (error (symbol "..."))))))))))))
+        (symbol.= type (symbol def-operation))
+          (operation.fold (def-operation.value operation) acc f)
+        (symbol.= type (symbol fn-operation))
+          (operation.fold (fn-operation.value operation) acc f)
+        (symbol.= type (symbol symbol-operation))
+          acc
+        (symbol.= type (symbol apply-operation))
+          (operation.fold (apply-operation.arg operation)
+            (operation.fold (apply-operation.fn operation) acc f)
+            f)
+        (symbol.= type (symbol line-number-operation))
+          (operation.fold (line-number-operation.operation operation) acc f)
+        (symbol.= type (symbol nil-operation))
+          acc
+        (error (symbol "..."))))
     operation))

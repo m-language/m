@@ -6,23 +6,16 @@
 ;; Desugars an operation.
 (defn desugar-operation operation
   ((let type (type-name operation)
-    (if (symbol.= type (symbol local-variable-operation))
-      desugar-local-variable-operation
-    (if (symbol.= type (symbol global-variable-operation))
-      desugar-global-variable-operation
-    (if (symbol.= type (symbol def-operation))
-      desugar-def-operation
-    (if (symbol.= type (symbol fn-operation))
-      desugar-fn-operation
-    (if (symbol.= type (symbol symbol-operation))
-      desugar-symbol-operation
-    (if (symbol.= type (symbol apply-operation))
-      desugar-apply-operation
-    (if (symbol.= type (symbol line-number-operation))
-      desugar-line-number-operation
-    (if (symbol.= type (symbol nil-operation))
-      desugar-nil-operation
-      (error (symbol "...")))))))))))
+    (cond
+      (symbol.= type (symbol local-variable-operation)) desugar-local-variable-operation
+      (symbol.= type (symbol global-variable-operation)) desugar-global-variable-operation
+      (symbol.= type (symbol def-operation)) desugar-def-operation
+      (symbol.= type (symbol fn-operation)) desugar-fn-operation
+      (symbol.= type (symbol symbol-operation)) desugar-symbol-operation
+      (symbol.= type (symbol apply-operation)) desugar-apply-operation
+      (symbol.= type (symbol line-number-operation)) desugar-line-number-operation
+      (symbol.= type (symbol nil-operation)) desugar-nil-operation
+      (error (symbol "..."))))
     desugar-operation operation))
 
 ;; Desugars a local variable operation
@@ -74,11 +67,10 @@
 ;; Desugars a declaration.
 (defn desugar-declaration declaration
   ((let type (type-name declaration)
-    (if (symbol.= type (symbol def-declaration))
-      desugar-def-declaration
-    (if (symbol.= type (symbol fn-declaration))
-      desugar-fn-declaration
-      (error (symbol "...")))))
+    (cond
+      (symbol.= type (symbol def-declaration)) desugar-def-declaration
+      (symbol.= type (symbol fn-declaration)) desugar-fn-declaration
+      (error (symbol "..."))))
     declaration))
 
 ;; Desugars a def declaration.
@@ -106,10 +98,10 @@
 (defn desugar-should-quote? name
   (if (nil? name) false
     (let char (car name)
-      (if (char.= char quote) true
-      (if (char.= char backslash) true
-      (if (char.= char open-parentheses) true
-      (if (char.= char close-parentheses) true
-      (if (char.= char semicolon) true
-      (if (whitespace? char) true
-      (desugar-should-quote? (cdr name)))))))))))
+      (| (char.= char quote)
+      (| (char.= char backslash)
+      (| (char.= char open-parentheses)
+      (| (char.= char close-parentheses)
+      (| (char.= char semicolon)
+      (| (whitespace? char)
+         (desugar-should-quote? (cdr name)))))))))))

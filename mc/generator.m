@@ -291,30 +291,31 @@
       (generate-nil local-env global-env)
       (if (symbol-expr? (car exprs))
         (let name (symbol-expr.name (car exprs))
-          (if (list.= char.= name (symbol->list (symbol fn)))
-            (generate-fn-expr generate-expr
-              (map (init (cdr exprs)) symbol-expr.name)
-              (last exprs)
-              local-env global-env)
-          (if (list.= char.= name (symbol->list (symbol def)))
-            (generate-def-expr generate-expr
-              (symbol-expr.name (cadr exprs))
-              (caddr exprs)
-              local-env global-env)
-          (if (list.= char.= name (symbol->list (symbol macro)))
-            (generate-macro-expr generate-expr
-              (symbol-expr.name (cadr exprs))
-              (caddr exprs)
-              local-env global-env)
-          (if (list.= char.= name (symbol->list (symbol symbol)))
-            (generate-symbol-literal-expr
-              (symbol-expr.name (cadr exprs))
-              local-env global-env)
+          (cond
+            (list.= char.= name (symbol->list (symbol fn)))
+              (generate-fn-expr generate-expr
+                (map (init (cdr exprs)) symbol-expr.name)
+                (last exprs)
+                local-env global-env)
+            (list.= char.= name (symbol->list (symbol def)))
+              (generate-def-expr generate-expr
+                (symbol-expr.name (cadr exprs))
+                (caddr exprs)
+                local-env global-env)
+            (list.= char.= name (symbol->list (symbol macro)))
+              (generate-macro-expr generate-expr
+                (symbol-expr.name (cadr exprs))
+                (caddr exprs)
+                local-env global-env)
+            (list.= char.= name (symbol->list (symbol symbol)))
+              (generate-symbol-literal-expr
+                (symbol-expr.name (cadr exprs))
+                local-env global-env)
             (generate-macro?-expr generate-expr
               expr
               (car exprs)
               (cdr exprs)
-              local-env global-env))))))
+              local-env global-env)))
         (generate-apply-expr generate-expr
           (car exprs)
           (cdr exprs)

@@ -5,25 +5,17 @@
 ;; Interprets an operation with a stack.
 (defn interpret-operation' operation stack heap
   ((let type (type-name operation)
-    (if (symbol.= type (symbol local-variable-operation))
-      interpret-local-variable-operation
-    (if (symbol.= type (symbol global-variable-operation))
-      interpret-global-variable-operation
-    (if (symbol.= type (symbol if-operation))
-      interpret-if-operation
-    (if (symbol.= type (symbol def-operation))
-      interpret-def-operation
-    (if (symbol.= type (symbol fn-operation))
-      interpret-fn-operation
-    (if (symbol.= type (symbol symbol-operation))
-      interpret-symbol-operation
-    (if (symbol.= type (symbol apply-operation))
-      interpret-apply-operation
-    (if (symbol.= type (symbol line-number-operation))
-      interpret-line-number-operation
-    (if (symbol.= type (symbol nil-operation))
-      interpret-nil-operation
-      (error (symbol "..."))))))))))))
+    (cond
+      (symbol.= type (symbol local-variable-operation)) interpret-local-variable-operation
+      (symbol.= type (symbol global-variable-operation)) interpret-global-variable-operation
+      (symbol.= type (symbol if-operation)) interpret-if-operation
+      (symbol.= type (symbol def-operation)) interpret-def-operation
+      (symbol.= type (symbol fn-operation)) interpret-fn-operation
+      (symbol.= type (symbol symbol-operation)) interpret-symbol-operation
+      (symbol.= type (symbol apply-operation)) interpret-apply-operation
+      (symbol.= type (symbol line-number-operation)) interpret-line-number-operation
+      (symbol.= type (symbol nil-operation)) interpret-nil-operation
+      (error (symbol "..."))))
     interpret-operation' operation stack heap))
 
 ;; Interprets a local variable operation.
@@ -80,11 +72,10 @@
 ;; Interprets a declaration.
 (defn interpret-declaration declaration heap
   ((let type (type-name declaration)
-    (if (symbol.= type (symbol def-declaration))
-      interpret-def-declaration
-    (if (symbol.= type (symbol fn-declaration))
-      interpret-fn-declaration
-      (error (symbol "...")))))
+    (cond
+      (symbol.= type (symbol def-declaration)) interpret-def-declaration
+      (symbol.= type (symbol fn-declaration)) interpret-fn-declaration
+      (error (symbol "..."))))
     declaration heap))
 
 ;; Interprets a def declaration.
