@@ -5,12 +5,11 @@ M Language
 for the JVM, JS, and Native, designed from the ground up to be as simple as
 possible for fast compilation and reusable optimizations.
 
-Come Talk to Us!
+Come talk to us!
 ---------------
 Other than emailing us, you can also hop into
 our [Discord server](https://discord.gg/nmnT7tN)
-to ask questions and hang out
-
+to ask questions and hang out.
 
 Getting Started
 ---------------
