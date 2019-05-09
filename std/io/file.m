@@ -1,7 +1,10 @@
 ;;; File.m
 
+;; A file specified by a path
+(extern file.from-path)
+
 ;; The root file for this program.
-(extern file.local-file)
+(def file.local-file (file.from-path (symbol ".")))
 
 ;; The name of a file.
 (extern file.name)
