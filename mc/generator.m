@@ -291,23 +291,23 @@
       (generate-nil local-env global-env)
       (if (symbol-expr? (car exprs))
         (let name (symbol-expr.name (car exprs))
-          (cond
-            (list.= char.= name (symbol->list (symbol fn)))
+          (cond-satisfy (compose (list.= char.= name) symbol->list)
+            (symbol fn)
               (generate-fn-expr generate-expr
                 (map (init (cdr exprs)) symbol-expr.name)
                 (last exprs)
                 local-env global-env)
-            (list.= char.= name (symbol->list (symbol def)))
+            (symbol def)
               (generate-def-expr generate-expr
                 (symbol-expr.name (cadr exprs))
                 (caddr exprs)
                 local-env global-env)
-            (list.= char.= name (symbol->list (symbol macro)))
+            (symbol macro)
               (generate-macro-expr generate-expr
                 (symbol-expr.name (cadr exprs))
                 (caddr exprs)
                 local-env global-env)
-            (list.= char.= name (symbol->list (symbol symbol)))
+            (symbol symbol)
               (generate-symbol-literal-expr
                 (symbol-expr.name (cadr exprs))
                 local-env global-env)

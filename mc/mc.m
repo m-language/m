@@ -1,10 +1,10 @@
 ;; The main function for M.
 (defn """" args
   (let mode (car args)
-    (cond
-      (symbol.= mode (symbol repl)) (run-repl (cdr args))
-      (symbol.= mode (symbol compile)) (run-compile (cdr args))
-      (symbol.= mode (symbol mpm-put)) (run-mpm-put (cdr args))
+    (cond-satisfy (symbol.= mode)
+      (symbol repl) (run-repl (cdr args))
+      (symbol compile) (run-compile (cdr args))
+      (symbol mpm-put) (run-mpm-put (cdr args))
       (error (concat (symbol "Could not find mode ") mode)))))
 
 ;; Runs the M repl.
@@ -38,9 +38,9 @@
   
 ;; Gets the backend given a name.
 (defn get-backend name
-  (cond
-    (symbol.= name (symbol m)) m-backend
-    (symbol.= name (symbol jvm)) jvm-backend
+  (cond-satisfy (symbol.= name)
+    (symbol m) m-backend
+    (symbol jvm) jvm-backend
     (error (concat (symbol "Could not find backend ") name))))
 
 ;; Generates list of expressions.

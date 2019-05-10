@@ -6,15 +6,15 @@
 ;; Desugars an operation.
 (defn desugar-operation operation
   ((let type (type-name operation)
-    (cond
-      (symbol.= type (symbol local-variable-operation)) desugar-local-variable-operation
-      (symbol.= type (symbol global-variable-operation)) desugar-global-variable-operation
-      (symbol.= type (symbol def-operation)) desugar-def-operation
-      (symbol.= type (symbol fn-operation)) desugar-fn-operation
-      (symbol.= type (symbol symbol-operation)) desugar-symbol-operation
-      (symbol.= type (symbol apply-operation)) desugar-apply-operation
-      (symbol.= type (symbol line-number-operation)) desugar-line-number-operation
-      (symbol.= type (symbol nil-operation)) desugar-nil-operation
+    (cond-satisfy (symbol.= type)
+      (symbol local-variable-operation) desugar-local-variable-operation
+      (symbol global-variable-operation) desugar-global-variable-operation
+      (symbol def-operation) desugar-def-operation
+      (symbol fn-operation) desugar-fn-operation
+      (symbol symbol-operation) desugar-symbol-operation
+      (symbol apply-operation) desugar-apply-operation
+      (symbol line-number-operation) desugar-line-number-operation
+      (symbol nil-operation) desugar-nil-operation
       (error (symbol "..."))))
     desugar-operation operation))
 

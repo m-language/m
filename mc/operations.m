@@ -73,30 +73,23 @@
 (defn operation.fold operation acc f
   (f
     (let type (type-name operation)
-      (cond
-        (symbol.= type (symbol local-variable-operation))
-          acc
-        (symbol.= type (symbol global-variable-operation))
-          acc
-        (symbol.= type (symbol if-operation))
+      (cond-satisfy (symbol.= type)
+        (symbol local-variable-operation) acc
+        (symbol global-variable-operation) acc
+        (symbol if-operation)
           (operation.fold (if-operation.false operation)
             (operation.fold (if-operation.true operation)
               (operation.fold (if-operation.cond operation) acc f)
               f)
             f)
-        (symbol.= type (symbol def-operation))
-          (operation.fold (def-operation.value operation) acc f)
-        (symbol.= type (symbol fn-operation))
-          (operation.fold (fn-operation.value operation) acc f)
-        (symbol.= type (symbol symbol-operation))
-          acc
-        (symbol.= type (symbol apply-operation))
+        (symbol def-operation) (operation.fold (def-operation.value operation) acc f)
+        (symbol fn-operation) (operation.fold (fn-operation.value operation) acc f)
+        (symbol symbol-operation) acc
+        (symbol apply-operation)
           (operation.fold (apply-operation.arg operation)
             (operation.fold (apply-operation.fn operation) acc f)
             f)
-        (symbol.= type (symbol line-number-operation))
-          (operation.fold (line-number-operation.operation operation) acc f)
-        (symbol.= type (symbol nil-operation))
-          acc
+        (symbol line-number-operation) (operation.fold (line-number-operation.operation operation) acc f)
+        (symbol nil-operation) acc
         (error (symbol "..."))))
     operation))
