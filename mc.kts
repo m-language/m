@@ -53,6 +53,8 @@ val bin = File("./bin")
 val mStdlib = File("../m-stdlib")
 val mJvm = File("../m-jvm")
 val mJvmJar = File(mJvm, "build/libs/m-jvm-0.1.0.jar")
+val mpmRoot = System.getenv("MPM_ROOT")?.let { File(it) }
+    ?: File(File.listRoots().first(), "mpm-root")
 
 fun mCompile(backend: String, input: String, output: String) {
     println("Compiling $input to $backend")
@@ -77,8 +79,9 @@ fun clean() {
     println("Removing bin")
     bin.deleteRecursively()
 
-    println("Removing mpm-root")
-    File(File.listRoots().first(), "mpm-root").listFiles().forEach { it.deleteRecursively() }
+    println("Removing mpm root")
+
+    mpmRoot.listFiles().forEach { it.deleteRecursively() }
 
     println("Cleaning m-jvm")
     exec("gradle clean", mJvm)

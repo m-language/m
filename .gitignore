@@ -4,5 +4,6 @@
 *.jar
 *.json
 
-out
-bin
+out/
+/bin/
+/.mpm/
