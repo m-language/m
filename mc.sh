@@ -1,2 +1,2 @@
 #!/usr/bin/env sh
-env MPM_ROOT=$root kotlinc -script mc.kts $*
+env MPM_ROOT="./.mpm/" kotlinc -script mc.kts $*
