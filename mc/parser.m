@@ -84,7 +84,7 @@
 ;; Parses an M expression.
 (defn parse-expr path input position continue
   (let head (car input)
-    (cond-satisfy (char.= head)
+    (pcond (char.= head)
       open-parentheses
         (parse-list parse-expr path (cdr input) (next-char position)
           (fn exprs path input position'

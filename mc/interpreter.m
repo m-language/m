@@ -5,7 +5,7 @@
 ;; Interprets an operation with a stack.
 (defn interpret-operation' operation stack heap
   ((let type (type-name operation)
-    (cond-satisfy (symbol.= type)
+    (pcond (symbol.= type)
       (symbol local-variable-operation) interpret-local-variable-operation
       (symbol global-variable-operation) interpret-global-variable-operation
       (symbol if-operation) interpret-if-operation
@@ -72,7 +72,7 @@
 ;; Interprets a declaration.
 (defn interpret-declaration declaration heap
   ((let type (type-name declaration)
-    (cond-satisfy (symbol.= type)
+    (pcond (symbol.= type)
       (symbol def-declaration) interpret-def-declaration
       (symbol fn-declaration) interpret-fn-declaration
       (error (symbol "..."))))

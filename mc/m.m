@@ -6,7 +6,7 @@
 ;; Desugars an operation.
 (defn desugar-operation operation
   ((let type (type-name operation)
-    (cond-satisfy (symbol.= type)
+    (pcond (symbol.= type)
       (symbol local-variable-operation) desugar-local-variable-operation
       (symbol global-variable-operation) desugar-global-variable-operation
       (symbol def-operation) desugar-def-operation
