@@ -1,3 +1,4 @@
+#!/usr/bin/env kotlinc -script
 import java.io.File
 
 fun exit(message: String = "Terminating build") {
@@ -71,7 +72,7 @@ fun help() {
         mc.kts help  -- Displays this help message
         mc.kts clean -- Cleans the M compiler
         mc.kts build -- Builds the M compiler
-        mc.kts mc    -- Runs the m compiler with the given arguments.
+        mc.kts test  -- Tests the M compiler
     """.trimIndent())
 }
 
@@ -114,7 +115,7 @@ fun build() {
 
 fun mc() {
     build()
-    val args = args.drop(1).joinToString(separator = " ", prefix = "", postfix = "")
+    val args = args.joinToString(separator = " ", prefix = "", postfix = "")
     val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss1g mc $args".split(' ').toList()).inheritIO().start()
     val code = exec.waitFor()
     if (code != 0) exit("mc failed with exit code $code")
@@ -130,6 +131,6 @@ when (args[0]) {
     "help" -> help()
     "clean" -> clean()
     "build" -> build()
-    "mc" -> mc()
     "test" -> test()
+    else -> mc()
 }
