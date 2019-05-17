@@ -74,18 +74,18 @@
           (macro-call-expr cond (cddr exprs))))))))
 
 ;; Macro to test a predicate against multiple alternatives
-;; (cond-satisfy predicate
+;; (pcond predicate
 ;;   value1 then-value1
 ;;   value2 then-value2
 ;;   ...
 ;;   valueN then-valueN
 ;;   else-value)
-(macrofn cond-satisfy env exprs
+(macrofn pcond env exprs
   (if (nil? exprs)
-    (result/error (symbol "No exprs passed to cond-satisfy"))
+    (result/error (symbol "No exprs passed to pcond"))
     (let predicate (car exprs) vals (cdr exprs)
       (cond
-        (nil? vals) (result/error (symbol "No values after predicate for cond-satisfy"))
+        (nil? vals) (result/error (symbol "No values after predicate for pcond"))
         ; Base case, we only have the else-case
         (nil? (cdr vals)) (result/success (car vals))
         ; TODO convert to a call to (cond ...) and do more thorough checks on input
@@ -95,4 +95,4 @@
             (expr/symbol (symbol if))
             (expr/list (list predicate (car vals)))
             (cadr vals)
-            (macro-call-expr cond-satisfy (cons predicate (cddr vals)))))))))
+            (macro-call-expr pcond (cons predicate (cddr vals)))))))))

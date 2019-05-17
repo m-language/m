@@ -291,7 +291,7 @@
       (generate-nil local-env global-env)
       (if (symbol-expr? (car exprs))
         (let name (symbol-expr.name (car exprs))
-          (cond-satisfy (compose (list.= char.= name) symbol->list)
+          (pcond (compose (list.= char.= name) symbol->list)
             (symbol fn)
               (generate-fn-expr generate-expr
                 (map (init (cdr exprs)) symbol-expr.name)

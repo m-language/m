@@ -73,7 +73,7 @@
 (defn operation.fold operation acc f
   (f
     (let type (type-name operation)
-      (cond-satisfy (symbol.= type)
+      (pcond (symbol.= type)
         (symbol local-variable-operation) acc
         (symbol global-variable-operation) acc
         (symbol if-operation)

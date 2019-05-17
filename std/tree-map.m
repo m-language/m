@@ -97,7 +97,7 @@
         (tree-map-node.key node)
         (tree-map-node.value node)))
     (fn =
-      (cond-satisfy tree-map-node-nil?
+      (pcond tree-map-node-nil?
         (tree-map-node.left node) (tree-map-node.right node)
         (tree-map-node.right node) (tree-map-node.left node)
         (let min (tree-map-node.min-node (tree-map-node.right node))

@@ -1,7 +1,7 @@
 ;; The main function for M.
 (defn """" args
   (let mode (car args)
-    (cond-satisfy (symbol.= mode)
+    (pcond (symbol.= mode)
       (symbol repl) (run-repl (cdr args))
       (symbol compile) (run-compile (cdr args))
       (symbol mpm-put) (run-mpm-put (cdr args))
@@ -38,7 +38,7 @@
   
 ;; Gets the backend given a name.
 (defn get-backend name
-  (cond-satisfy (symbol.= name)
+  (pcond (symbol.= name)
     (symbol m) m-backend
     (symbol jvm) jvm-backend
     (error (concat (symbol "Could not find backend ") name))))
