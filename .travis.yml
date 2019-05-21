@@ -1,0 +1,10 @@
+language: kotlin
+jdk:
+- oraclejdk8
+sudo: false
+
+cache:
+  directories:
+  - $HOME/.gradle
+
+script: ./mc.sh build
