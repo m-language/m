@@ -9,6 +9,7 @@ cache:
 
 install:
   - bash ./.travis/getkotlin.sh
+  - git clone https://github.com/m-language/m-jvm ../m-jvm
 
 script:
   - bash ./.travis/build.sh
