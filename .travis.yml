@@ -1,4 +1,4 @@
-language: kotlin
+language: java
 jdk:
 - oraclejdk8
 sudo: false
@@ -7,4 +7,8 @@ cache:
   directories:
   - $HOME/.gradle
 
-script: ./mc.sh build
+install:
+  - ./.travis/getkotlin.sh
+
+script:
+  - ./.travis/build.sh
