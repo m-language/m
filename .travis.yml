@@ -8,7 +8,7 @@ cache:
   - $HOME/.gradle
 
 install:
-  - ./.travis/getkotlin.sh
+  - bash ./.travis/getkotlin.sh
 
 script:
-  - ./.travis/build.sh
+  - bash ./.travis/build.sh
