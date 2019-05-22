@@ -8,8 +8,8 @@ cache:
   - $HOME/.gradle
 
 install:
-  - bash ./.travis/getkotlin.sh
+  - bash ./.travis/installdeps.sh
   - git clone https://github.com/m-language/m-jvm ../m-jvm
 
 script:
-  - bash ./.travis/build.sh
+  - bash ./.travis/build.sh 
