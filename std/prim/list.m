@@ -2,9 +2,6 @@
 ;;;
 ;;; An implementation of lists which are encoded using false as the empty list
 ;;; and pair as the head and tail of the list.
-;;;
-;;; All definitions in this file are optimized to use the backend's native
-;;; implementation of lists.
 
 ;; The singleton empty list.
 (def nil ())

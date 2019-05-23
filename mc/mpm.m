@@ -75,13 +75,13 @@
         (fn pair (resolve (first pair) (second pair)))))))
 
 (defn resolve-dependencies root resolve resolved result dependencies indef
-  (let src-of-ref (get-src (src-root root)) ref-of-sym (get-ref (ref-root root))
+  (let src-of-ref (get-src (src-root root)) 
+       ref-of-sym (get-ref (ref-root root))
     (if (nil? dependencies)
       (let result
         (if indef result
           (degenerate
-            (symbol.+ (symbol "Could not find ")
-              (flat-map dependencies ((swap append) space)))
+            (list (symbol "Could not resolve dependencies"))
             (generate-result.global-env result)))
         (impure (pair resolved result)))
       (let ref-file (ref-of-sym (car dependencies))

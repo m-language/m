@@ -16,6 +16,12 @@
 (defn run-with p f
   (then-run-with p (compose impure f)))
 
+;; Sequences a list of processes to a process of a list.
+(defn process/sequence list
+  (do head (car list)
+      tail (process/sequence (cdr list))
+    (impure (cons head tail))))
+
 ;; Macro for running processes.
 (macrofn do env exprs
   (result/success
