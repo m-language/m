@@ -1,6 +1,8 @@
 M Language
 ==========
 
+![travis build](https://travis-ci.com/m-language/m-language.svg?branch=master)
+
 [The M programming language](https://m-language.github.io/) is a minimal Lisp
 for the JVM, JS, and Native, designed from the ground up to be as simple as
 possible for fast compilation and reusable optimizations.
