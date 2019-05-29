@@ -24,7 +24,7 @@ fun exec(string: String, file: File = File(".")) {
 }
 
 fun execM(args: String, string: String = "", file: File = File(".")) {
-    val exec = ProcessBuilder("java -classpath ${bin.absolutePath}${File.pathSeparator}${mJvmJar.absolutePath} -Xss1g mc $args".split(' ').toList())
+    val exec = ProcessBuilder("java -classpath ${bin.absolutePath}${File.pathSeparator}${mJvmJar.absolutePath} -Xss1g m $args".split(' ').toList())
             .redirectError(ProcessBuilder.Redirect.INHERIT)
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .directory(file.absoluteFile).start()
@@ -69,10 +69,10 @@ fun mJvmCompile(input: String, output: String) {
 
 fun help() {
     println("""
-        mc.kts help  -- Displays this help message
-        mc.kts clean -- Cleans the M compiler
-        mc.kts build -- Builds the M compiler
-        mc.kts test  -- Tests the M compiler
+        m.kts help  -- Displays this help message
+        m.kts clean -- Cleans the M compiler
+        m.kts build -- Builds the M compiler
+        m.kts test  -- Tests the M compiler
     """.trimIndent())
 }
 
@@ -99,32 +99,32 @@ fun build() {
     println("Building m-jvm jar")
     exec("gradle fatJar", mJvm)
 
-    mJvmCompile("mc.m", bin.path)
+    mJvmCompile("m.m", bin.path)
     
-    mCompile("jvm", "mc.m", bin.path)
-    mCompile("jvm", "mc.m", bin.path)
+    mCompile("jvm", "m.m", bin.path)
+    mCompile("jvm", "m.m", bin.path)
 
     println("Compiling standard library")
     execM("mpm-put std")
 
-    mCompile("jvm", "mc", bin.path)
-    mCompile("jvm", "mc", bin.path)
+    mCompile("jvm", "m", bin.path)
+    mCompile("jvm", "m", bin.path)
 
-    mCompile("m", "mc", "mc.m")
+    mCompile("m", "m", "m.m")
 }
 
-fun mc() {
+fun m() {
     build()
     val args = args.joinToString(separator = " ", prefix = "", postfix = "")
-    val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss1g mc $args".split(' ').toList()).inheritIO().start()
+    val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss1g m $args".split(' ').toList()).inheritIO().start()
     val code = exec.waitFor()
-    if (code != 0) exit("mc failed with exit code $code")
+    if (code != 0) exit("m failed with exit code $code")
 }
 
 fun test() {
     build()
     println("Running tests")
-    execM("repl mc", "!(run-test mc:test)")
+    execM("repl m", "!(run-test m:test)")
 }
 
 when (args[0]) {
@@ -132,5 +132,5 @@ when (args[0]) {
     "clean" -> clean()
     "build" -> build()
     "test" -> test()
-    else -> mc()
+    else -> m()
 }

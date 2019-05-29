@@ -55,7 +55,7 @@
 (def delay (fn env (fn exprs (result/success (expr/list ((cons (expr/symbol (symbol fn))) ((cons (expr/symbol (symbol _))) exprs)))))))
 (def list (fn env (fn exprs (result/success (expr/list ((((nil? exprs) (const ())) (fn _ ((cons (expr/symbol (symbol cons))) ((cons (car exprs)) ((cons (expr/list ((cons (expr/symbol (symbol list))) (cdr exprs)))) ()))))) ()))))))
 (def success (left ()))
-(def mc:test (fn _ success))
+(def m:test (fn _ success))
 (def apply-vararg (fn env (fn exprs (result/success (expr/list ((cons (car exprs)) ((cons (expr/list ((cons (expr/symbol (symbol list))) (cdr exprs)))) ())))))))
 (def if (fn env (fn exprs (result/success (expr/list ((cons (expr/symbol (symbol force))) ((cons (expr/list ((cons (car exprs)) ((cons (expr/list ((cons (expr/symbol (symbol delay))) ((cons (cadr exprs)) ())))) ((cons (expr/list ((cons (expr/symbol (symbol delay))) ((cons (caddr exprs)) ())))) ()))))) ())))))))
 (def macrofn (fn env (fn exprs (result/success (expr/list ((cons (expr/symbol (symbol macro))) ((cons (car exprs)) ((cons (expr/list ((cons (expr/symbol (symbol fn))) (cdr exprs)))) ()))))))))
