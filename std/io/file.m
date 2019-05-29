@@ -30,5 +30,21 @@
 ;; A list of child files.
 (extern file.child-files)
 
-;; Copys a file.
+;; Copies a file.
 (extern file.copy)
+
+;; Converts a file to a map of paths to files.
+(defn file->tree-map file
+  (file->tree-map' () (impure (empty-tree-map (compare-list compare-symbol))) file))
+
+(defn file->tree-map' path !tree-map file 
+  (do directory? (file.directory? file)
+    (if directory?
+      (do child-files (file.child-files file)
+        (fold child-files !tree-map 
+          (file->tree-map' (append path (file.name file)))))
+      (do tree-map !tree-map
+        (impure 
+          (tree-map.put tree-map
+            (append path (file.name file))
+            file))))))

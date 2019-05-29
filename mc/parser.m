@@ -109,23 +109,15 @@
 
 ;; Parses an M program given a file.
 (defn parse-file file
-  (parse-file' file () true))
-
-(defn parse-file' file path init
-  (do directory? (file.directory? file)
-    (if directory?
-      (do child-files (file.child-files file)
-        (fold child-files (impure ())
-          (fn acc child
-            (do parse
-                  (parse-file' child
-                    (if init () (concat path (append (file.name file) slash)))
-                    false)
-                exprs acc
-              (impure (concat exprs parse))))))
-      (do chars (file.read file)
-        (impure
-          (parse
-            (concat path (file.name-without-extension file))
-            chars
-            (position nat.1 nat.1)))))))
+  (do tree-map (file->tree-map file)
+      directory? (file.directory? file)
+    (tree-map.fold tree-map (impure ())
+      (fn !acc path file
+        (do chars (file.read file)
+            acc !acc
+          (impure
+            (concat acc
+              (parse 
+                (init (init (cdr (flat-map (if directory? (cdr path) path) (cons slash)))))
+                chars
+                (position nat.1 nat.1)))))))))
