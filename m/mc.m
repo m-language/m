@@ -54,4 +54,4 @@
   (fn generating' (impure (error (flat-map (generating.dependencies generating') ((swap append) space)))))
   (fn generated' (backend out (generated.operation generated') (generated.declarations generated')))))
 
-(def mc:test (delay success))
+(def m:test (delay success))

@@ -1,5 +1,5 @@
 @echo off
 setlocal
     set MPM_ROOT=.\.mpm\
-    kotlinc -script mc.kts %*
+    kotlinc -script m.kts %*
 endlocal

@@ -110,6 +110,7 @@
 ;; Parses an M program given a file.
 (defn parse-file file
   (do tree-map (file->tree-map file)
+      directory? (file.directory? file)
     (tree-map.fold tree-map (impure ())
       (fn !acc path file
         (do chars (file.read file)
@@ -117,6 +118,6 @@
           (impure
             (concat acc
               (parse 
-                (init (init (cdr (flat-map path (cons slash)))))
+                (init (init (cdr (flat-map (if directory? (cdr path) path) (cons slash)))))
                 chars
                 (position nat.1 nat.1)))))))))
