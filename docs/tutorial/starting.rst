@@ -59,8 +59,8 @@ Before building M-JVM, you will need:
 - Kotlin version 1.3 or higher.
 - Gradle version 4.4 or higher.
 
-Once these are installed, simply run ``./mc.sh build`` or ``./mc.bat build`` to build
-the compiler. Then you can run the compiler with ``./mc.sh`` or ``./mc.bat``.
+Once these are installed, simply run ``./m.sh build`` or ``./m.bat build`` to build
+the compiler. Then you can run the compiler with ``./m.sh`` or ``./m.bat``.
 
 Building M-JS
 =============
@@ -79,6 +79,6 @@ Once the M compiler is built, it can be ran with the following arguments.
 
 .. code-block:: bash
 
-    mc compile <backend> <in> <out> -- Compiles a file
-    mc repl <in>                    -- Runs the M repl
-    mc mpm-put <in>                 -- Puts a file in mpm
+    m compile <backend> <in> <out> -- Compiles a file
+    m repl <in>                    -- Runs the M repl
+    m mpm-put <in>                 -- Puts a file in mpm
