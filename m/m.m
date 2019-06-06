@@ -9,14 +9,18 @@
 
 ;; Runs the M repl.
 (defn run-repl args
-  (let file (file.child file.local-file (car args))
-    (do exprs (parse-file file)
-        result (generate exprs)
-      (repl
-        (generated.global-env result)
-        (interpret-declarations (generated.declarations result) empty-heap)
-        nat.1
-        (empty-tree-map compare-symbol)))))
+  ; TODO parse an arbitrary number of argument files
+  (if (nil? args)
+    (repl default-global-env empty-heap nat.1 (symbol _) (empty-tree-map compare-symbol))
+    (let file (file.child file.local-file (car args))
+      (do exprs (parse-file file)
+          result (generate exprs)
+        (repl
+          (generated.global-env result)
+          (interpret-declarations (generated.declarations result) empty-heap)
+          nat.1
+          (symbol _)
+          (empty-tree-map compare-symbol))))))
 
 ;; Runs the M compiler.
 (defn run-compile args
