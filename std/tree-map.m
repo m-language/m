@@ -27,7 +27,7 @@
   (tree-map tree-map-node-nil compare))
 
 ;; Gets the value of a key in a tree map node.
-(defn tree-map-node.get node compare key
+(defnrec tree-map-node.get node compare key
   (if (tree-map-node-nil? node) null
     (fold-compare (compare key (tree-map-node.key node))
       (fn < (tree-map-node.get (tree-map-node.left node) compare key))
@@ -39,7 +39,7 @@
   (tree-map-node.get (tree-map.node map) (tree-map.compare map) key))
 
 ;; Puts the value of a key in a tree map node.
-(defn tree-map-node.put node compare key value
+(defnrec tree-map-node.put node compare key value
   (if (tree-map-node-nil? node)
     (tree-map-node tree-map-node-nil tree-map-node-nil key value)
     (fold-compare (compare key (tree-map-node.key node))
@@ -81,7 +81,7 @@
     (tree-map.compare map)))
 
 ;; Removes a key in a tree map node.
-(defn tree-map-node.remove node compare key
+(defnrec tree-map-node.remove node compare key
   (if (tree-map-node-nil? node) node
   (fold-compare (compare key (tree-map-node.key node))
     (fn <
@@ -114,12 +114,12 @@
     (tree-map.compare map)))
 
 ;; The minimum node of a tree map node.
-(defn tree-map-node.min-node node
+(defnrec tree-map-node.min-node node
   (if (tree-map-node-nil? (tree-map-node.left node)) node
     (tree-map-node.min-node (tree-map-node.left node))))
 
 ;; Folds a node with an accumulator and function.
-(defn tree-map-node.fold node acc f
+(defnrec tree-map-node.fold node acc f
   (if (tree-map-node-nil? node) acc
     (tree-map-node.fold (tree-map-node.right node)
       (f (tree-map-node.fold (tree-map-node.left node) acc f)

@@ -62,7 +62,7 @@
   (fn generated2 (degenerate.with-global-env global-env degenerate1))))
 
 ;; Combines a generating with a generator result.
-(defn generating.combine generating1 result global-env f
+(defnrec generating.combine generating1 result global-env f
   (generate-result.match result
     (fn degenerate2 (degenerate.with-global-env global-env degenerate2))
     (fn generating2
@@ -74,7 +74,7 @@
     (fn generated2 (generated-resolve-generating generated.combine generated2 generating1 global-env (swap f)))))
 
 ;; Combines a generated with a generator result.
-(defn generated.combine generated1 result global-env f
+(defnrec generated.combine generated1 result global-env f
   (generate-result.match result
     (fn degenerate2 (degenerate.with-global-env global-env degenerate2))
     (fn generating2 (generated-resolve-generating generated.combine generated1 generating2 global-env f))
@@ -113,7 +113,7 @@
 (defn closures local-env
   (closures' local-env (empty-tree-map compare-symbol)))
 
-(defn closures' local-env acc expr
+(defnrec closures' local-env acc expr
   (if (symbol-expr? expr)
     (if (null? (tree-map.get (local-env.locals local-env) (symbol-expr.name expr)))
       acc
@@ -121,7 +121,7 @@
     (fold (list-expr.exprs expr) acc (closures' local-env))))
 
 ;; Generates a global expression.
-(defn generate-global-expr macro? generate-expr name value local-env global-env
+(defnrec generate-global-expr macro? generate-expr name value local-env global-env
   (if (some? (tree-map.get (global-env.globals global-env) name))
     (degenerate (list (concat name (symbol " has already been defined"))) global-env)
     (let new-global-env
@@ -160,7 +160,7 @@
 (def generate-macro-expr (generate-global-expr true))
 
 ;; Generates a symbol expression.
-(defn generate-symbol-expr name local-env global-env
+(defnrec generate-symbol-expr name local-env global-env
   (let option (env.get local-env global-env name)
     (if (some? option)
       (generated (generate-symbol-expr' (unnull option)) () global-env)
@@ -182,7 +182,7 @@
   (generated nil-operation () global-env))
 
 ;; Generates a fn expression.
-(defn generate-fn-expr generate-expr names value local-env global-env
+(defnrec generate-fn-expr generate-expr names value local-env global-env
   (if (nil? (cdr names))
     (generate-fn-expr' generate-expr (car names) value local-env global-env)
     (let new-value
@@ -196,7 +196,7 @@
         (expr.end value))
       (generate-fn-expr generate-expr (init names) new-value local-env global-env))))
 
-(defn generate-fn-expr' generate-expr name value local-env global-env
+(defnrec generate-fn-expr' generate-expr name value local-env global-env
   (let mangled-name (mangle-fn-name (local-env.def local-env) (global-env.index global-env))
        new-global-env (global-env.with-index (nat.+ nat.1 (global-env.index global-env)) global-env)
        closures (map (tree-map->list (closures local-env value)) first)
@@ -254,7 +254,7 @@
     apply-operation))
 
 ;; Generates an expression which may be a macro.
-(defn generate-macro?-expr generate-expr expr fn args local-env global-env
+(defnrec generate-macro?-expr generate-expr expr fn args local-env global-env
   (let name (symbol-expr.name fn)
        option (env.get local-env global-env name)
     (if (null? option)
@@ -267,7 +267,7 @@
           (generate-apply-expr generate-expr fn args local-env global-env))))))
 
 ;; Generates a macro application expression.
-(defn generate-macro-apply-expr generate-expr expr name args local-env global-env
+(defnrec generate-macro-apply-expr generate-expr expr name args local-env global-env
   (let function (heap.get (global-env.heap global-env) name)
        env (global-env->env global-env)
        result (function env args)
@@ -322,7 +322,7 @@
           local-env global-env)))))
 
 ;; Generates an expression.
-(defn generate-expr expr local-env global-env
+(defnrec generate-expr expr local-env global-env
   (generate-result.match
     (if (symbol-expr? expr)
       (generate-symbol-expr (symbol-expr.name expr) local-env global-env)
@@ -340,7 +340,7 @@
 (defn generate-exprs exprs global-env
   (generate-exprs' exprs (generated nil-operation () global-env)))
 
-(defn generate-exprs' exprs result
+(defnrec generate-exprs' exprs result
   (if (nil? exprs) result
   (let car-result
     (generate-result.match

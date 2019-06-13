@@ -4,7 +4,7 @@
     (file.write out desugared)))
 
 ;; Desugars an operation.
-(defn desugar-operation operation
+(defnrec desugar-operation operation
   ((let type (type-name operation)
     (pcond (symbol.= type)
       (symbol local-variable-operation) desugar-local-variable-operation
@@ -95,7 +95,7 @@
     name))
 
 ;; Tests if a name should be quoted
-(defn desugar-should-quote? name
+(defnrec desugar-should-quote? name
   (if (nil? name) false
     (let char (car name)
       (| (char.= char quote)

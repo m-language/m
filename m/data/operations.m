@@ -70,7 +70,7 @@
 (def nil-operation (object (symbol nil-operation)))
 
 ;; Folds over an operation.
-(defn operation.fold operation acc f
+(defnrec operation.fold operation acc f
   (f
     (let type (type-name operation)
       (pcond (symbol.= type)

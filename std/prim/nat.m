@@ -27,17 +27,17 @@
     (n (fn g h (h (g f))) (const x) id)))
 
 ;; Adds two natural numbers.
-(defn nat.+ a b
+(defnrec nat.+ a b
   (if (nat.0? b) a
     (nat.+ (nat.inc a) (nat.dec b))))
 
 ;; Subtracts two natural numbers.
-(defn nat.- a b
+(defnrec nat.- a b
   (if (nat.0? b) a
     (nat.- (nat.dec a) (nat.dec b))))
 
 ;; True if the first natural number is less than the second natural number.
-(defn nat.< a b
+(defnrec nat.< a b
   (cond
     (nat.0? a) (not (nat.0? b))
     (nat.0? b) false
@@ -47,7 +47,7 @@
 (def nat.> (swap nat.<))
 
 ;; True if two natural numbers are equal.
-(defn nat.= a b
+(defnrec nat.= a b
   (cond
     (nat.0? a) (nat.0? b)
     (nat.0? b) false
