@@ -1,5 +1,5 @@
 ;; The main function for M.
-(defn """" args
+(defn "" args
   (let mode (car args)
     (pcond (symbol.= mode)
       (symbol repl) (run-repl (cdr args))

@@ -88,13 +88,18 @@
 (defn desugar-quote name
   (if (| (desugar-should-quote? name) (nil? name))
     (cons quote
-      (cons quote
-        ((swap append) quote
-          ((swap append) quote
-            name))))
+      ((swap append) quote
+        (desugar-quote' name)))
     name))
 
-;; Tests if a name should be quoted
+(defnrec desugar-quote' name
+  (cond 
+    (nil? name) name
+    (char.= quote (car name))
+      (cons quote (cons quote (desugar-quote' (cdr name))))
+      (cons (car name) (desugar-quote' (cdr name)))))
+
+;; Tests if a name should be quoted.
 (defnrec desugar-should-quote? name
   (if (nil? name) false
     (let char (car name)

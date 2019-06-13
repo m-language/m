@@ -28,35 +28,20 @@
               (parse-unused path input position continue)))
           (continue path input position)))))
 
-;; Parses an M single quote.
-(defnrec parse-single-quote path input position continue
-  (if (nil? input)
-    (error (symbol "Unexpected end of file"))
-    (let head (car input)
-      (if (char.= head quote)
-        (continue () path (cdr input) (next-char position))
-        (parse-single-quote path (cdr input) ((if (char.= head linefeed) next-line next-char) position)
-          (fn chars path input position
-            (continue (cons head chars) path input position)))))))
-
-;; Parses an M double quote.
-(defnrec parse-double-quote path input position continue
-  (if (nil? input)
-    (error (symbol "Unexpected end of file"))
-    (let head (car input)
-      (if (& (char.= head quote) (char.= (cadr input) quote))
-        (continue () path (cddr input) (next-char (next-char position)))
-        (parse-double-quote path (cdr input) ((if (char.= head linefeed) next-line next-char) position)
-          (fn chars path input position
-            (continue (cons head chars) path input position)))))))
-
 ;; Parses an M symbol literal.
 (defnrec parse-symbol-literal path input position continue
   (if (nil? input)
     (error (symbol "Unexpected end of file"))
-    (if (char.= (car input) quote)
-      (parse-double-quote path (cdr input) (next-char position) continue)
-      (parse-single-quote path input position continue))))
+    (let head (car input)
+      (if (char.= head quote)
+        (if (char.= (cadr input) quote)
+          (parse-symbol-literal path (cdr input) (next-char (next-char position))
+            (fn chars path input position
+              (continue (cons quote chars) path input position)))
+          (continue () path (cdr input) (next-char position)))
+        (parse-symbol-literal path (cdr input) ((if (char.= head linefeed) next-line next-char) position)
+          (fn chars path input position
+            (continue (cons head chars) path input position)))))))
 
 ;; Parses an M symbol
 (defnrec parse-symbol path input position continue
