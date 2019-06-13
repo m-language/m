@@ -25,7 +25,7 @@
 (def dot (car (symbol .)))
 
 ;; The literal character """.
-(def quote (car (symbol """ "")))
+(def quote (car (symbol """")))
 
 ;; The literal character "/".
 (def slash (car (symbol /)))
@@ -37,7 +37,7 @@
 (def space (car (symbol " ")))
 
 ;; The literal character "\t".
-(def tab (car (symbol ""	"")))
+(def tab (car (symbol "	")))
 
 ;; The literal character "\n".
 (def linefeed (car (symbol "
