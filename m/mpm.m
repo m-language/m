@@ -53,7 +53,7 @@
   ((swap run-with) second
     (mpm-resolve-generate-result' (empty-tree-map compare-symbol) result)))
 
-(defn mpm-resolve-generate-result' resolved result
+(defnrec mpm-resolve-generate-result' resolved result
   (generate-result.match result
     (fn degenerate' (impure (pair resolved degenerate')))
     (mpm-resolve-generating mpm-resolve-generate-result' resolved)
@@ -77,7 +77,7 @@
 ;; Resolves a list of dependencies with mpm.
 (def mpm-resolve-dependencies (resolve-dependencies mpm-root))
 
-(defn resolve-dependencies root resolve resolved result dependencies resolved?
+(defnrec resolve-dependencies root resolve resolved result dependencies resolved?
   (let src-of-ref (get-src (src-root root)) 
        ref-of-sym (get-ref (ref-root root))
     (if (nil? dependencies)

@@ -49,7 +49,7 @@
   (new-data' type names ()))
 
 ;; Implementation of new-data.
-(defn new-data' type names fields
+(defnrec new-data' type names fields
   (if (nil? names)
     (data type fields)
     (fn value

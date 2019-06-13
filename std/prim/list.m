@@ -50,57 +50,57 @@
               ()))))) ())))))
 
 ;; The initial elements of a list.
-(defn init list
+(defnrec init list
   (if (nil? (cdr list)) ()
     (cons (car list) (init (cdr list)))))
 
 ;; The last element of a list.
-(defn last list
+(defnrec last list
   (if (nil? (cdr list))
     (car list)
     (last (cdr list))))
 
 ;; Appends an element to a list.
-(defn append list elem
+(defnrec append list elem
   (if (nil? list)
     (cons elem ())
     (cons (car list) (append (cdr list) elem))))
 
 ;; Concatenates two lists.
-(defn concat a b
+(defnrec concat a b
   (if (nil? a) b
     (cons (car a) (concat (cdr a) b))))
 
 ;; Gets the nth element of a list.
-(defn get list n
+(defnrec get list n
   (if (nat.0? n)
     (car list)
     (get (cdr list) (nat.dec n))))
 
 ;; Maps a list with a function.
-(defn map list f
+(defnrec map list f
   (if (nil? list) ()
     (cons (f (car list)) (map (cdr list) f))))
 
 ;; Flat maps a list with a function.
-(defn flat-map list f
+(defnrec flat-map list f
   (if (nil? list) ()
     (concat (f (car list)) (flat-map (cdr list) f))))
 
 ;; Filters a list with a function.
-(defn filter list f
+(defnrec filter list f
   (if (nil? list) ()
     (if (f (car list))
       (cons (car list) (filter (cdr list) f))
       (filter (cdr list) f))))
 
 ;; Folds a list with an accumulator and a function.
-(defn fold list acc f
+(defnrec fold list acc f
   (if (nil? list) acc
     (fold (cdr list) (f acc (car list)) f)))
 
 ;; Implementation of reverse.
-(defn reverse' list acc
+(defnrec reverse' list acc
   (if (nil? list) acc
     (reverse'
       (cdr list)
@@ -111,7 +111,7 @@
   (reverse' list ()))
 
 ;; Tests if two lists are equal are equal given its element's equality function.
-(defn list.= = a b
+(defnrec list.= = a b
   (cond
     (nil? a) (nil? b)
     (nil? b) false
@@ -119,7 +119,7 @@
        (list.= = (cdr a) (cdr b)))))
 
 ;; Compares two lists given a compare function.
-(defn compare-list compare a b
+(defnrec compare-list compare a b
   (cond
     (& (nil? a) (nil? b)) compare=
     (nil? a) compare<

@@ -7,13 +7,13 @@
      (char.= char quote))))))
 
 ;; Parses an M comment.
-(defn parse-comment path input position continue
+(defnrec parse-comment path input position continue
   (if (| (nil? input) (newline? (car input)))
     (continue path input position)
     (parse-comment path (cdr input) (next-char position) continue)))
 
 ;; Parses unused characters.
-(defn parse-unused path input position continue
+(defnrec parse-unused path input position continue
   (if (nil? input)
     (continue path input position)
     (let head (car input)
@@ -29,7 +29,7 @@
           (continue path input position)))))
 
 ;; Parses an M single quote.
-(defn parse-single-quote path input position continue
+(defnrec parse-single-quote path input position continue
   (if (nil? input)
     (error (symbol "Unexpected end of file"))
     (let head (car input)
@@ -40,7 +40,7 @@
             (continue (cons head chars) path input position)))))))
 
 ;; Parses an M double quote.
-(defn parse-double-quote path input position continue
+(defnrec parse-double-quote path input position continue
   (if (nil? input)
     (error (symbol "Unexpected end of file"))
     (let head (car input)
@@ -51,7 +51,7 @@
             (continue (cons head chars) path input position)))))))
 
 ;; Parses an M symbol literal.
-(defn parse-symbol-literal path input position continue
+(defnrec parse-symbol-literal path input position continue
   (if (nil? input)
     (error (symbol "Unexpected end of file"))
     (if (char.= (car input) quote)
@@ -59,7 +59,7 @@
       (parse-single-quote path input position continue))))
 
 ;; Parses an M symbol
-(defn parse-symbol path input position continue
+(defnrec parse-symbol path input position continue
   (let head (car input)
     (if (| (nil? input) (separator? head))
       (continue () path input position)
@@ -68,7 +68,7 @@
           (continue (cons head chars) path input position))))))
 
 ;; Parses an M list.
-(defn parse-list parse-expr path input position continue
+(defnrec parse-list parse-expr path input position continue
   (if (nil? input)
     (error (symbol "Unexpected end of file"))
     (if (char.= (car input) close-parentheses)
@@ -82,7 +82,7 @@
                   (continue (cons expr exprs) path input position))))))))))
 
 ;; Parses an M expression.
-(defn parse-expr path input position continue
+(defnrec parse-expr path input position continue
   (let head (car input)
     (pcond (char.= head)
       open-parentheses
@@ -98,7 +98,7 @@
           (continue (symbol-expr chars path position position') path input position'))))))
 
 ;; Parses an M program.
-(defn parse path input position
+(defnrec parse path input position
   (parse-unused path input position
     (fn path input position
       (if (nil? input)

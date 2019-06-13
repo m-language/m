@@ -3,7 +3,7 @@
   (interpret-operation' operation () heap))
 
 ;; Interprets an operation with a stack.
-(defn interpret-operation' operation stack heap
+(defnrec interpret-operation' operation stack heap
   ((let type (type-name operation)
     (pcond (symbol.= type)
       (symbol local-variable-operation) interpret-local-variable-operation

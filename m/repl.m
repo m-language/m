@@ -1,5 +1,5 @@
 ;; The M repl.
-(defn repl global-env heap index name resolved
+(defnrec repl global-env heap index name resolved
   (do line
     (then-run
       (ostream.write stdout (car (symbol >)))

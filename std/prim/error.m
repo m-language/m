@@ -8,5 +8,5 @@
 ;;; with these definitions.
 
 ;; Creates an M error given a message.
-(defn error message
+(defnrec error message
   (delay (error message)))
