@@ -14,7 +14,6 @@
       (symbol symbol-operation) desugar-symbol-operation
       (symbol apply-operation) desugar-apply-operation
       (symbol line-number-operation) desugar-line-number-operation
-      (symbol nil-operation) desugar-nil-operation
       (error (symbol "..."))))
     desugar-operation operation))
 
@@ -56,10 +55,6 @@
 (defn desugar-line-number-operation desugar-operation operation
   (desugar-operation (line-number-operation.operation operation)))
 
-;; Desugars a nil operation.
-(defn desugar-nil-operation desugar-operation operation
-  (symbol "()"))
-
 ;; Desugars a list of declarations.
 (defn desugar-declarations declarations
   (flat-map declarations desugar-declaration))
@@ -82,7 +77,7 @@
   (append (symbol ")") linefeed))))))
 
 ;; Desugars a fn declaration.
-(def desugar-fn-declaration (const ()))
+(def desugar-fn-declaration (const nil))
 
 ;; Quotes a variable with invalid characters.
 (defn desugar-quote name

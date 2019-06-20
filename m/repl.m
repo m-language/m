@@ -4,8 +4,8 @@
     (then-run
       (ostream.write stdout (car (symbol >)))
       (istream.readln stdin))
-    (if (symbol.= (filter line (compose not whitespace?)) ())
-      (impure ())
+    (if (symbol.= (filter line (compose not whitespace?)) nil)
+      (impure nil)
       (let !? (char.= (car line) (car (symbol "!")))
            text (concat (symbol "(def ") 
                   (concat (append name space) 

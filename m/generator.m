@@ -95,7 +95,7 @@
 
 ;; Converts a generating to a generated.
 (defn generating->generated generating' operation global-env continue
-  (generated operation ()
+  (generated operation nil
     ((swap global-env.with-dependents) global-env
       (let dependents (global-env.dependents (generating.global-env generating'))
            dependency (car (generating.dependencies generating'))
@@ -163,7 +163,7 @@
 (defnrec generate-symbol-expr name local-env global-env
   (let option (env.get local-env global-env name)
     (if (some? option)
-      (generated (generate-symbol-expr' (unnull option)) () global-env)
+      (generated (generate-symbol-expr' (unnull option)) nil global-env)
       (generating (list name) global-env
         (fn global-env
           (generate-symbol-expr name local-env global-env))))))
@@ -176,10 +176,6 @@
     (local-variable-operation
       (local-variable.name variable)
       (local-variable.index variable))))
-
-;; Generates a nil expression.
-(defn generate-nil local-env global-env
-  (generated nil-operation () global-env))
 
 ;; Generates a fn expression.
 (defnrec generate-fn-expr generate-expr names value local-env global-env
@@ -238,7 +234,7 @@
 
 ;; Generates a symbol literal expression.
 (defn generate-symbol-literal-expr name local-env global-env
-  (generated (symbol-operation name) () global-env))
+  (generated (symbol-operation name) nil global-env))
 
 ;; Generates an apply expression.
 (defn generate-apply-expr generate-expr fn args local-env global-env
@@ -288,7 +284,7 @@
 (defn generate-list-expr generate-expr expr local-env global-env
   (let exprs (list-expr.exprs expr)
     (if (nil? exprs)
-      (generate-nil local-env global-env)
+      (degenerate (list (symbol "List of expressions is empty")) global-env)
       (if (symbol-expr? (car exprs))
         (let name (symbol-expr.name (car exprs))
           (pcond (compose (list.= char.= name) symbol->list)
@@ -338,7 +334,7 @@
 
 ;; Generates a list of expressions.
 (defn generate-exprs exprs global-env
-  (generate-exprs' exprs (generated nil-operation () global-env)))
+  (generate-exprs' exprs (generated nil-operation nil global-env)))
 
 (defnrec generate-exprs' exprs result
   (if (nil? exprs) result

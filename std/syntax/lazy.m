@@ -15,4 +15,4 @@
     (result/success
       (apply-vararg expr/list 
         (car exprs) 
-        (expr/list ())))))
+        (expr/symbol (symbol nil))))))

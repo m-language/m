@@ -1,7 +1,7 @@
 ;; An expression representing an M symbol.
 (def symbol-expr
   (fn name path start end
-    (pair true (cons name (cons path (cons start (cons end ())))))))
+    (pair true (cons name (cons path (cons start (cons end nil)))))))
 
 (def symbol-expr? first)
 (def symbol-expr.name (compose car second))
@@ -12,7 +12,7 @@
 ;; An expression representing an M list.
 (def list-expr
   (fn exprs path start end
-    (pair false (cons exprs (cons path (cons start (cons end ())))))))
+    (pair false (cons exprs (cons path (cons start (cons end nil)))))))
 
 (def list-expr? (compose not first))
 (def list-expr.exprs (compose car second))

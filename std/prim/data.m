@@ -46,7 +46,7 @@
 
 ;; Creates a data structure's constructor given a type and a list of field names.
 (defn new-data type names
-  (new-data' type names ()))
+  (new-data' type names nil))
 
 ;; Implementation of new-data.
 (defnrec new-data' type names fields

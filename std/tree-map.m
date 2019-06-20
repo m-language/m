@@ -139,6 +139,6 @@
 
 ;; Converts a tree map to a list.
 (defn tree-map->list map
-  (tree-map.fold map ()
+  (tree-map.fold map nil
     (fn list key value
       (cons (pair key value) list))))

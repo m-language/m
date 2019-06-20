@@ -5,7 +5,7 @@
 ;;; and to be used a base for more powerful testing frameworks.
 
 ;; Creates a successful test.
-(def success (left ()))
+(def success (left nil))
 
 ;; Creates a failed test.
 (defn failure messages
@@ -31,7 +31,7 @@
   ((force test)
     (fn success (ostream.writeln stdout (symbol "Tests successful")))
     (fn failure
-      (fold failure (impure ())
+      (fold failure (impure nil)
         (fn process message
           (then-run process
             (ostream.writeln stderr message)))))))

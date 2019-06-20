@@ -19,7 +19,7 @@ What it looks like
 ;; This is a comment
 
 ;; Definitions are global and unordered
-(def list/empty ())
+(def list/empty nil)
 
 ;; Functions are single argument curried lambdas
 (def id (fn x x))

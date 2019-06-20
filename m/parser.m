@@ -38,7 +38,7 @@
           (parse-symbol-literal path (cdr input) (next-char (next-char position))
             (fn chars path input position
               (continue (cons quote chars) path input position)))
-          (continue () path (cdr input) (next-char position)))
+          (continue nil path (cdr input) (next-char position)))
         (parse-symbol-literal path (cdr input) ((if (char.= head linefeed) next-line next-char) position)
           (fn chars path input position
             (continue (cons head chars) path input position)))))))
@@ -47,7 +47,7 @@
 (defnrec parse-symbol path input position continue
   (let head (car input)
     (if (| (nil? input) (separator? head))
-      (continue () path input position)
+      (continue nil path input position)
       (parse-symbol path (cdr input) (next-char position)
         (fn chars path input position
           (continue (cons head chars) path input position))))))
@@ -57,7 +57,7 @@
   (if (nil? input)
     (error (symbol "Unexpected end of file"))
     (if (char.= (car input) close-parentheses)
-      (continue () path (cdr input) (next-char position))
+      (continue nil path (cdr input) (next-char position))
       (parse-unused path input position
         (fn path input position
           (parse-expr path input position
@@ -87,7 +87,7 @@
   (parse-unused path input position
     (fn path input position
       (if (nil? input)
-        ()
+        nil
         (parse-expr path input position
           (fn expr path input position
             (cons expr (parse path input position))))))))
@@ -96,7 +96,7 @@
 (defn parse-file file
   (do tree-map (file->tree-map file)
       directory? (file.directory? file)
-    (tree-map.fold tree-map (impure ())
+    (tree-map.fold tree-map (impure nil)
       (fn !acc path file
         (do chars (file.read file)
             acc !acc
