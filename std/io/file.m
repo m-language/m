@@ -35,7 +35,7 @@
 
 ;; Converts a file to a map of paths to files.
 (defn file->tree-map file
-  (file->tree-map' () (impure (empty-tree-map (compare-list compare-symbol))) file))
+  (file->tree-map' nil (impure (empty-tree-map (compare-list compare-symbol))) file))
 
 (defn file->tree-map' path !tree-map file 
   (do directory? (file.directory? file)

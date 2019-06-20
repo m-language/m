@@ -4,7 +4,7 @@
 ;;; and pair as the head and tail of the list.
 
 ;; The singleton empty list.
-(def nil ())
+(def nil false)
 
 ;; Prepends an element to a list.
 (def cons pair)
@@ -41,17 +41,17 @@
 (macro list
   (fn env exprs
     (result/success
-      (expr/list
-        (((nil? exprs) (const ())
-          (fn _
+      (((nil? exprs) (const (expr/symbol (symbol nil)))
+        (fn _
+          (expr/list
             (cons (expr/symbol (symbol cons))
             (cons (car exprs)
             (cons (expr/list (cons (expr/symbol (symbol list)) (cdr exprs)))
-              ()))))) ())))))
+              nil))))) nil)))))
 
 ;; The initial elements of a list.
 (defnrec init list
-  (if (nil? (cdr list)) ()
+  (if (nil? (cdr list)) nil
     (cons (car list) (init (cdr list)))))
 
 ;; The last element of a list.
@@ -63,7 +63,7 @@
 ;; Appends an element to a list.
 (defnrec append list elem
   (if (nil? list)
-    (cons elem ())
+    (cons elem nil)
     (cons (car list) (append (cdr list) elem))))
 
 ;; Concatenates two lists.
@@ -79,17 +79,17 @@
 
 ;; Maps a list with a function.
 (defnrec map list f
-  (if (nil? list) ()
+  (if (nil? list) nil
     (cons (f (car list)) (map (cdr list) f))))
 
 ;; Flat maps a list with a function.
 (defnrec flat-map list f
-  (if (nil? list) ()
+  (if (nil? list) nil
     (concat (f (car list)) (flat-map (cdr list) f))))
 
 ;; Filters a list with a function.
 (defnrec filter list f
-  (if (nil? list) ()
+  (if (nil? list) nil
     (if (f (car list))
       (cons (car list) (filter (cdr list) f))
       (filter (cdr list) f))))
@@ -108,7 +108,7 @@
 
 ;; Reverses a list.
 (defn reverse list
-  (reverse' list ()))
+  (reverse' list nil))
 
 ;; Tests if two lists are equal are equal given its element's equality function.
 (defnrec list.= = a b

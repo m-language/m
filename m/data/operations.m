@@ -67,7 +67,7 @@
 (def line-number-operation.line (field (symbol line-number-operation) (symbol line)))
 
 ;; The nil operation.
-(def nil-operation (object (symbol nil-operation)))
+(def nil-operation (symbol-operation nil))
 
 ;; Folds over an operation.
 (defnrec operation.fold operation acc f

@@ -53,7 +53,7 @@
 
 ;; The default local M environment.
 (def default-local-env
-  (local-env (empty-tree-map compare-symbol) ()))
+  (local-env (empty-tree-map compare-symbol) nil))
 
 ;; Gets the variable with a name in an environment.
 (defn env.get local-env global-env name

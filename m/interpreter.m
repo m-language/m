@@ -1,6 +1,6 @@
 ;; Interprets an operation.
 (defn interpret-operation operation heap
-  (interpret-operation' operation () heap))
+  (interpret-operation' operation nil heap))
 
 ;; Interprets an operation with a stack.
 (defnrec interpret-operation' operation stack heap
@@ -14,7 +14,6 @@
       (symbol symbol-operation) interpret-symbol-operation
       (symbol apply-operation) interpret-apply-operation
       (symbol line-number-operation) interpret-line-number-operation
-      (symbol nil-operation) interpret-nil-operation
       (error (symbol "..."))))
     interpret-operation' operation stack heap))
 
@@ -58,10 +57,6 @@
 ;; Interprets a line number operation.
 (defn interpret-line-number-operation interpret-operation' operation
   (interpret-operation' (line-number-operation.operation operation)))
-
-;; Interprets a nil operation.
-(defn interpret-nil-operation interpret-operation' operation stack heap
-  ())
 
 ;; Interprets a list of declarations.
 (defn interpret-declarations declarations heap

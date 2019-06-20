@@ -34,7 +34,7 @@
 
 (defn put-refs declarations ref-root
   (let def-declarations (filter declarations def-declaration?)
-    (fold def-declarations (impure ())
+    (fold def-declarations (impure nil)
       (fn process declaration
         (then-run process
           (file.write

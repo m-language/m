@@ -7,6 +7,6 @@
 (defn istream.readln istream
   (do char istream
     (if (char.= linefeed char)
-      (impure ())
+      (impure nil)
       (do line (istream.readln istream)
         (impure (if (newline? char) line (cons char line)))))))
