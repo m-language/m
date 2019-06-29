@@ -99,9 +99,8 @@
   (if (nil? name) false
     (let char (car name)
       (| (char.= char quote)
-      (| (char.= char backslash)
       (| (char.= char open-parentheses)
       (| (char.= char close-parentheses)
       (| (char.= char semicolon)
       (| (whitespace? char)
-         (desugar-should-quote? (cdr name)))))))))))
+         (desugar-should-quote? (cdr name))))))))))
