@@ -54,8 +54,6 @@ val bin = File("./bin")
 val mStdlib = File("../m-stdlib")
 val mJvm = File("../m-jvm")
 val mJvmJar = File(mJvm, "build/libs/m-jvm-0.1.0.jar")
-val mpmRoot = System.getenv("MPM_ROOT")?.let { File(it) }
-    ?: File(File.listRoots().first(), "mpm-root")
 
 fun mCompile(backend: String, input: String, output: String) {
     println("Compiling $input to $backend")
@@ -80,10 +78,6 @@ fun clean() {
     println("Removing bin")
     bin.deleteRecursively()
 
-    println("Removing mpm root")
-
-    mpmRoot.listFiles().forEach { it.deleteRecursively() }
-
     println("Cleaning m-jvm")
     exec("gradle clean", mJvm)
 }
@@ -104,13 +98,10 @@ fun build() {
     mCompile("jvm", "m.m", bin.path)
     mCompile("jvm", "m.m", bin.path)
 
-    println("Compiling standard library")
-    execM("mpm-put std")
+    mCompile("jvm", "src", bin.path)
+    mCompile("jvm", "src", bin.path)
 
-    mCompile("jvm", "m", bin.path)
-    mCompile("jvm", "m", bin.path)
-
-    mCompile("m", "m", "m.m")
+    mCompile("m", "src", "m.m")
 }
 
 fun m() {
@@ -121,16 +112,9 @@ fun m() {
     if (code != 0) exit("m failed with exit code $code")
 }
 
-fun test() {
-    build()
-    println("Running tests")
-    execM("repl m", "!(run-test m:test)")
-}
-
 when (args[0]) {
     "help" -> help()
     "clean" -> clean()
     "build" -> build()
-    "test" -> test()
     else -> m()
 }
