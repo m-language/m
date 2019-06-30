@@ -70,19 +70,27 @@ fun help() {
         m.kts help  -- Displays this help message
         m.kts clean -- Cleans the M compiler
         m.kts build -- Builds the M compiler
-        m.kts test  -- Tests the M compiler
     """.trimIndent())
 }
 
-fun clean() {
-    println("Removing bin")
-    bin.deleteRecursively()
-
-    println("Cleaning m-jvm")
-    exec("gradle clean", mJvm)
+fun build() {
+    buildBackend()
+    buildHostBackend()
+    buildHostSelf()
+    buildSelf()
 }
 
-fun build() {
+fun buildFull() {
+    buildBackend()
+    buildHostBackend()
+    buildHostSelf()
+    buildHostSelf()
+    buildSelf()
+    buildSelf()
+    buildHost()
+}
+
+fun buildBackend() {
     if (!mJvm.exists()) {
         val mJvmGit = "https://github.com/m-language/m-jvm.git"
         ask("$mJvm does not exist, would you like to clone it from $mJvmGit?") {
@@ -90,22 +98,31 @@ fun build() {
         }
     }
 
-    println("Building m-jvm jar")
     exec("gradle fatJar", mJvm)
+}
 
+fun buildHostBackend() {
     mJvmCompile("m.m", bin.path)
-    
-    mCompile("jvm", "m.m", bin.path)
-    mCompile("jvm", "m.m", bin.path)
+}
 
-    mCompile("jvm", "src", bin.path)
-    mCompile("jvm", "src", bin.path)
+fun buildHostSelf() {
+    mCompile("jvm", "m.m", bin.path)
+}
 
+fun buildSelf() {
+    mCompile("jvm", "src", bin.path)
+}
+
+fun buildHost() {
     mCompile("m", "src", "m.m")
 }
 
+fun clean() {
+    println("Removing bin")
+    bin.deleteRecursively()
+}
+
 fun m() {
-    build()
     val args = args.joinToString(separator = " ", prefix = "", postfix = "")
     val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss1g m $args".split(' ').toList()).inheritIO().start()
     val code = exec.waitFor()
@@ -114,7 +131,13 @@ fun m() {
 
 when (args[0]) {
     "help" -> help()
-    "clean" -> clean()
     "build" -> build()
+    "build-full" -> buildFull()
+    "build-backend" -> buildBackend()
+    "build-host-backend" -> buildHostBackend()
+    "build-host-self" -> buildHostSelf()
+    "build-self" -> buildSelf()
+    "build-host" -> buildHost()
+    "clean" -> clean()
     else -> m()
 }
