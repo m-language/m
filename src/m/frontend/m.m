@@ -1,10 +1,3 @@
-;; The main function for M.
-(defn "" args
-  (let mode (car args)
-    (pcond (symbol.= mode)
-      (symbol compile) (run-compile (cdr args))
-      (error (concat (symbol "Could not find mode ") mode)))))
-
 ;; Runs the M compiler.
 (defn run-compile args
   (let backend (get-backend (car args))
