@@ -114,11 +114,13 @@
   (closures' local-env (empty-tree-map compare-symbol)))
 
 (defnrec closures' local-env acc expr
-  (if (symbol-expr? expr)
-    (if (null? (tree-map.get (local-env.locals local-env) (symbol-expr.name expr)))
-      acc
-      (tree-map.put acc (symbol-expr.name expr) true))
-    (fold (list-expr.exprs expr) acc (closures' local-env))))
+  (expr
+    (fn name _ _ _
+      (if (null? (tree-map.get (local-env.locals local-env) name))
+        acc
+        (tree-map.put acc name true)))
+    (fn exprs _ _ _
+      (fold exprs acc (closures' local-env)))))
 
 ;; Generates a global expression.
 (defnrec generate-global-expr macro? generate-expr name value local-env global-env
@@ -320,9 +322,9 @@
 ;; Generates an expression.
 (defnrec generate-expr expr local-env global-env
   (generate-result.match
-    (if (symbol-expr? expr)
-      (generate-symbol-expr (symbol-expr.name expr) local-env global-env)
-      (generate-list-expr generate-expr expr local-env global-env))
+    (expr
+      (fn name _ _ _ (generate-symbol-expr name local-env global-env))
+      (fn _ _ _ _ (generate-list-expr generate-expr expr local-env global-env)))
   (fn degenerate' degenerate')
   (fn generating' generating')
   (fn generated'

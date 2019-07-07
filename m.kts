@@ -67,27 +67,34 @@ fun mJvmCompile(input: String, output: String) {
 
 fun help() {
     println("""
-        m.kts help  -- Displays this help message
-        m.kts clean -- Cleans the M compiler
-        m.kts build -- Builds the M compiler
+        m.kts help       -- Displays this help message
+        m.kts build      -- Builds the M compiler
+        m.kts build-full -- Builds the M compiler with itself
+          m.kts build-backend      -- Builds the M backend
+          m.kts build-host-backend -- Builds the M compiler host with the backend compiler
+          m.kts build-host         -- Builds the M compiler host
+          m.kts build-self         -- Builds the M compiler
+          m.kts build-host-src     -- Builds the M compiler host's source
+        m.kts clean      -- Cleans the M compiler
     """.trimIndent())
 }
 
 fun build() {
     buildBackend()
     buildHostBackend()
-    buildHostSelf()
+    buildHost()
     buildSelf()
 }
 
 fun buildFull() {
+    clean()
     buildBackend()
     buildHostBackend()
-    buildHostSelf()
-    buildHostSelf()
-    buildSelf()
-    buildSelf()
     buildHost()
+    buildHost()
+    buildSelf()
+    buildSelf()
+    buildHostSrc()
 }
 
 fun buildBackend() {
@@ -105,7 +112,7 @@ fun buildHostBackend() {
     mJvmCompile("m.m", bin.path)
 }
 
-fun buildHostSelf() {
+fun buildHost() {
     mCompile("jvm", "m.m", bin.path)
 }
 
@@ -113,7 +120,7 @@ fun buildSelf() {
     mCompile("jvm", "src", bin.path)
 }
 
-fun buildHost() {
+fun buildHostSrc() {
     mCompile("m", "src", "m.m")
 }
 
@@ -135,9 +142,9 @@ when (args[0]) {
     "build-full" -> buildFull()
     "build-backend" -> buildBackend()
     "build-host-backend" -> buildHostBackend()
-    "build-host-self" -> buildHostSelf()
-    "build-self" -> buildSelf()
     "build-host" -> buildHost()
+    "build-self" -> buildSelf()
+    "build-host-src" -> buildHostSrc()
     "clean" -> clean()
     else -> m()
 }

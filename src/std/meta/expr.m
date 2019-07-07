@@ -1,45 +1,55 @@
 ;; An expression representing an M symbol.
 (def symbol-expr
   (fn name path start end
-    (pair true (cons name (cons path (cons start (cons end nil)))))))
-
-(def symbol-expr? first)
-(def symbol-expr.name (compose car second))
-(def symbol-expr.path (compose cadr second))
-(def symbol-expr.start (compose caddr second))
-(def symbol-expr.end (compose cadddr second))
+    (fn f _
+      (f name path start end))))
 
 ;; An expression representing an M list.
 (def list-expr
   (fn exprs path start end
-    (pair false (cons exprs (cons path (cons start (cons end nil)))))))
+    (fn _ f
+      (f exprs path start end))))
 
-(def list-expr? (compose not first))
-(def list-expr.exprs (compose car second))
-(def list-expr.path (compose cadr second))
-(def list-expr.start (compose caddr second))
-(def list-expr.end (compose cadddr second))
+(defn symbol-expr? expr
+  (expr
+    (fn _ _ _ _ true)
+    (fn _ _ _ _ false)))
+
+(defn list-expr? expr
+  (expr
+    (fn _ _ _ _ false)
+    (fn _ _ _ _ true)))
+
+(defn symbol-expr.name expr
+  (expr
+    (fn name _ _ _ name)
+    (fn _ _ _ _ (error (symbol "Could not cast expr to symbol-expr")))))
+
+(defn list-expr.exprs expr
+  (expr
+    (fn _ _ _ _ (error (symbol "Could not cast expr to list-expr")))
+    (fn exprs _ _ _ exprs)))
 
 (defn expr.path expr
-  (if (list-expr? expr)
-    (list-expr.path expr)
-    (symbol-expr.path expr)))
+  (expr
+    (fn _ path _ _ path)
+    (fn _ path _ _ path)))
 
 (defn expr.start expr
-  (if (list-expr? expr)
-    (list-expr.start expr)
-    (symbol-expr.start expr)))
+  (expr
+    (fn _ _ start _ start)
+    (fn _ _ start _ start)))
 
 (defn expr.end expr
-  (if (list-expr? expr)
-    (list-expr.end expr)
-    (symbol-expr.end expr)))
+  (expr
+    (fn _ _ _ end end)
+    (fn _ _ _ end end)))
 
 ;; Changes the path of an expr.
-(defn expr.with-path path expr
-  (if (symbol-expr? expr)
-    (symbol-expr (symbol-expr.name expr) path (symbol-expr.start expr) (symbol-expr.end expr))
-    (list-expr (map (list-expr.exprs expr) (expr.with-path path)) path (list-expr.start expr) (list-expr.end expr))))
+(defnrec expr.with-path path expr
+  (expr
+    (fn name _ start end (symbol-expr name path start end))
+    (fn exprs _ start end (list-expr (map exprs (expr.with-path path)) path start end))))
 
 (def expr/symbol
   (fn name
