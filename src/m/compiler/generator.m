@@ -252,27 +252,28 @@
     apply-operation))
 
 ;; Generates an expression which may be a macro.
-(defnrec generate-macro?-expr generate-expr expr fn args local-env global-env
+(defnrec generate-macro?-expr generate-expr fn args local-env global-env
   (let name (symbol-expr.name fn)
        option (env.get local-env global-env name)
     (if (null? option)
       (generating (list name) global-env
         (fn global-env
-          (generate-macro?-expr expr fn args local-env global-env)))
+          (generate-macro?-expr generate-expr fn args local-env global-env)))
       (let variable (unnull option)
         (if (& (global-variable? variable) (global-variable.macro? variable))
-          (generate-macro-apply-expr generate-expr expr name args local-env global-env)
+          (generate-macro-apply-expr generate-expr fn args local-env global-env)
           (generate-apply-expr generate-expr fn args local-env global-env))))))
 
 ;; Generates a macro application expression.
-(defnrec generate-macro-apply-expr generate-expr expr name args local-env global-env
-  (let function (heap.get (global-env.heap global-env) name)
+(defnrec generate-macro-apply-expr generate-expr fn args local-env global-env
+  (let name (symbol-expr.name fn)
+       function (heap.get (global-env.heap global-env) name)
        env (global-env->env global-env)
        result (function env args)
     (result/match result
       (fn new-expr
         (generate-expr
-          (expr.with-path (expr.path expr) new-expr)
+          (expr.with-path (expr.path fn) new-expr)
           local-env
           global-env))
       (fn errors
@@ -280,40 +281,36 @@
       (fn dependencies
         (generating dependencies global-env
           (fn global-env
-            (generate-macro-apply-expr generate-expr expr name args local-env global-env)))))))
+            (generate-macro-apply-expr generate-expr fn args local-env global-env)))))))
 
 ;; Generates a list expression.
-(defn generate-list-expr generate-expr expr local-env global-env
-  (let exprs (list-expr.exprs expr)
-    (if (nil? exprs)
-      (degenerate (list (symbol "List of expressions is empty")) global-env)
-      (if (symbol-expr? (car exprs))
-        (let name (symbol-expr.name (car exprs))
-          (pcond (compose (list.= char.= name) symbol->list)
-            (symbol fn)
-              (generate-fn-expr generate-expr
-                (map (init (cdr exprs)) symbol-expr.name)
-                (last exprs)
-                local-env global-env)
-            (symbol def)
-              (generate-def-expr generate-expr
-                (symbol-expr.name (cadr exprs))
-                (caddr exprs)
-                local-env global-env)
-            (symbol macro)
-              (generate-macro-expr generate-expr
-                (symbol-expr.name (cadr exprs))
-                (caddr exprs)
-                local-env global-env)
-            (symbol symbol)
-              (generate-symbol-literal-expr
-                (symbol-expr.name (cadr exprs))
-                local-env global-env)
-            (generate-macro?-expr generate-expr
-              expr
-              (car exprs)
-              (cdr exprs)
-              local-env global-env)))
+(defn generate-list-expr generate-expr exprs local-env global-env
+  (if (nil? exprs)
+    (degenerate (list (symbol "List of expressions is empty.")) global-env)
+    ((car exprs)
+      (fn name path start end
+        (pcond (list.= char.= name)
+          (symbol fn)
+            (generate-fn-expr generate-expr
+              (map (init (cdr exprs)) symbol-expr.name)
+              (last exprs)
+              local-env global-env)
+          (symbol def)
+            (generate-def-expr generate-expr
+              (symbol-expr.name (cadr exprs))
+              (caddr exprs)
+              local-env global-env)
+          (symbol macro)
+            (generate-macro-expr generate-expr
+              (symbol-expr.name (cadr exprs))
+              (caddr exprs)
+              local-env global-env)
+          (symbol symbol)
+            (generate-symbol-literal-expr
+              (symbol-expr.name (cadr exprs))
+              local-env global-env)
+          (generate-macro?-expr generate-expr (car exprs) (cdr exprs) local-env global-env)))
+      (fn _ _ _ _
         (generate-apply-expr generate-expr
           (car exprs)
           (cdr exprs)
@@ -324,7 +321,7 @@
   (generate-result.match
     (expr
       (fn name _ _ _ (generate-symbol-expr name local-env global-env))
-      (fn _ _ _ _ (generate-list-expr generate-expr expr local-env global-env)))
+      (fn exprs _ _ _ (generate-list-expr generate-expr exprs local-env global-env)))
   (fn degenerate' degenerate')
   (fn generating' generating')
   (fn generated'
