@@ -8,7 +8,6 @@
     (pcond (symbol.= type)
       (symbol local-variable-operation) interpret-local-variable-operation
       (symbol global-variable-operation) interpret-global-variable-operation
-      (symbol if-operation) interpret-if-operation
       (symbol def-operation) interpret-def-operation
       (symbol fn-operation) interpret-fn-operation
       (symbol symbol-operation) interpret-symbol-operation
@@ -24,12 +23,6 @@
 ;; Interprets a global variable operation.
 (defn interpret-global-variable-operation interpret-operation' operation stack heap
   (heap.get heap (global-variable-operation.name operation)))
-
-;; Interprets an if operation.
-(defn interpret-if-operation interpret-operation' operation stack heap
-  (if (interpret-operation' (if-operation.cond operation) stack heap)
-    (interpret-operation' (if-operation.true operation) stack heap)
-    (interpret-operation' (if-operation.false operation) stack heap)))
 
 ;; Interprets a def operation.
 (defn interpret-def-operation interpret-operation' operation stack heap

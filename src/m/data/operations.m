@@ -14,15 +14,6 @@
 (def global-variable-operation.name (field (symbol global-variable-operation) (symbol name)))
 (def global-variable-operation.path (field (symbol global-variable-operation) (symbol path)))
 
-;; An if operation.
-(def if-operation
-  (new-data (symbol if-operation)
-    (list (symbol cond) (symbol true) (symbol false))))
-
-(def if-operation.cond (field (symbol if-operation) (symbol cond)))
-(def if-operation.true (field (symbol if-operation) (symbol true)))
-(def if-operation.false (field (symbol if-operation) (symbol false)))
-
 ;; A def operation.
 (def def-operation
   (new-data (symbol def-operation)
@@ -76,12 +67,6 @@
       (pcond (symbol.= type)
         (symbol local-variable-operation) acc
         (symbol global-variable-operation) acc
-        (symbol if-operation)
-          (operation.fold (if-operation.false operation)
-            (operation.fold (if-operation.true operation)
-              (operation.fold (if-operation.cond operation) acc f)
-              f)
-            f)
         (symbol def-operation) (operation.fold (def-operation.value operation) acc f)
         (symbol fn-operation) (operation.fold (fn-operation.value operation) acc f)
         (symbol symbol-operation) acc
