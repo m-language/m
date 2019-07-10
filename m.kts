@@ -121,7 +121,7 @@ fun clean() {
 }
 
 fun test() {
-    build()
+    buildFull()
     File("test").listFiles().filter { it.name.endsWith(".m") }.forEach { file ->
         val name = file.nameWithoutExtension
         val expect = File("test/$name.txt")
