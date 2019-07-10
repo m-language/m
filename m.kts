@@ -15,25 +15,16 @@ fun tryOrExit(fn: () -> Unit) {
     }
 }
 
-fun exec(string: String, file: File = File(".")) {
-    val exec = ProcessBuilder(string.split(' ').toList())
-            .redirectErrorStream(true)
-            .inheritIO().directory(file.absoluteFile).start()
+fun exec(string: String, apply: (ProcessBuilder) -> ProcessBuilder) {
+    val exec = apply(ProcessBuilder(string.split(' ').toList()).redirectErrorStream(true)).start()
     val code = exec.waitFor()
     if (code != 0) exit("Command $string failed with exit code $code")
 }
 
-fun execM(args: String, string: String = "", file: File = File(".")) {
-    val exec = ProcessBuilder("java -classpath ${bin.absolutePath}${File.pathSeparator}${mJvmJar.absolutePath} -Xss1g m $args".split(' ').toList())
-            .redirectError(ProcessBuilder.Redirect.INHERIT)
-            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-            .directory(file.absoluteFile).start()
-    if (string != "") {
-        exec.outputStream.write("$string\n\n".toByteArray())
-        exec.outputStream.flush()
+fun execM(args: String, apply: (ProcessBuilder) -> ProcessBuilder) {
+    exec("java -classpath ${bin.absolutePath}${File.pathSeparator}${mJvmJar.absolutePath} -Xss1g m $args") {
+        apply(it.redirectError(ProcessBuilder.Redirect.INHERIT).redirectOutput(ProcessBuilder.Redirect.INHERIT))
     }
-    val code = exec.waitFor()
-    if (code != 0) exit("Command $string failed with exit code $code")
 }
 
 tailrec fun ask(message: String, yes: () -> Unit) {
@@ -55,14 +46,14 @@ val mStdlib = File("../m-stdlib")
 val mJvm = File("../m-jvm")
 val mJvmJar = File(mJvm, "build/libs/m-jvm-0.1.0.jar")
 
-fun mCompile(backend: String, input: String, output: String) {
+fun mCompile(backend: String, input: String, output: String, apply: (ProcessBuilder) -> ProcessBuilder) {
     println("Compiling $input to $backend")
-    execM("compile $backend $input $output")
+    execM("compile $backend $input $output", apply)
 }
 
 fun mJvmCompile(input: String, output: String) {
     println("Compiling $input with m-jvm")
-    exec("java -classpath $mJvmJar -Xss4m io.github.m.Compiler $input $output")
+    exec("java -classpath $mJvmJar -Xss4m io.github.m.Compiler $input $output") { it.inheritIO() }
 }
 
 fun help() {
@@ -101,11 +92,11 @@ fun buildBackend() {
     if (!mJvm.exists()) {
         val mJvmGit = "https://github.com/m-language/m-jvm.git"
         ask("$mJvm does not exist, would you like to clone it from $mJvmGit?") {
-            exec("git clone $mJvmGit", File(".."))
+            exec("git clone $mJvmGit") { it.directory(File("..")).inheritIO() }
         }
     }
 
-    exec("gradle fatJar", mJvm)
+    exec("gradle fatJar") { it.directory(mJvm).inheritIO() }
 }
 
 fun buildHostBackend() {
@@ -113,20 +104,49 @@ fun buildHostBackend() {
 }
 
 fun buildHost() {
-    mCompile("jvm", "m.m", bin.path)
+    mCompile("jvm", "m.m", bin.path) { it }
 }
 
 fun buildSelf() {
-    mCompile("jvm", "src", bin.path)
+    mCompile("jvm", "src", bin.path) { it }
 }
 
 fun buildHostSrc() {
-    mCompile("m", "src", "m.m")
+    mCompile("m", "src", "m.m") { it }
 }
 
 fun clean() {
     println("Removing bin")
     bin.deleteRecursively()
+}
+
+fun test() {
+    build()
+    File("test").listFiles().filter { it.name.endsWith(".m") }.forEach { file ->
+        val name = file.nameWithoutExtension
+        val expect = File("test/$name.txt")
+        val expect2 = File("test/_$name.txt")
+        if (!expect.exists()) {
+            mCompile("jvm", "test/$name.m", bin.path) { it.redirectOutput(expect) }
+        } else {
+            mCompile("jvm", "test/$name.m", bin.path) { it.redirectOutput(expect2) }
+            val t1 = expect.readText().trim()
+            val t2 = expect2.readText().trim()
+            if (t1 != t2) {
+                println("""
+                    Error: expected
+                    ```
+                    $t1
+                    ```
+                    found
+                    ```
+                    $t2
+                    ```
+                """.trimIndent())
+            }
+            expect2.delete()
+        }
+    }
 }
 
 fun m() {
@@ -146,5 +166,6 @@ when (args[0]) {
     "build-self" -> buildSelf()
     "build-host-src" -> buildHostSrc()
     "clean" -> clean()
+    "test" -> test()
     else -> m()
 }

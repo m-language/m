@@ -21,6 +21,6 @@
 ;; Writes a generate result.
 (defn write-result backend result out
   (generate-result.match result
-  (fn degenerate' (impure (error (car (degenerate.errors degenerate')))))
+  (fn degenerate' (ostream.writeln stderr (concat (symbol "Error: ") (car (degenerate.errors degenerate')))))
   (fn generating' (impure (error (flat-map (generating.dependencies generating') ((swap append) space)))))
   (fn generated' (backend out (generated.operation generated') (generated.declarations generated')))))
