@@ -23,3 +23,10 @@
 
 ;; Matches a macro expression.
 (def match-macro-expr match-def-expr)
+
+;; Matches a symbol literal expression.
+(defn match-symbol-literal-expr exprs no-symbol invalid-symbol success
+  (if (nil? exprs) no-symbol
+    ((car exprs)
+      (fn name _ _ _ (success name))
+      (fn _ _ _ _ (invalid-symbol (car exprs))))))

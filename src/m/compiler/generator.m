@@ -309,9 +309,10 @@
               (fn name (degenerate (list (symbol "Macro name is not a symbol.")) global-env))
               (fn name expr (generate-macro-expr generate-expr name expr local-env global-env)))
           (symbol symbol)
-            (generate-symbol-literal-expr
-              (symbol-expr.name (cadr exprs))
-              local-env global-env)
+            (match-symbol-literal-expr (cdr exprs)
+              (degenerate (list (symbol "Symbol literal has no symbol.")) global-env)
+              (fn name (degenerate (list (symbol "Symbol literal is not a symbol.")) global-env))
+              (fn name (generate-symbol-literal-expr name local-env global-env)))
           (generate-macro?-expr generate-expr (car exprs) (cdr exprs) local-env global-env)))
       (fn _ _ _ _
         (generate-apply-expr generate-expr

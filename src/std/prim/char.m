@@ -28,10 +28,10 @@
 (def quote (car (symbol """")))
 
 ;; The literal character "/".
-(def slash (car (symbol /)))
+(def slash (car (symbol "/")))
 
 ;; The literal character "\".
-(def backslash (car (symbol \)))
+(def backslash (car (symbol "\")))
 
 ;; The literal character "\s".
 (def space (car (symbol " ")))
