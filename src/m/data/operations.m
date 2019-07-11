@@ -57,6 +57,9 @@
 (def line-number-operation.operation (field (symbol line-number-operation) (symbol operation)))
 (def line-number-operation.line (field (symbol line-number-operation) (symbol line)))
 
+;; The nil operation.
+(def nil-operation (symbol-operation nil))
+
 ;; Folds over an operation.
 (defnrec operation.fold operation acc f
   (f
@@ -72,5 +75,6 @@
             (operation.fold (apply-operation.fn operation) acc f)
             f)
         (symbol line-number-operation) (operation.fold (line-number-operation.operation operation) acc f)
+        (symbol nil-operation) acc
         (error (symbol "..."))))
     operation))

@@ -14,19 +14,21 @@
         (invalid-arg (car exprs))))))
 
 ;; Matches a def expression.
-(defn match-def-expr exprs no-name no-expr invalid-name success
+(defn match-def-expr exprs no-name no-expr extra-exprs invalid-name  success
   (if (nil? exprs) no-name
   (if (nil? (cdr exprs)) no-expr
+  (if (not (nil? (cddr exprs))) extra-exprs
     ((car exprs)
       (fn name _ _ _ (success name (cadr exprs)))
-      (fn _ _ _ _ (invalid-name (car exprs)))))))
+      (fn _ _ _ _ (invalid-name (car exprs))))))))
 
 ;; Matches a macro expression.
 (def match-macro-expr match-def-expr)
 
 ;; Matches a symbol literal expression.
-(defn match-symbol-literal-expr exprs no-symbol invalid-symbol success
+(defn match-symbol-literal-expr exprs no-symbol extra-exprs invalid-symbol success
   (if (nil? exprs) no-symbol
+  (if (not (nil? (cdr exprs))) extra-exprs
     ((car exprs)
       (fn name _ _ _ (success name))
-      (fn _ _ _ _ (invalid-symbol (car exprs))))))
+      (fn _ _ _ _ (invalid-symbol (car exprs)))))))
