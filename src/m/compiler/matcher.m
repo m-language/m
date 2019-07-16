@@ -7,18 +7,18 @@
 (defn match-fn-expr' exprs names invalid-arg success
   (if (nil? (cdr exprs))
     (success (reverse names) (car exprs))
-    ((car exprs)
+    (expr.match (car exprs)
       (fn name _ _ _
         (match-fn-expr' (cdr exprs) (cons name names) invalid-arg success))
       (fn _ _ _ _
         (invalid-arg (car exprs))))))
 
 ;; Matches a def expression.
-(defn match-def-expr exprs no-name no-expr extra-exprs invalid-name  success
+(defn match-def-expr exprs no-name no-expr extra-exprs invalid-name success
   (if (nil? exprs) no-name
   (if (nil? (cdr exprs)) no-expr
   (if (not (nil? (cddr exprs))) extra-exprs
-    ((car exprs)
+    (expr.match (car exprs)
       (fn name _ _ _ (success name (cadr exprs)))
       (fn _ _ _ _ (invalid-name (car exprs))))))))
 
@@ -29,6 +29,6 @@
 (defn match-symbol-literal-expr exprs no-symbol extra-exprs invalid-symbol success
   (if (nil? exprs) no-symbol
   (if (not (nil? (cdr exprs))) extra-exprs
-    ((car exprs)
+    (expr.match (car exprs)
       (fn name _ _ _ (success name))
       (fn _ _ _ _ (invalid-symbol (car exprs)))))))

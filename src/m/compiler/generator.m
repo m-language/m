@@ -6,7 +6,7 @@
   (closures' local-env (empty-tree-map compare-symbol)))
 
 (defnrec closures' local-env acc expr
-  (expr
+  (expr.match expr
     (fn name _ _ _
       (if (null? (tree-map.get (local-env.locals local-env) name))
         acc
@@ -177,7 +177,7 @@
 (defn generate-list-expr generate-expr exprs local-env global-env
   (if (nil? exprs)
     (degenerate (list (symbol "List of expressions is empty.")) global-env)
-    ((car exprs)
+    (expr.match (car exprs)
       (fn name path start end
         (pcond (list.= char.= name)
           (symbol fn)
@@ -216,7 +216,7 @@
 ;; Generates an expression.
 (defnrec generate-expr expr local-env global-env
   (generate-result.match
-    (expr
+    (expr.match expr
       (fn name _ _ _ (generate-symbol-expr name local-env global-env))
       (fn exprs _ _ _ (generate-list-expr generate-expr exprs local-env global-env)))
   (fn degenerate' degenerate')
