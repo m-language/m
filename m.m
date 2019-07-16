@@ -85,8 +85,6 @@
 (def env/get-value (fn env (fn name (first (first ((env/get env) name))))))
 (def env/get-def (fn env (fn name (second (first ((env/get env) name))))))
 (def env/get-macro? (fn env (fn name (second ((env/get env) name)))))
-(def symbol-expr? (fn expr ((expr (fn _ (fn _ (fn _ (fn _ true))))) (fn _ (fn _ (fn _ (fn _ false)))))))
-(def list-expr? (fn expr ((expr (fn _ (fn _ (fn _ (fn _ false))))) (fn _ (fn _ (fn _ (fn _ true)))))))
 (def expr.path (fn expr ((expr (fn _ (fn path (fn _ (fn _ path))))) (fn _ (fn path (fn _ (fn _ path)))))))
 (def expr.start (fn expr ((expr (fn _ (fn _ (fn start (fn _ start))))) (fn _ (fn _ (fn start (fn _ start)))))))
 (def expr.end (fn expr ((expr (fn _ (fn _ (fn _ (fn end end))))) (fn _ (fn _ (fn _ (fn end end)))))))

@@ -10,16 +10,6 @@
     (fn _ f
       (f exprs path start end))))
 
-(defn symbol-expr? expr
-  (expr
-    (fn _ _ _ _ true)
-    (fn _ _ _ _ false)))
-
-(defn list-expr? expr
-  (expr
-    (fn _ _ _ _ false)
-    (fn _ _ _ _ true)))
-
 (defn expr.path expr
   (expr
     (fn _ path _ _ path)
