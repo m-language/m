@@ -20,16 +20,6 @@
     (fn _ _ _ _ false)
     (fn _ _ _ _ true)))
 
-(defn symbol-expr.name expr
-  (expr
-    (fn name _ _ _ name)
-    (fn _ _ _ _ (error (symbol "Could not cast expr to symbol-expr")))))
-
-(defn list-expr.exprs expr
-  (expr
-    (fn _ _ _ _ (error (symbol "Could not cast expr to list-expr")))
-    (fn exprs _ _ _ exprs)))
-
 (defn expr.path expr
   (expr
     (fn _ path _ _ path)

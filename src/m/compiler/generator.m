@@ -144,22 +144,20 @@
     apply-operation))
 
 ;; Generates an expression which may be a macro.
-(defnrec generate-macro?-expr generate-expr fn args local-env global-env
-  (let name (symbol-expr.name fn)
-       option (env.get local-env global-env name)
+(defnrec generate-macro?-expr generate-expr name fn args local-env global-env
+  (let option (env.get local-env global-env name)
     (if (null? option)
       (generating (list name) global-env
         (fn global-env
           (generate-macro?-expr generate-expr fn args local-env global-env)))
       (let variable (unnull option)
         (if (& (global-variable? variable) (global-variable.macro? variable))
-          (generate-macro-apply-expr generate-expr fn args local-env global-env)
+          (generate-macro-apply-expr generate-expr name fn args local-env global-env)
           (generate-apply-expr generate-expr fn args local-env global-env))))))
 
 ;; Generates a macro application expression.
-(defnrec generate-macro-apply-expr generate-expr fn args local-env global-env
-  (let name (symbol-expr.name fn)
-       function (heap.get (global-env.heap global-env) name)
+(defnrec generate-macro-apply-expr generate-expr name fn args local-env global-env
+  (let function (heap.get (global-env.heap global-env) name)
        env (global-env->env global-env)
        result (function env args)
     (result/match result
@@ -208,7 +206,7 @@
               (degenerate (list (symbol "Symbol literal has extra expressions.")) global-env)
               (fn name (degenerate (list (symbol "Symbol literal is not a symbol.")) global-env))
               (fn name (generate-symbol-literal-expr name local-env global-env)))
-          (generate-macro?-expr generate-expr (car exprs) (cdr exprs) local-env global-env)))
+          (generate-macro?-expr generate-expr name (car exprs) (cdr exprs) local-env global-env)))
       (fn _ _ _ _
         (generate-apply-expr generate-expr
           (car exprs)
