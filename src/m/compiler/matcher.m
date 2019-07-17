@@ -32,3 +32,7 @@
     (expr.match (car exprs)
       (fn name _ _ _ (success name))
       (fn _ _ _ _ (invalid-symbol (car exprs)))))))
+
+;; Matches an applicaion expression.
+(defn match-apply-expr exprs no-args success
+  (if (nil? (cdr exprs)) no-args success))

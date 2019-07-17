@@ -47,7 +47,7 @@
             (cons (expr/symbol (symbol cons))
             (cons (car exprs)
             (cons (expr/list (cons (expr/symbol (symbol list)) (cdr exprs)))
-              nil))))) nil)))))
+              nil)))))) nil))))
 
 ;; The initial elements of a list.
 (defnrec init list

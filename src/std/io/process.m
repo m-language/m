@@ -25,7 +25,7 @@
 ;; Macro for running processes.
 (macrofn do env exprs
   (result/success
-    (if (nil? (cdr exprs)) (expr/list exprs)
+    (if (nil? (cdr exprs)) (car exprs)
       (apply-vararg expr/list
         (expr/symbol (symbol then-run-with))
         (cadr exprs)

@@ -208,10 +208,9 @@
               (fn name (generate-symbol-literal-expr name local-env global-env)))
           (generate-macro?-expr generate-expr name (car exprs) (cdr exprs) local-env global-env)))
       (fn _ _ _ _
-        (generate-apply-expr generate-expr
-          (car exprs)
-          (cdr exprs)
-          local-env global-env)))))
+        (match-apply-expr exprs
+          (degenerate (list (symbol "Application has no arguments.")) global-env)
+          (generate-apply-expr generate-expr (car exprs) (cdr exprs) local-env global-env))))))
 
 ;; Generates an expression.
 (defnrec generate-expr expr local-env global-env

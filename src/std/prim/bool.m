@@ -83,7 +83,8 @@
 (macrofn pcond env exprs
   (if (nil? exprs)
     (result/error (symbol "No exprs passed to pcond"))
-    (let predicate (car exprs) vals (cdr exprs)
+    (let predicate (car exprs)
+         vals (cdr exprs)
       (cond
         (nil? vals) (result/error (symbol "No values after predicate for pcond"))
         ; Base case, we only have the else-case
