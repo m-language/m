@@ -23,4 +23,8 @@
   (generate-result.match result
   (fn degenerate' (ostream.writeln stderr (concat (symbol "Error: ") (car (degenerate.errors degenerate')))))
   (fn generating' (impure (error (flat-map (generating.dependencies generating') ((swap append) space)))))
-  (fn generated' (backend out (generated.operation generated') (generated.declarations generated')))))
+  (fn generated'
+    (let unresolved (global-env.unresolved (generated.global-env generated'))
+      (if (nil? unresolved)
+        (backend out (generated.operation generated') (generated.declarations generated'))
+        (ostream.writeln stderr (concat (symbol "Error: ") (concat (car unresolved) (symbol " is not defined")))))))))

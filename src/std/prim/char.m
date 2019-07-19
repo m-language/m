@@ -22,7 +22,7 @@
 (def semicolon (car (symbol ";")))
 
 ;; The literal character ".".
-(def dot (car (symbol .)))
+(def dot (car (symbol ".")))
 
 ;; The literal character """.
 (def quote (car (symbol """")))
