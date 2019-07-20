@@ -85,7 +85,7 @@ fun clean() {
     mpmRoot.listFiles().forEach { it.deleteRecursively() }
 
     println("Cleaning m-jvm")
-    exec("gradle clean", mJvm)
+    exec("gradle clean --no-daemon", mJvm)
 }
 
 fun build() {
@@ -97,7 +97,7 @@ fun build() {
     }
 
     println("Building m-jvm jar")
-    exec("gradle fatJar", mJvm)
+    exec("gradle fatJar --no-daemon", mJvm)
 
     mJvmCompile("m.m", bin.path)
     
