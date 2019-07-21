@@ -96,7 +96,7 @@ fun buildBackend() {
         }
     }
 
-    exec("gradle fatJar") { it.directory(mJvm).inheritIO() }
+    exec("gradle fatJar --no-daemon") { it.directory(mJvm).inheritIO() }
 }
 
 fun buildHostBackend() {
@@ -116,6 +116,7 @@ fun buildHostSrc() {
 }
 
 fun clean() {
+    exec("gradle clean --no-daemon") { it.directory(mJvm).inheritIO() }
     println("Removing bin")
     bin.deleteRecursively()
 }
