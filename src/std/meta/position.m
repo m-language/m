@@ -1,4 +1,4 @@
-;; A position in a file.
+;; A position in text.
 (def position pair)
 
 (def position.line first)

@@ -73,14 +73,14 @@
       open-parentheses
         (parse-list parse-expr path (cdr input) (next-char position)
           (fn exprs path input position'
-            (continue (list-expr exprs path position position') path input position')))
+            (continue (list-expr exprs (location path (span position position'))) path input position')))
       quote
         (parse-symbol-literal path (cdr input) (next-char position)
           (fn chars path input position'
-            (continue (symbol-expr chars path position position') path input position')))
+            (continue (symbol-expr chars (location path (span position position'))) path input position')))
       (parse-symbol path input position
         (fn chars path input position'
-          (continue (symbol-expr chars path position position') path input position'))))))
+          (continue (symbol-expr chars (location path (span position position'))) path input position'))))))
 
 ;; Parses an M program.
 (defnrec parse path input position

@@ -7,11 +7,11 @@
 
 (defnrec closures' local-env acc expr
   (expr.match expr
-    (fn name _ _ _
+    (fn name _
       (if (null? (tree-map.get (local-env.locals local-env) name))
         acc
         (tree-map.put acc name true)))
-    (fn exprs _ _ _
+    (fn exprs _
       (fold exprs acc (closures' local-env)))))
 
 ;; Generates a global expression.
@@ -78,12 +78,10 @@
     (let new-value
       (list-expr
         (list
-          (symbol-expr (symbol fn) (expr.path value) (expr.start value) (expr.end value))
-          (symbol-expr (last names) (expr.path value) (expr.start value) (expr.end value))
+          (symbol-expr (symbol fn) (location (expr.path value) (span (expr.start value) (expr.end value))))
+          (symbol-expr (last names) (location (expr.path value) (span (expr.start value) (expr.end value))))
           value)
-        (expr.path value)
-        (expr.start value)
-        (expr.end value))
+        (location (expr.path value) (span (expr.start value) (expr.end value))))
       (generate-fn-expr generate-expr (init names) new-value local-env global-env))))
 
 (defnrec generate-fn-expr' generate-expr name value local-env global-env
@@ -178,7 +176,7 @@
   (if (nil? exprs)
     (degenerate (list (symbol "List of expressions is empty.")) global-env)
     (expr.match (car exprs)
-      (fn name path start end
+      (fn name _
         (pcond (list.= char.= name)
           (symbol fn)
             (match-fn-expr (cdr exprs)
@@ -207,7 +205,7 @@
               (fn name (degenerate (list (symbol "Symbol literal is not a symbol.")) global-env))
               (fn name (generate-symbol-literal-expr name local-env global-env)))
           (generate-macro?-expr generate-expr name (car exprs) (cdr exprs) local-env global-env)))
-      (fn _ _ _ _
+      (fn _ _
         (match-apply-expr exprs
           (degenerate (list (symbol "Application has no arguments.")) global-env)
           (generate-apply-expr generate-expr (car exprs) (cdr exprs) local-env global-env))))))
@@ -216,8 +214,8 @@
 (defnrec generate-expr expr local-env global-env
   (generate-result.match
     (expr.match expr
-      (fn name _ _ _ (generate-symbol-expr name local-env global-env))
-      (fn exprs _ _ _ (generate-list-expr generate-expr exprs local-env global-env)))
+      (fn name _ (generate-symbol-expr name local-env global-env))
+      (fn exprs _ (generate-list-expr generate-expr exprs local-env global-env)))
   (fn degenerate' degenerate')
   (fn generating' generating')
   (fn generated'

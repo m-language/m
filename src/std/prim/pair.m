@@ -10,8 +10,8 @@
 ;; Creates a pair of two values.
 (def pair
   (fn first second
-    (fn bool
-      (bool first second))))
+    (fn f
+      (f first second))))
 
 ;; The first value of a pair.
 (def first
