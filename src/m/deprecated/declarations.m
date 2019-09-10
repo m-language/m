@@ -30,3 +30,16 @@
   (if (def-declaration? declaration)
     (def-declaration.value declaration)
     (fn-declaration.value declaration)))
+
+(defnrec declarations->trees declarations
+  (if (nil? declarations) nil
+    (let declaration (car declarations)
+         type (type-name declaration)
+      (pcond (symbol.= type)
+        (symbol def-declaration)
+          (cons
+            (tree/def (def-declaration.name declaration) (operation->tree (def-declaration.value declaration)))
+            (declarations->trees (cdr declarations)))
+        (symbol fn-declaration)
+          (declarations->trees (cdr declarations))
+        (error (symbol "..."))))))

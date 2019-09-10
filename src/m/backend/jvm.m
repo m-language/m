@@ -1,2 +1,2 @@
-;; The jvm backend for M.
 (extern jvm-backend)
+(extern jvm-backend')
