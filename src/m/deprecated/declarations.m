@@ -43,3 +43,6 @@
         (symbol fn-declaration)
           (declarations->trees (cdr declarations))
         (error (symbol "..."))))))
+
+(defn def-declaration->tree declaration
+  (tree/def (def-declaration.name declaration) (operation->tree (def-declaration.value declaration))))

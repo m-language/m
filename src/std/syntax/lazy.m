@@ -6,7 +6,7 @@
     (result/success
       (expr/list
         (cons (expr/symbol (symbol fn))
-        (cons (expr/symbol (symbol _))
+        (cons (expr/symbol (symbol ""))
           exprs))))))
 
 ;; Macro which forces the delayed evaluation of an expression.

@@ -66,6 +66,7 @@ fun help() {
           m.kts build-host         -- Builds the M compiler host
           m.kts build-self         -- Builds the M compiler
           m.kts build-host-src     -- Builds the M compiler host's source
+        m.kts test       -- Tests the M compiler
         m.kts clean      -- Cleans the M compiler
     """.trimIndent())
 }
@@ -75,6 +76,7 @@ fun build() {
     buildHostBackend()
     buildHost()
     buildSelf()
+    buildHostSrc()
 }
 
 fun buildFull() {
@@ -82,8 +84,6 @@ fun buildFull() {
     buildBackend()
     buildHostBackend()
     buildHost()
-    buildHost()
-    buildSelf()
     buildSelf()
     buildHostSrc()
 }

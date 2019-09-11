@@ -49,7 +49,7 @@
 
 ;; The default global M environment.
 (def default-global-env
-  (global-env (empty-tree-map compare-symbol) empty-heap (empty-tree-map compare-symbol) nat.0))
+  (global-env (empty-tree-map compare-symbol) heap/nil (empty-tree-map compare-symbol) nat.0))
 
 ;; The default local M environment.
 (def default-local-env

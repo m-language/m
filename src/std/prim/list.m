@@ -42,7 +42,7 @@
   (fn env exprs
     (result/success
       (((nil? exprs) (const (expr/symbol (symbol nil)))
-        (fn _
+        (fn ""
           (expr/list
             (cons (expr/symbol (symbol cons))
             (cons (car exprs)

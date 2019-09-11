@@ -155,7 +155,7 @@
 
 ;; Generates a macro application expression.
 (defnrec generate-macro-apply-expr generate-expr name fn args local-env global-env
-  (let function (heap.get (global-env.heap global-env) name)
+  (let function (heap/get (global-env.heap global-env) name)
        env (global-env->env global-env)
        result (function env args)
     (result/match result
