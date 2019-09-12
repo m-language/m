@@ -4,7 +4,7 @@
 ;; Puts a value in a heap.
 (defn heap/put heap name value
   (fn x
-    (if (symbol.= (debug x) name) (some value) (heap x))))
+    (if (symbol.= x name) (some value) (heap x))))
 
 ;; Gets a value in a heap.
 (defn heap/get heap name
