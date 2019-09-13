@@ -6,12 +6,17 @@
   (fn x
     (if (symbol.= x name) (some value) (heap x))))
 
+;; Puts a lazy value into a heap.
+(defn heap/put! heap name value!
+  (fn x
+    (if (symbol.= x name) (some (force value!)) (heap x))))
+
 ;; Gets a value in a heap.
 (defn heap/get heap name
   (let value? (heap name)
     (if (null? value?)
       (error (concat (symbol->list (symbol "Could not find ")) name))
-      ((unnull value?) heap))))
+      (unnull value?))))
 
 ;; Concatenates two heaps.
 (defn heap/concat heap heap'
@@ -37,9 +42,10 @@
   heap)
 
 (defn interpret-heap-def interpret-heap tree heap
-  (heap/put (interpret-heap (tree/def.value tree) heap)
-    (tree/def.name tree)
-    (interpret (tree/def.value tree) heap)))
+  (let heap' (interpret-heap (tree/def.value tree) heap)
+    (heap/put! heap'
+      (tree/def.name tree)
+      (delay (interpret (tree/def.value tree) heap')))))
 
 (defn interpret-heap-fn interpret-heap tree heap
   (interpret-heap (tree/fn.value tree) heap))

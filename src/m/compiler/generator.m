@@ -45,7 +45,8 @@
     (def-operation name (expr.path value) (generated.operation generated'))
     (append (generated.declarations generated') declaration)
     ((swap global-env.with-heap) (generated.global-env generated')
-      (interpret-declaration declaration (global-env.heap (generated.global-env generated'))))))
+      (interpret-heap (def-declaration->tree declaration)
+        (global-env.heap (generated.global-env generated'))))))
 
 ;; Generates a def expression.
 (def generate-def-expr (generate-global-expr false))
@@ -111,9 +112,7 @@
                 (generate-symbol-expr'
                   (unnull (env.get local-env (generated.global-env generated') closure))))))
           (append (generated.declarations generated') declaration)
-          ((swap global-env.with-heap) (generated.global-env generated')
-            (interpret-declaration declaration
-              (global-env.heap (generated.global-env generated'))))))))))
+          (generated.global-env generated')))))))
 
 (defn generate-fn-expr-closures closures name local-env
   (second
