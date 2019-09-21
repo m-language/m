@@ -122,10 +122,7 @@
        result (function env args)
     (result/match result
       (fn new-expr
-        (generate-expr
-          (expr.with-path (expr.path fn) new-expr)
-          local-env
-          global-env))
+        (generate-expr (expr.with-path (expr.path fn) new-expr) local-env global-env))
       (fn errors
         (degenerate errors global-env))
       (fn dependencies
@@ -174,18 +171,9 @@
 
 ;; Generates an expression.
 (defnrec generate-expr expr local-env global-env
-  (generate-result.match
-    (expr.match expr
-      (fn name _ (generate-symbol-expr name local-env global-env))
-      (fn exprs _ (generate-list-expr generate-expr exprs local-env global-env)))
-  (fn degenerate' degenerate')
-  (fn generating' generating')
-  (fn generated'
-    (generated
-      (line-number-operation (generated.operation generated')
-        (position.line (expr.start expr)))
-      (generated.declarations generated')
-      (generated.global-env generated')))))
+  (expr.match expr
+    (fn name _ (generate-symbol-expr name local-env global-env))
+    (fn exprs _ (generate-list-expr generate-expr exprs local-env global-env))))
 
 ;; Generates a list of expressions.
 (defn generate-exprs exprs global-env
