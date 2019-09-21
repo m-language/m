@@ -12,6 +12,7 @@
   (pcond (symbol.= name)
     (symbol m) m-backend'
     (symbol jvm) jvm-backend'
+    (symbol js) js-backend'
     (error (concat (symbol "Could not find backend ") name))))
 
 ;; Generates list of expressions.

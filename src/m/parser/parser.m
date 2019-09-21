@@ -35,7 +35,7 @@
     (let head (car input)
       (if (char.= head quote)
         (if (char.= (cadr input) quote)
-          (parse-symbol-literal path (cdr input) (next-char (next-char position))
+          (parse-symbol-literal path (cddr input) (next-char (next-char position))
             (fn chars path input position
               (continue (cons quote chars) path input position)))
           (continue nil path (cdr input) (next-char position)))
