@@ -9,9 +9,8 @@
 ;; The location of a global variable
 (def global-variable
   (new-data (symbol global-variable)
-    (list (symbol name) (symbol path) (symbol macro?))))
+    (list (symbol name) (symbol macro?))))
 
 (def global-variable.name (field (symbol global-variable) (symbol name)))
-(def global-variable.path (field (symbol global-variable) (symbol path)))
 (def global-variable.macro? (field (symbol global-variable) (symbol macro?)))
 (def global-variable? (is? (symbol global-variable)))

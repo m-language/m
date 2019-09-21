@@ -5,7 +5,7 @@
     (let new-global-env
       ((swap global-env.with-globals) global-env
         (tree-map.put (global-env.globals global-env) name
-          (global-variable name (expr.path value) macro?)))
+          (global-variable name macro?)))
       (generate-result.match (generate-expr value (local-env.with-def name local-env) new-global-env)
       (fn degenerate' degenerate')
       (fn generating'
@@ -41,15 +41,10 @@
 (defnrec generate-symbol-expr name local-env global-env
   (let option (env.get local-env global-env name)
     (if (some? option)
-      (generated (generate-symbol-expr' (unnull option)) nil global-env)
+      (generated (tree/val name) nil global-env)
       (generating (list name) global-env
         (fn global-env
           (generate-symbol-expr name local-env global-env))))))
-
-(defn generate-symbol-expr' variable
-  (if (global-variable? variable)
-    (tree/val (global-variable.name variable))
-    (tree/val (local-variable.name variable))))
 
 ;; Generates a fn expression.
 (defnrec generate-fn-expr generate-expr names value local-env global-env
@@ -90,12 +85,7 @@
     (fold args fn-result
       (fn fn-result arg
         (let arg-result (generate-expr arg local-env (generate-result.global-env fn-result))
-          (generate-apply-expr' fn-result arg-result))))))
-
-(defn generate-apply-expr' fn-result arg-result
-  (generate-result.combine fn-result arg-result
-    (generate-result.global-env arg-result)
-    tree/ap))
+          (generate-result.combine fn-result arg-result (generate-result.global-env arg-result) tree/ap))))))
 
 ;; Generates an expression which may be a macro.
 (defnrec generate-macro?-expr generate-expr name fn args local-env global-env
