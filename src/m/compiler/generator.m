@@ -10,27 +10,26 @@
       (fn degenerate' degenerate')
       (fn generating'
         (generating->generated generating'
-          (def-operation name (expr.path value) nil-operation)
+          (tree/def name tree/nil)
           global-env
           (fn global-env
             (generate-global-expr macro? generate-expr name value local-env global-env))))
       (fn generated'
-        (let declaration (def-declaration name (expr.path value) (generated.operation generated'))
+        (let tree (tree/def name (generated.tree generated'))
              generating? (tree-map.get (global-env.dependents (generated.global-env generated')) name)
-             result1 (generate-global-expr' name value declaration generated')
+             result1 (generate-global-expr' name value tree generated')
              result2 ((unnull generating?) (generated.global-env result1))
           (if (null? generating?) result1
             (generated.combine result1 result2
               (generate-result.global-env result2)
               true))))))))
 
-(defn generate-global-expr' name value declaration generated'
+(defn generate-global-expr' name value tree generated'
   (generated
-    (def-operation name (expr.path value) (generated.operation generated'))
-    (append (generated.declarations generated') declaration)
+    (tree/def name (generated.tree generated'))
+    (append (generated.trees generated') tree)
     ((swap global-env.with-heap) (generated.global-env generated')
-      (interpret-heap (def-declaration->tree declaration)
-        (global-env.heap (generated.global-env generated'))))))
+      (interpret-heap tree (global-env.heap (generated.global-env generated'))))))
 
 ;; Generates a def expression.
 (def generate-def-expr (generate-global-expr false))
@@ -49,12 +48,8 @@
 
 (defn generate-symbol-expr' variable
   (if (global-variable? variable)
-    (global-variable-operation
-      (global-variable.name variable)
-      (global-variable.path variable))
-    (local-variable-operation
-      (local-variable.name variable)
-      nat.0)))
+    (tree/val (global-variable.name variable))
+    (tree/val (local-variable.name variable))))
 
 ;; Generates a fn expression.
 (defnrec generate-fn-expr generate-expr names value local-env global-env
@@ -80,15 +75,14 @@
       (fn global-env
         (generate-fn-expr' name value local-env global-env))))
   (fn generated'
-    (let declaration (fn-declaration nil (expr.path value) nil (generated.operation generated'))
-      (generated
-        (fn-operation (expr.path value) nil name (generated.operation generated') nil)
-        (append (generated.declarations generated') declaration)
-        (generated.global-env generated'))))))
+    (generated
+      (tree/fn name (generated.tree generated'))
+      (generated.trees generated')
+      (generated.global-env generated')))))
 
 ;; Generates a symbol literal expression.
 (defn generate-symbol-literal-expr name local-env global-env
-  (generated (symbol-operation name) nil global-env))
+  (generated (tree/symbol name) nil global-env))
 
 ;; Generates an apply expression.
 (defn generate-apply-expr generate-expr fn args local-env global-env
@@ -101,7 +95,7 @@
 (defn generate-apply-expr' fn-result arg-result
   (generate-result.combine fn-result arg-result
     (generate-result.global-env arg-result)
-    apply-operation))
+    tree/ap))
 
 ;; Generates an expression which may be a macro.
 (defnrec generate-macro?-expr generate-expr name fn args local-env global-env
@@ -177,7 +171,7 @@
 
 ;; Generates a list of expressions.
 (defn generate-exprs exprs global-env
-  (generate-exprs' exprs (generated nil-operation nil global-env)))
+  (generate-exprs' exprs (generated tree/nil nil global-env)))
 
 (defnrec generate-exprs' exprs result
   (if (nil? exprs) result
@@ -186,7 +180,7 @@
       (generate-expr (car exprs) default-local-env (generate-result.global-env result))
       (fn degenerate' degenerate')
       (fn generating'
-        (generating->generated generating' nil-operation
+        (generating->generated generating' tree/nil
           (generate-result.global-env result)
           (fn global-env
             (generate-expr (car exprs) default-local-env global-env))))

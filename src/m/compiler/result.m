@@ -11,10 +11,10 @@
 ;; The result of generating an expression without unresolved dependencies.
 (def generated
   (new-data (symbol generated)
-    (list (symbol operation) (symbol declarations) (symbol global-env))))
+    (list (symbol tree) (symbol trees) (symbol global-env))))
 
-(def generated.operation (field (symbol generated) (symbol operation)))
-(def generated.declarations (field (symbol generated) (symbol declarations)))
+(def generated.tree (field (symbol generated) (symbol tree)))
+(def generated.trees (field (symbol generated) (symbol trees)))
 (def generated.global-env (field (symbol generated) (symbol global-env)))
 (def generated? (is? (symbol generated)))
 
@@ -77,8 +77,8 @@
     (fn generating2 (generated-resolve-generating generated.combine generated1 generating2 global-env f))
     (fn generated2
       (generated
-        (f (generated.operation generated1) (generated.operation generated2))
-        (concat (generated.declarations generated1) (generated.declarations generated2))
+        (f (generated.tree generated1) (generated.tree generated2))
+        (concat (generated.trees generated1) (generated.trees generated2))
         global-env))))
 
 ;; Resolves all dependencies of a generating given a generated.
@@ -91,8 +91,8 @@
         f))))
 
 ;; Converts a generating to a generated.
-(defn generating->generated generating' operation global-env continue
-  (generated operation nil
+(defn generating->generated generating' tree global-env continue
+  (generated tree nil
     ((swap global-env.with-dependents) global-env
       (let dependents (global-env.dependents (generating.global-env generating'))
            dependency (car (generating.dependencies generating'))

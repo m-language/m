@@ -30,3 +30,5 @@
     (list (symbol name))))
 
 (def tree/symbol.name (field (symbol tree/symbol) (symbol name)))
+
+(def tree/nil (tree/symbol (symbol "nil")))

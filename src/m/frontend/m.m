@@ -26,7 +26,7 @@
   (fn generated'
     (let unresolved (global-env.unresolved (generated.global-env generated'))
       (if (nil? unresolved)
-        (backend in out (declarations->trees (generated.declarations generated')))
+        (backend in out (generated.trees generated'))
         (ostream.writeln stderr
           (flat-map unresolved
             (fn name
