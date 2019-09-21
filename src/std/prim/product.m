@@ -1,7 +1,7 @@
 ;;; Product.m
 ;;;
 ;;; An implementation of products as a function which applies a function to each
-;;; ov its values.
+;;; of its values.
 ;;;
 ;;; All definitions in this file are optimized to use the backend's native
 ;;; implementation of products.

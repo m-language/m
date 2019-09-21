@@ -1,19 +1,6 @@
 ;; Mangles the name of a function given an index.
 (extern mangle-fn-name)
 
-;; The set of closures in an expression.
-(defn closures local-env
-  (closures' local-env (empty-tree-map compare-symbol)))
-
-(defnrec closures' local-env acc expr
-  (expr.match expr
-    (fn name _
-      (if (null? (tree-map.get (local-env.locals local-env) name))
-        acc
-        (tree-map.put acc name true)))
-    (fn exprs _
-      (fold exprs acc (closures' local-env)))))
-
 ;; Generates a global expression.
 (defnrec generate-global-expr macro? generate-expr name value local-env global-env
   (if (some? (tree-map.get (global-env.globals global-env) name))
@@ -88,11 +75,9 @@
 (defnrec generate-fn-expr' generate-expr name value local-env global-env
   (let mangled-name (mangle-fn-name (local-env.def local-env) (global-env.index global-env))
        new-global-env (global-env.with-index (nat.+ nat.1 (global-env.index global-env)) global-env)
-       closures (map (tree-map->list (closures local-env value)) first)
     (generate-result.match
       (generate-expr value
-        (local-env.with-locals (generate-fn-expr-closures closures name local-env)
-          (local-env.with-def mangled-name local-env))
+        (local-env.with-locals (tree-map.put (local-env.locals local-env) name (local-variable name nat.0)) local-env)
         new-global-env)
     (fn degenerate' degenerate')
     (fn generating'
@@ -100,28 +85,11 @@
         (fn global-env
           (generate-fn-expr' name value local-env global-env))))
     (fn generated'
-      (let declaration (fn-declaration mangled-name (expr.path value) closures (generated.operation generated'))
+      (let declaration (fn-declaration mangled-name (expr.path value) nil (generated.operation generated'))
         (generated
-          (fn-operation
-            (expr.path value)
-            mangled-name
-            name
-            (generated.operation generated')
-            (map closures
-              (fn closure
-                (generate-symbol-expr'
-                  (unnull (env.get local-env (generated.global-env generated') closure))))))
+          (fn-operation (expr.path value) mangled-name name (generated.operation generated') nil)
           (append (generated.declarations generated') declaration)
           (generated.global-env generated')))))))
-
-(defn generate-fn-expr-closures closures name local-env
-  (second
-    (fold (append closures name) (pair nat.0 (local-env.locals local-env))
-      (fn vars closure
-        (pair
-          (nat.+ nat.1 (first vars))
-          (tree-map.put (second vars) closure
-            (local-variable closure (first vars))))))))
 
 ;; Generates a symbol literal expression.
 (defn generate-symbol-literal-expr name local-env global-env
