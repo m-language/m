@@ -73,12 +73,11 @@
       (generate-fn-expr generate-expr (init names) new-value local-env global-env))))
 
 (defnrec generate-fn-expr' generate-expr name value local-env global-env
-  (let mangled-name (mangle-fn-name (local-env.def local-env) (global-env.index global-env))
-       new-global-env (global-env.with-index (nat.+ nat.1 (global-env.index global-env)) global-env)
+  (let mangled-name (mangle-fn-name (local-env.def local-env) nat.0)
     (generate-result.match
       (generate-expr value
         (local-env.with-locals (tree-map.put (local-env.locals local-env) name (local-variable name)) local-env)
-        new-global-env)
+        global-env)
     (fn degenerate' degenerate')
     (fn generating'
       (generating (generating.dependencies generating') (generating.global-env generating')
