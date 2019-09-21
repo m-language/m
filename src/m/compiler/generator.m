@@ -1,6 +1,3 @@
-;; Mangles the name of a function given an index.
-(extern mangle-fn-name)
-
 ;; Generates a global expression.
 (defnrec generate-global-expr macro? generate-expr name value local-env global-env
   (if (some? (tree-map.get (global-env.globals global-env) name))
@@ -73,22 +70,21 @@
       (generate-fn-expr generate-expr (init names) new-value local-env global-env))))
 
 (defnrec generate-fn-expr' generate-expr name value local-env global-env
-  (let mangled-name (mangle-fn-name (local-env.def local-env) nat.0)
-    (generate-result.match
-      (generate-expr value
-        (local-env.with-locals (tree-map.put (local-env.locals local-env) name (local-variable name)) local-env)
-        global-env)
-    (fn degenerate' degenerate')
-    (fn generating'
-      (generating (generating.dependencies generating') (generating.global-env generating')
-        (fn global-env
-          (generate-fn-expr' name value local-env global-env))))
-    (fn generated'
-      (let declaration (fn-declaration mangled-name (expr.path value) nil (generated.operation generated'))
-        (generated
-          (fn-operation (expr.path value) mangled-name name (generated.operation generated') nil)
-          (append (generated.declarations generated') declaration)
-          (generated.global-env generated')))))))
+  (generate-result.match
+    (generate-expr value
+      (local-env.with-locals (tree-map.put (local-env.locals local-env) name (local-variable name)) local-env)
+      global-env)
+  (fn degenerate' degenerate')
+  (fn generating'
+    (generating (generating.dependencies generating') (generating.global-env generating')
+      (fn global-env
+        (generate-fn-expr' name value local-env global-env))))
+  (fn generated'
+    (let declaration (fn-declaration nil (expr.path value) nil (generated.operation generated'))
+      (generated
+        (fn-operation (expr.path value) nil name (generated.operation generated') nil)
+        (append (generated.declarations generated') declaration)
+        (generated.global-env generated'))))))
 
 ;; Generates a symbol literal expression.
 (defn generate-symbol-literal-expr name local-env global-env
