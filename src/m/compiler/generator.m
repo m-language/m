@@ -57,7 +57,7 @@
       (global-variable.path variable))
     (local-variable-operation
       (local-variable.name variable)
-      (local-variable.index variable))))
+      nat.0)))
 
 ;; Generates a fn expression.
 (defnrec generate-fn-expr generate-expr names value local-env global-env
@@ -77,7 +77,7 @@
        new-global-env (global-env.with-index (nat.+ nat.1 (global-env.index global-env)) global-env)
     (generate-result.match
       (generate-expr value
-        (local-env.with-locals (tree-map.put (local-env.locals local-env) name (local-variable name nat.0)) local-env)
+        (local-env.with-locals (tree-map.put (local-env.locals local-env) name (local-variable name)) local-env)
         new-global-env)
     (fn degenerate' degenerate')
     (fn generating'

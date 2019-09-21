@@ -1,10 +1,9 @@
 ;; The location of a local variable.
 (def local-variable
   (new-data (symbol local-variable)
-    (list (symbol name) (symbol index))))
+    (list (symbol name))))
 
 (def local-variable.name (field (symbol local-variable) (symbol name)))
-(def local-variable.index (field (symbol local-variable) (symbol index)))
 (def local-variable? (is? (symbol local-variable)))
 
 ;; The location of a global variable
