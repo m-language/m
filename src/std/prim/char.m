@@ -25,7 +25,7 @@
 (def dot (car (symbol ".")))
 
 ;; The literal character """.
-(def quote (car (symbol """")))
+(def double-quote (car (symbol """")))
 
 ;; The literal character "/".
 (def slash (car (symbol "/")))

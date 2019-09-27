@@ -67,6 +67,7 @@ fun help() {
           m.kts build-self         -- Builds the M compiler
           m.kts build-host-src     -- Builds the M compiler host's source
         m.kts test       -- Tests the M compiler
+        m.kts test-full  -- Tests the M compiler with itself
         m.kts clean      -- Cleans the M compiler
     """.trimIndent())
 }
@@ -122,7 +123,7 @@ fun clean() {
 }
 
 fun test() {
-    buildFull()
+    build()
     File("test").listFiles().filter { it.name.endsWith(".m") }.forEach { file ->
         val name = file.nameWithoutExtension
         val expect = File("test/$name.txt")
@@ -150,6 +151,11 @@ fun test() {
     }
 }
 
+fun testFull() {
+    buildFull()
+    test()
+}
+
 fun m() {
     val args = args.joinToString(separator = " ", prefix = "", postfix = "")
     val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss1g m $args".split(' ').toList()).inheritIO().start()
@@ -168,5 +174,6 @@ when (args[0]) {
     "build-host-src" -> buildHostSrc()
     "clean" -> clean()
     "test" -> test()
+    "test-full" -> testFull()
     else -> m()
 }

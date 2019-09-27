@@ -4,7 +4,7 @@
   (| (char.= char open-parentheses)
   (| (char.= char close-parentheses)
   (| (char.= char semicolon)
-     (char.= char quote))))))
+     (char.= char double-quote))))))
 
 ;; Parses an M comment.
 (defnrec parse-comment path input position continue
@@ -33,11 +33,11 @@
   (if (nil? input)
     (error (symbol "Unexpected end of file"))
     (let head (car input)
-      (if (char.= head quote)
-        (if (char.= (cadr input) quote)
+      (if (char.= head double-quote)
+        (if (char.= (cadr input) double-quote)
           (parse-symbol-literal path (cddr input) (next-char (next-char position))
             (fn chars path input position
-              (continue (cons quote chars) path input position)))
+              (continue (cons double-quote chars) path input position)))
           (continue nil path (cdr input) (next-char position)))
         (parse-symbol-literal path (cdr input) ((if (char.= head linefeed) next-line next-char) position)
           (fn chars path input position
@@ -74,7 +74,7 @@
         (parse-list parse-expr path (cdr input) (next-char position)
           (fn exprs path input position'
             (continue (list-expr exprs (location path (span position position'))) path input position')))
-      quote
+      double-quote
         (parse-symbol-literal path (cdr input) (next-char position)
           (fn chars path input position'
             (continue (symbol-expr chars (location path (span position position'))) path input position')))

@@ -27,29 +27,26 @@
 ;; Macro for and which delays the second argument.
 (macrofn & env exprs
   (result/success
-    (apply-vararg expr/list
-      (expr/symbol (symbol and))
-      (car exprs)
-      (expr/list (cons (expr/symbol (symbol delay)) (list (cadr exprs)))))))
+    (quote
+      (and (unquote (car exprs))
+        (delay (unquote (cadr exprs)))))))
 
 ;; Macro for or which delays the second argument.
 (macrofn | env exprs
   (result/success
-    (apply-vararg expr/list
-      (expr/symbol (symbol or))
-      (car exprs)
-      (expr/list (cons (expr/symbol (symbol delay)) (list (cadr exprs)))))))
+    (quote
+      (or (unquote (car exprs))
+        (delay (unquote (cadr exprs)))))))
 
 ;; Macro for control flow.
-(macro if
-  (fn env exprs
-    (result/success
+(macrofn if env exprs
+  (result/success
+    (apply-vararg expr/list
+      (expr/symbol (symbol force))
       (apply-vararg expr/list
-        (expr/symbol (symbol force))
-        (apply-vararg expr/list
-          (car exprs)
-          (expr/list (cons (expr/symbol (symbol delay)) (list (cadr exprs))))
-          (expr/list (cons (expr/symbol (symbol delay)) (list (caddr exprs)))))))))
+        (car exprs)
+        (expr/list (cons (expr/symbol (symbol delay)) (list (cadr exprs))))
+        (expr/list (cons (expr/symbol (symbol delay)) (list (caddr exprs))))))))
 
 ;; Macro for multi-branch if expressions, i.e
 ;; (cond
@@ -73,13 +70,7 @@
           (cadr exprs)
           (macro-call-expr cond (cddr exprs))))))))
 
-;; Macro to test a predicate against multiple alternatives
-;; (pcond predicate
-;;   value1 then-value1
-;;   value2 then-value2
-;;   ...
-;;   valueN then-valueN
-;;   else-value)
+;; Macro to test a predicate against multiple values.
 (macrofn pcond env exprs
   (if (nil? exprs)
     (result/error (symbol "No exprs passed to pcond"))

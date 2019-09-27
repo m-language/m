@@ -42,11 +42,11 @@
 
 ;; Quotes a string.
 (defn js/desugar-string name
-  (cons quote (append (js/desugar-string' name) quote)))
+  (cons double-quote (append (js/desugar-string' name) double-quote)))
 
 (defnrec js/desugar-string' name
   (cond (nil? name) nil
-        (char.= quote (car name)) (concat (symbol "\""") (js/desugar-string' (cdr name)))
+        (char.= double-quote (car name)) (concat (symbol "\""") (js/desugar-string' (cdr name)))
         (char.= backslash (car name)) (concat (symbol "\\") (js/desugar-string' (cdr name)))
         (char.= linefeed (car name)) (concat (symbol "\n") (js/desugar-string' (cdr name)))
         (char.= carriage-return (car name)) (concat (symbol "\r") (js/desugar-string' (cdr name)))

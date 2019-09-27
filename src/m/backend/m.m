@@ -32,23 +32,23 @@
 ;; Quotes a variable with invalid characters.
 (defn m/desugar-quote name
   (if (| (m/desugar-should-quote? name) (nil? name))
-    (cons quote
-      ((swap append) quote
+    (cons double-quote
+      ((swap append) double-quote
         (m/desugar-quote' name)))
     name))
 
 (defnrec m/desugar-quote' name
   (cond
     (nil? name) name
-    (char.= quote (car name))
-      (cons quote (cons quote (m/desugar-quote' (cdr name))))
+    (char.= double-quote (car name))
+      (cons double-quote (cons double-quote (m/desugar-quote' (cdr name))))
       (cons (car name) (m/desugar-quote' (cdr name)))))
 
 ;; Tests if a name should be quoted.
 (defnrec m/desugar-should-quote? name
   (if (nil? name) false
     (let char (car name)
-      (| (char.= char quote)
+      (| (char.= char double-quote)
       (| (char.= char open-parentheses)
       (| (char.= char close-parentheses)
       (| (char.= char semicolon)

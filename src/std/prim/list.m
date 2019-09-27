@@ -115,8 +115,8 @@
   (cond
     (nil? a) (nil? b)
     (nil? b) false
-    (& (= (car a) (car b))
-       (list.= = (cdr a) (cdr b)))))
+    (= (car a) (car b)) (list.= = (cdr a) (cdr b))
+    false))
 
 ;; Compares two lists given a compare function.
 (defnrec compare-list compare a b

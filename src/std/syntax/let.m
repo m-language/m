@@ -4,13 +4,7 @@
 (macrofn let env exprs
   (result/success
     (if (nil? (cdr exprs)) (car exprs)
-      (apply-vararg expr/list
-        (expr/symbol (symbol with))
-        (cadr exprs)
-        (apply-vararg expr/list
-          (expr/symbol (symbol fn))
-          (car exprs)
-          (expr/list
-            (cons 
-              (expr/symbol (symbol let))
-              (cddr exprs))))))))
+      (quote
+        (with (unquote (cadr exprs))
+          (fn (unquote (car exprs))
+              (unquote (expr/list (cons (quote let) (cddr exprs))))))))))

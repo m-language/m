@@ -26,13 +26,7 @@
 (macrofn do env exprs
   (result/success
     (if (nil? (cdr exprs)) (car exprs)
-      (apply-vararg expr/list
-        (expr/symbol (symbol then-run-with))
-        (cadr exprs)
-        (apply-vararg expr/list
-          (expr/symbol (symbol fn))
-          (car exprs)
-          (expr/list
-            (cons
-              (expr/symbol (symbol do))
-              (cddr exprs))))))))
+      (quote
+        (then-run-with (unquote (cadr exprs))
+          (fn (unquote (car exprs))
+              (unquote (expr/list (cons (quote do) (cddr exprs))))))))))

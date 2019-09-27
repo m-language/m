@@ -41,3 +41,18 @@
 (def expr/list
   (fn exprs
     (list-expr exprs (location (symbol expr.m) (span start-position start-position)))))
+
+(defn expr/match expr symbol-fn list-fn
+  (expr.match expr
+    (fn symbol _ (symbol-fn symbol))
+    (fn list _ (list-fn list))))
+
+(def expr/nil
+  (expr/list nil))
+
+(defn expr/cons car cdr
+  (expr/list
+    (cons car
+      (expr/match cdr
+        (fn symbol (error symbol))
+        (fn list list)))))
