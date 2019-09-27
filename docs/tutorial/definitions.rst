@@ -5,7 +5,7 @@ Definitions
 ***********
 
 While it is possible to introduce local variables with functions, something more
-powerful is needed to abstract larger programs. M's definitions have
+powerful is needed to abstract larger programs. M's definitions have simple
 compositional semantics which allow them to to easily be extended.
 
 Definition expressions are of the form ``(def <name> <value>)``, where name is
@@ -48,6 +48,17 @@ its first usage.
     ;; The increment function which adds one to its argument.
     (def inc (+ 1))
 
+Recursion
+=========
+
+M does not natively support recursion; it is instead emulated through the fixed
+point combinator as shown later in `recursion <recursion.html>`_.
+
+.. code-block:: lisp
+
+    ;; Error: could not find recursive.
+    (def recursive (fn x (recursive x)))
+
 As Expressions
 ==============
 
@@ -81,7 +92,7 @@ files are equivalent to the same two definitions in the same file. In other
 words, it does not matter where the definitions are stored as long as the M
 compiler can find them.
 
-By default, the M compiler looks in the current directory and MPM for
+By default, the M compiler looks in the current directory and in MPM for
 definitions. This is semantically equivalent to combining every file in your
 project and every file in MPM into one file, though optimizations are in place
 to avoid compiling unused files. This functionality also extends to the REPL.

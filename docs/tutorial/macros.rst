@@ -41,7 +41,10 @@ Macro Definition
 ================
 
 Macro definitions are of the form ``(macro <name> <value>)``, where name is the
-name of the macro and value is the value of the macro. 
+name of the macro and value is the value of the macro. They have identical
+semantics to definition expressions; their names cannot collide, their order
+does not matter, and they can be used as expressions which evaluate to their
+value.
 
 .. code-block:: lisp
 
@@ -50,5 +53,5 @@ name of the macro and value is the value of the macro.
       (fn exprs
         (macro/list
           (cons (macro/symbol (symbol fn))
-          (cons (macro/symbol (symbol _))
+          (cons (macro/symbol (symbol ""))
             exprs)))))

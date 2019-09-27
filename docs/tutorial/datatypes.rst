@@ -114,7 +114,6 @@ are some examples:
 
 - char = nat
 - int = pair bool nat
-- option a = either a bool
-- list a = either bool (pair a (list a))
+- option a = either a unit
+- list a = either unit (pair a (list a))
 - string = list char
-- struct = pair string (string -> any)

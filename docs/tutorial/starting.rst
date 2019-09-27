@@ -67,4 +67,3 @@ Once the M compiler is built, it can be ran with the following arguments.
 
     m compile <backend> <in> <out> -- Compiles a file
     m repl <in>                    -- Runs the M repl
-    m mpm-put <in>                 -- Puts a file in mpm

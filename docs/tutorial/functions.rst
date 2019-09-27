@@ -4,11 +4,11 @@
 Functions
 *********
 
-Unlike most programming languages, functions are completely fundamental to M.
-Every data type in M is represented as a function, even typically intrinsic ones
+Unlike most programming languages, functions are the only fundamental objects in
+M. Every data type in M is represented as a function, even typically intrinsic ones
 like structs and integers. These representations will be covered in
-`data types <datatypes.html>`_, but for now it is enough to know that functions 
-are the singular object type in M.
+`data types <datatypes.html>`_, and are optimized to their efficient machine
+representations where possible.
 
 Functions in M are pure, meaning that they return the same result for the same
 input, and only ever take one argument (multi-argument functions are provided as
@@ -30,7 +30,7 @@ the function.
     (+ (nat 1) (nat 3))
 
 Functions are applied eagerly, so their arguments are always evaluated before
-the function, but an argument evaluation order is not specified.
+the function, and arguments are evaluated left to right.
 
 Function Abstraction
 ====================
@@ -45,6 +45,9 @@ arguments is a list of argument names and value is the value of the function.
 
     ;; The constant function which ignores its second argument.
     (fn x _ x)
+
+    ;; The increment function.
+    (fn x (+ x (nat 1)))
 
 Closures
 ========
@@ -71,15 +74,15 @@ functions are curried.
 
 .. code-block:: lisp
 
-    ;; This has the same effect as the example above since addition is curried.
+    ;; This has the same effect as the example above due to currying.
     (+ (nat 1))
 
 Multi-Argument Functions
 ========================
 
-As you might have guessed, multi-argument functions in M are actually just
-syntax sugar for curried functions. Likewise, multi-argument application is just
-repeated application of a single argument.
+Multi-argument functions in M are actually just syntax sugar for curried
+functions. Likewise, multi-argument application is just repeated application of
+single arguments.
 
 .. code-block:: lisp
 
