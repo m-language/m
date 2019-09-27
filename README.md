@@ -36,36 +36,30 @@ What it looks like
 (def "a name with spaces in it" ...)
 
 ;; Pound is syntax sugar for applying a macro to the whole file
-#(package demo)
+#(module demo)
 
-;; Everything after this point is provided as a library
-;; and not as part of the language
-
-;; Imports are defined in package.m
+;; Imports are defined in module.m
 #(import nat)
 
 ;; Natural numbers are defined in nat.m
 (def inc (+ 1))
-(def dec ((swap -) 1))
 
 ;; Lists are defined in list.m
 (defn sum list
   (fold list 0 +))
 
-;; If expressions are macros defined in bool.m
+;; If expressions are defined in bool.m
 (defnrec factorial x
-  (if (= x 0) 1
+  (if (0? x) 1
     (* x (factorial (dec x)))))
 
 ;; Processes are used for IO
-(defrec echo
-  (do
-    (x (read-line stdin))
-    (_
-      (run-async
-        (write-line stdout x)
-        (write-line (file-out (string "out.log")) x)))
-    (_ echo)))
+(defnrec echo log
+  (do x (readln stdin)
+      _ (run-async
+          (writeln stdout x)
+          (writeln log x))
+      (echo log)))
 
 ;; Data types are defined in data.m
 (defdata point x y)
@@ -95,7 +89,7 @@ Contributing
 There's a lot of work to be done on M, and any help is greatly appreciated. If
 there's a feature you want to add, please open an issue and I'll help however I
 can. If you want to add an editor plugin, language backend, or other tooling,
-please [contact me personally](https://github.com/aedans) and I'll add it to the
+please [contact me](https://github.com/aedans) and I'll add it to the
 organization.
 
 If you want to help M succeed but don't want to contribute code, please consider
