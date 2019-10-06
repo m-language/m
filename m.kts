@@ -1,9 +1,10 @@
 #!/usr/bin/env kotlinc -script
 import java.io.File
+import kotlin.system.exitProcess
 
-fun exit(message: String = "Terminating build") {
+fun exit(message: String = "Terminating build"): Nothing {
     System.err.println(message)
-    System.exit(0)
+    exitProcess(0)
 }
 
 fun tryOrExit(fn: () -> Unit) {
@@ -63,6 +64,7 @@ fun help() {
         m.kts build-full -- Builds the M compiler with itself
           m.kts build-backend      -- Builds the M backend
           m.kts build-host-backend -- Builds the M compiler host with the backend compiler
+          m.kts build-self-backend -- Build the M compiler with the specified backend
           m.kts build-host         -- Builds the M compiler host
           m.kts build-self         -- Builds the M compiler
           m.kts build-host-src     -- Builds the M compiler host's source
@@ -102,6 +104,16 @@ fun buildBackend() {
 
 fun buildHostBackend() {
     mJvmCompile("m.m", bin.path)
+}
+
+fun buildSelfBackend() {
+    val backend = args[1];
+    val output = when(backend) {
+        "js" -> "bin/$backend/m.js"
+        "jvm" -> "bin"
+        else -> exit("unknown backend $backend")
+    }
+    mCompile(backend, "m.m", output) { it.inheritIO() };
 }
 
 fun buildHost() {
@@ -169,6 +181,7 @@ when (args[0]) {
     "build-full" -> buildFull()
     "build-backend" -> buildBackend()
     "build-host-backend" -> buildHostBackend()
+    "build-self-backend" -> buildSelfBackend()
     "build-host" -> buildHost()
     "build-self" -> buildSelf()
     "build-host-src" -> buildHostSrc()
