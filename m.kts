@@ -1,9 +1,10 @@
 #!/usr/bin/env kotlinc -script
 import java.io.File
+import kotlin.system.exitProcess
 
-fun exit(message: String = "Terminating build") {
+fun exit(code: Int = 0, message: String = "Terminating build"): Nothing {
     System.err.println(message)
-    System.exit(0)
+    exitProcess(code)
 }
 
 fun tryOrExit(fn: () -> Unit) {
@@ -11,14 +12,14 @@ fun tryOrExit(fn: () -> Unit) {
         fn()
     } catch (e: Exception) {
         e.printStackTrace()
-        exit()
+        exit(1)
     }
 }
 
 fun exec(string: String, apply: (ProcessBuilder) -> ProcessBuilder) {
     val exec = apply(ProcessBuilder(string.split(' ').toList()).redirectErrorStream(true)).start()
     val code = exec.waitFor()
-    if (code != 0) exit("Command $string failed with exit code $code")
+    if (code != 0) exit(code, "Command $string failed with exit code $code")
 }
 
 fun execM(args: String, apply: (ProcessBuilder) -> ProcessBuilder) {
@@ -33,7 +34,7 @@ tailrec fun ask(message: String, yes: () -> Unit) {
     val line = readLine()?.toLowerCase()?.trim() ?: "n"
     when (line) {
         "y", "yes" -> yes()
-        "n", "no" -> exit()
+        "n", "no" -> exit(0)
         else -> {
             println("Expected [y/n]")
             ask(message, yes)
@@ -63,6 +64,7 @@ fun help() {
         m.kts build-full -- Builds the M compiler with itself
           m.kts build-backend      -- Builds the M backend
           m.kts build-host-backend -- Builds the M compiler host with the backend compiler
+          m.kts build-self-backend -- Build the M compiler with the specified backend
           m.kts build-host         -- Builds the M compiler host
           m.kts build-self         -- Builds the M compiler
           m.kts build-host-src     -- Builds the M compiler host's source
@@ -102,6 +104,17 @@ fun buildBackend() {
 
 fun buildHostBackend() {
     mJvmCompile("m.m", bin.path)
+}
+
+fun buildSelfBackend() {
+    val backend = args[1];
+    val output = when(backend) {
+        "js" -> "bin/m.js"
+        "jvm" -> "bin"
+        "m" -> "m.m"
+        else -> exit(1, "unknown backend $backend")
+    }
+    mCompile(backend, "m.m", output) { it.inheritIO() };
 }
 
 fun buildHost() {
@@ -160,7 +173,7 @@ fun m() {
     val args = args.joinToString(separator = " ", prefix = "", postfix = "")
     val exec = ProcessBuilder("java -classpath ./bin${File.pathSeparator}$mJvmJar -Xss1g m $args".split(' ').toList()).inheritIO().start()
     val code = exec.waitFor()
-    if (code != 0) exit("m failed with exit code $code")
+    if (code != 0) exit(code, "m failed with exit code $code")
 }
 
 when (args[0]) {
@@ -169,6 +182,7 @@ when (args[0]) {
     "build-full" -> buildFull()
     "build-backend" -> buildBackend()
     "build-host-backend" -> buildHostBackend()
+    "build-self-backend" -> buildSelfBackend()
     "build-host" -> buildHost()
     "build-self" -> buildSelf()
     "build-host-src" -> buildHostSrc()
