@@ -64,7 +64,7 @@ fun help() {
         m.kts build-full -- Builds the M compiler with itself
           m.kts build-backend      -- Builds the M backend
           m.kts build-host-backend -- Builds the M compiler host with the backend compiler
-          m.kts build-self-backend -- Build the M compiler with the specified backend
+          m.kts build-self-backend -- Builds the M compiler with the specified backend
           m.kts build-host         -- Builds the M compiler host
           m.kts build-self         -- Builds the M compiler
           m.kts build-host-src     -- Builds the M compiler host's source
