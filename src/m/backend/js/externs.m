@@ -1,6 +1,6 @@
 ;;; Externs for js code interop
 
-; Fix builds
+;; Fix builds
 (macrofn internal env exprs
   (result/success
     (quote
