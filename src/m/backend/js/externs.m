@@ -1,50 +1,58 @@
 ;;; Externs for js code interop
 
-; Encode an m symbol as a js symbol
-(extern js/symbol)
+; Fix builds
+(macrofn internal env exprs
+  (result/success
+    (quote
+      (def (unquote (car exprs)) id))))
 
-; Get the type of a js value
-(extern js/value.type)
+;; Encode an m symbol as a js symbol
+(internal js/symbol)
+
+;; Get the type of a js value
+(internal js/value.type)
 
 ;; Get the property of a value
-(extern js/value.get-property)
+(internal js/value.get-property)
 
 ;; Set the property of a value (impure)
-(extern js/value.set-property)
+(internal js/value.set-property)
 
 ;; Call a js method with a `this` and arguments
-(extern js/invoke-method)
+(internal js/invoke-method)
 
 ;; Call a js function
 (defn js/call fn args (js/invoke-method fn js/global args))
 
-;; The global `this` value
-(extern js/global)
+;; The global `this` value, whether it be `window`, top-level `this`, or `globalThis`.
+(internal js/global)
 
-(def js/get-value (js/value.get-property js/global))
+;; Get a value at the global scope
+(def js/get-global-property (js/value.get-property js/global))
 
-(def js/set-value (js/value.set-property js/global))
+;; Set a value at the global scope
+(def js/set-global-property (js/value.set-property js/global))
 
 ;; The null value
-(extern js/null)
+(internal js/null)
 
 ;; The undefined value
-(extern js/undefined)
+(internal js/undefined)
 
 ;; Convert an m symbol to a JS string 
-(extern js/string)
+(internal js/string)
 
 ;; Converts an m bool to a JS bool
-(extern js/bool)
+(internal js/bool)
 
 ;; Convert an m natural to a JS number
-(extern js/number)
+(internal js/number)
 
 ;; Convert an m association list to a JS object
-(extern js/object)
+(internal js/object)
 
-;; Test if two values are monomorphically equal (===)
-(extern js/eq?)
+;; Test if two JS values are monomorphically equal (===)
+(internal js/===?)
 
-; ;; Test if two values polymorphically equal
-(extern js/poly-eq?)
+;; Test if two JS values are polymorphically equal (==)
+(internal js/==?)

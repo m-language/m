@@ -9,9 +9,11 @@
       (let desugared-name (js/desugar-quote (tree/def.name tree))
         (concat (symbol "export const ")
           (concat desugared-name
-            (concat (symbol " = ")
-              (concat (js/desugar-tree (tree/def.value tree))
-                (list semicolon linefeed))))))
+            (concat (symbol " = RT.definitions.")
+              (concat desugared-name
+                (concat (symbol " || ") 
+                  (concat (js/desugar-tree (tree/def.value tree))
+                    (list semicolon linefeed))))))))
     (symbol tree/fn)
       (concat (symbol "RT.createMFunction(")
         (concat (js/desugar-quote (tree/fn.arg tree))
