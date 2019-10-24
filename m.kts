@@ -117,6 +117,17 @@ fun buildSelfBackend() {
     mCompile(backend, "m.m", output) { it.inheritIO() };
 }
 
+fun buildSrcBackend() {
+        val backend = args[1];
+    val output = when(backend) {
+        "js" -> "bin/m.js"
+        "jvm" -> "bin"
+        "m" -> "m.m"
+        else -> exit(1, "unknown backend $backend")
+    }
+    mCompile(backend, "src", output) { it.inheritIO() };
+}
+
 fun buildHost() {
     mCompile("jvm", "m.m", bin.path) { it }
 }
@@ -183,6 +194,7 @@ when (args[0]) {
     "build-backend" -> buildBackend()
     "build-host-backend" -> buildHostBackend()
     "build-self-backend" -> buildSelfBackend()
+    "build-src-backend" -> buildSrcBackend()
     "build-host" -> buildHost()
     "build-self" -> buildSelf()
     "build-host-src" -> buildHostSrc()
