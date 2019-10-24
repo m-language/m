@@ -51,8 +51,7 @@
   (expr/list nil))
 
 (defn expr/cons car cdr
-  (expr/list
-    (cons car
-      (expr/match cdr
-        (fn symbol (error symbol))
-        (fn list list)))))
+  (expr/match cdr
+    (fn _ (expr/cons car (expr/list (list cdr))))
+    (fn list-cdr
+      (expr/list (cons car list-cdr)))))

@@ -49,6 +49,10 @@
             (cons (expr/list (cons (expr/symbol (symbol list)) (cdr exprs)))
               nil)))))) nil))))
 
+;; Creates a singleton list.
+(defn list1 a
+  (cons a nil))
+
 ;; The initial elements of a list.
 (defnrec init list
   (if (nil? (cdr list)) nil
