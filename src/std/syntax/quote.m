@@ -9,18 +9,24 @@
           (if (nil? exprs)
             (expr/symbol (symbol expr/nil))
             (expr/match (car exprs)
-              (fn symbol
-                (if (symbol.= symbol (symbol unquote))
+              (fn name
+                (if (symbol.= name (symbol unquote))
                   (cadr exprs)
                   (quote-list exprs)))
-              (fn _ (quote-list exprs)))))))))
+              (fn list
+                (expr/match (car list)
+                  (fn name
+                    (if (symbol.= name (symbol splice))
+                      (quote-splice (cadr list) exprs)
+                      (quote-list exprs)))
+                  (fn _ (quote-list exprs)))))))))))
 
-(defn quote-symbol symbol
+(defn quote-symbol name
   (apply-vararg expr/list
     (expr/symbol (symbol expr/symbol))
     (apply-vararg expr/list
       (expr/symbol (symbol symbol))
-      (expr/symbol symbol))))
+      (expr/symbol name))))
 
 (defn quote-list exprs
   (apply-vararg expr/list
@@ -31,3 +37,11 @@
     (apply-vararg expr/list
       (expr/symbol (symbol quote))
       (expr/list (cdr exprs)))))
+
+(defn quote-splice spliced exprs
+  (apply-vararg expr/list
+    (expr/symbol (symbol expr/concat-list))
+    (apply-vararg expr/list
+      (expr/symbol (symbol quote))
+      (expr/list (cdr exprs)))
+    spliced))

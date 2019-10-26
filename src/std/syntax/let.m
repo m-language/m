@@ -7,4 +7,4 @@
       (quote
         (with (unquote (cadr exprs))
           (fn (unquote (car exprs))
-              (unquote (expr/list (cons (quote let) (cddr exprs))))))))))
+            (let (splice (cddr exprs)))))))))

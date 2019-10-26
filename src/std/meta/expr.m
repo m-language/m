@@ -55,3 +55,9 @@
     (fn _ (expr/cons car (expr/list (list cdr))))
     (fn list-cdr
       (expr/list (cons car list-cdr)))))
+
+(defn expr/concat-list expr list
+  (expr/match expr
+    (fn _ (expr/concat-list (expr/list (list expr)) list))
+    (fn exprs
+      (expr/list (concat exprs list)))))

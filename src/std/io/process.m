@@ -29,4 +29,4 @@
       (quote
         (then-run-with (unquote (cadr exprs))
           (fn (unquote (car exprs))
-              (unquote (expr/list (cons (quote do) (cddr exprs))))))))))
+            (do (splice (cddr exprs)))))))))
