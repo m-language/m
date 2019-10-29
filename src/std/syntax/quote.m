@@ -40,7 +40,7 @@
 
 (defn quote-splice spliced exprs
   (apply-vararg expr/list
-    (expr/symbol (symbol expr/concat-list))
+    (expr/symbol (symbol expr/prepend-list))
     (apply-vararg expr/list
       (expr/symbol (symbol quote))
       (expr/list (cdr exprs)))

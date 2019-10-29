@@ -32,7 +32,7 @@
     (fold-compare (compare key (tree-map-node.key node))
       (fn < (tree-map-node.get (tree-map-node.left node) compare key))
       (fn > (tree-map-node.get (tree-map-node.right node) compare key))
-      (fn =  (some (tree-map-node.value node))))))
+      (fn = (some (tree-map-node.value node))))))
 
 ;; Gets the value of a key in a tree map.
 (defn tree-map.get map key

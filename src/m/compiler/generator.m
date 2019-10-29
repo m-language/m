@@ -48,6 +48,7 @@
 
 ;; Generates a fn expression.
 (defnrec generate-fn-expr generate-expr names value local-env global-env
+  (if (nil? names) (generate-expr value local-env global-env)
   (if (nil? (cdr names))
     (generate-fn-expr' generate-expr (car names) value local-env global-env)
     (let new-value
@@ -57,7 +58,7 @@
           (symbol-expr (last names) (location (expr.path value) (span (expr.start value) (expr.end value))))
           value)
         (location (expr.path value) (span (expr.start value) (expr.end value))))
-      (generate-fn-expr generate-expr (init names) new-value local-env global-env))))
+      (generate-fn-expr generate-expr (init names) new-value local-env global-env)))))
 
 (defnrec generate-fn-expr' generate-expr name value local-env global-env
   (generate-result.match
@@ -97,7 +98,6 @@
           (symbol fn)
             (match-fn-expr (cdr exprs)
               (degenerate (list (symbol "Function has no expression.")) global-env)
-              (degenerate (list (symbol "Function has no arguments.")) global-env)
               (fn expr (degenerate (list (symbol "Function argument is not a symbol.")) global-env))
               (fn args expr (generate-fn-expr generate-expr args expr local-env global-env)))
           (symbol def)
@@ -121,11 +121,11 @@
               (fn name (degenerate (list (symbol "Symbol literal is not a symbol.")) global-env))
               (fn name (generate-symbol-literal-expr name local-env global-env)))
           (match-apply-expr exprs
-            (degenerate (list (symbol "Application has no arguments.")) global-env)
+            (generate-expr (car exprs) local-env global-env)
             (generate-apply-expr generate-expr (car exprs) (cdr exprs) local-env global-env))))
       (fn _ _
         (match-apply-expr exprs
-          (degenerate (list (symbol "Application has no arguments.")) global-env)
+          (generate-expr (car exprs) local-env global-env)
           (generate-apply-expr generate-expr (car exprs) (cdr exprs) local-env global-env))))))
 
 ;; Generates an expression.

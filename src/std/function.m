@@ -28,4 +28,6 @@
     (f x)))
 
 ;; The inverse of apply.
-(def with (swap apply))
+(def with
+  (fn f x
+    (x f)))

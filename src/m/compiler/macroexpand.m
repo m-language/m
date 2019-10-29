@@ -33,5 +33,5 @@
        result (function env exprs)
     (result/match result
       (fn new-expr (macroexpand-expr (expr.with-path (location.path l) new-expr) local-env global-env))
-      (fn errors (left (left errors)))
+      (fn error (left (left (list error))))
       (fn dependencies (left (right dependencies))))))

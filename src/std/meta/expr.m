@@ -8,10 +8,8 @@
   (fn exprs location
     (right (pair exprs location))))
 
-(defn expr.match expr symbol-fn list-fn
-  (expr
-    (fn symbol-expr (symbol-expr symbol-fn))
-    (fn list-expr (list-expr list-fn))))
+(defn expr.match expr symbol-expr list-expr
+  (expr (with symbol-expr) (with list-expr)))
 
 (defn expr.path expr
   (expr.match expr
@@ -56,8 +54,8 @@
     (fn list-cdr
       (expr/list (cons car list-cdr)))))
 
-(defn expr/concat-list expr list
+(defn expr/prepend-list expr list
   (expr/match expr
-    (fn _ (expr/concat-list (expr/list (list expr)) list))
+    (fn _ (expr/prepend-list (expr/list (list expr)) list))
     (fn exprs
-      (expr/list (concat exprs list)))))
+      (expr/list (concat list exprs)))))

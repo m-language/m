@@ -10,7 +10,7 @@
         (concat (m/desugar-quote (tree/def.name tree))
           (concat (symbol " ")
             (concat (m/desugar-tree (tree/def.value tree))
-              (symbol ")")))))
+              (append (symbol ")") linefeed)))))
     (symbol tree/fn)
       (concat (symbol "(fn ")
         (concat (m/desugar-quote (tree/fn.arg tree))

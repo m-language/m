@@ -1,8 +1,7 @@
 ;; Matches a function expression.
-(defn match-fn-expr exprs no-expr no-args invalid-arg success
+(defn match-fn-expr exprs no-expr invalid-arg success
   (if (nil? exprs) no-expr
-  (if (nil? (cdr exprs)) no-args
-    (match-fn-expr' exprs nil invalid-arg success))))
+    (match-fn-expr' exprs nil invalid-arg success)))
 
 (defn match-fn-expr' exprs names invalid-arg success
   (if (nil? (cdr exprs))

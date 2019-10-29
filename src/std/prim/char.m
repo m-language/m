@@ -33,6 +33,9 @@
 ;; The literal character "\".
 (def backslash (car (symbol "\")))
 
+;; The literal character "?".
+(def question-mark (car (symbol "?")))
+
 ;; The literal character "\s".
 (def space (car (symbol " ")))
 

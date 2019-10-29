@@ -56,6 +56,6 @@
 ;; Compares nats.
 (defn compare-nat a b
   (cond
-    (nat.> a b) compare>
-    (nat.< a b) compare<
-    compare=))
+    (nat.> a b) compare/>
+    (nat.< a b) compare/<
+    compare/=))

@@ -125,10 +125,10 @@
 ;; Compares two lists given a compare function.
 (defnrec compare-list compare a b
   (cond
-    (& (nil? a) (nil? b)) compare=
-    (nil? a) compare<
-    (nil? b) compare>
+    (& (nil? a) (nil? b)) compare/=
+    (nil? a) compare/<
+    (nil? b) compare/>
     (let compare-result (compare (car a) (car b))
-      (if (compare=? compare-result)
+      (if (compare/=? compare-result)
         (compare-list compare (cdr a) (cdr b))
         compare-result))))
