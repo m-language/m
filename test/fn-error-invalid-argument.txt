@@ -1,1 +1,0 @@
-Error: Function argument is not a symbol.

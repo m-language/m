@@ -1,11 +1,14 @@
 M Language
 ==========
 
+**Note: M has recently undergone a complete rewrite, so some things may be
+mismatched or missing.**
+
 ![travis build](https://travis-ci.com/m-language/m-language.svg?branch=master)
 
-[The M programming language](https://m-language.github.io/) is a minimal Lisp
-for the JVM, JS, and Native, designed from the ground up to be as simple as
-possible for fast compilation and reusable optimizations.
+[The M programming language](https://m-language.github.io/) is a minimal 
+language, designed from the ground up to be as simple as possible for
+readability and expressiveness. 
 
 Getting Started
 ---------------
@@ -13,66 +16,57 @@ Getting Started
 See [the getting started guide](https://m-language.readthedocs.io/en/latest/tutorial/starting.html).
 
 What it looks like
-----------------------
+------------------
 
-```lisp
-;; This is a comment
+```
+# This is a comment
 
-;; Definitions are global and unordered
-(def list/empty nil)
+# Definitions are global and unordered
+(def one)
 
-;; Functions are single argument curried lambdas
+# Functions are single argument curried lambdas
 (def id (fn x x))
-(def const (fn x _ x))
+(def const (fn [x y] x))
 
-;; Application is also curried
-(def swap (fn f x y (f y x)))
+# Application is also curried
+(def swap (fn [f x y] (f y x)))
 
-;; New forms can be constructed using macros
-(macro defn ...)   ; implementation elided
-(defn compose f g x (f (g x)))
+# New forms can be constructed using macros
+(def defn ...)   # implementation elided
+(defn (compose f g x) (f (g x)))
 
-;; Quotes can be used for special symbols
-(def "a name with spaces in it" ...)
+# Modules are defined in module.m
+(defmodule (demo nat list bool data stdio) {
+  # Natural numbers are defined in nat.m
+  (def inc (add 1))
 
-;; Pound is syntax sugar for applying a macro to the whole file
-#(module demo)
+  # Lists are defined in list.m
+  (defn (sum list)
+    (fold list 0 add))
 
-;; Imports are defined in module.m
-#(import nat)
+  # Recursion is defined in recur.m
+  (defnrec (factorial x)
+    ((zero? x) 1
+      (mul x (factorial (dec x)))))
 
-;; Natural numbers are defined in nat.m
-(def inc (+ 1))
+  # Processes are used for IO
+  (defnrec (echo log)
+    (do {
+      (def line (read-line stdin))
+      (run-async 
+        (write-line stdout line)
+        (write-line log line))
+      (echo log)
+    }))
 
-;; Lists are defined in list.m
-(defn sum list
-  (fold list 0 +))
-
-;; If expressions are defined in bool.m
-(defnrec factorial x
-  (if (0? x) 1
-    (* x (factorial (dec x)))))
-
-;; Processes are used for IO
-(defnrec echo log
-  (do x (readln stdin)
-      _ (run-async
-          (writeln stdout x)
-          (writeln log x))
-      (echo log)))
-
-;; Data types are defined in data.m
-(defdata point x y)
-(def origin (point 0 0))
+  # Data types are defined in data.m
+  (defdata (point x y))
+  (def origin (point 0 0))
+})
 ```
 
 For more information, an in-depth tutorial can be found
-[here](https://m-language.readthedocs.io/en/latest/tutorial/index.html),
-and the specification can be found
-[here](https://github.com/m-language/m-spec/raw/master/m.pdf)
-(also available as
-[markdown](https://github.com/m-language/m-spec/blob/master/m.md) and
-[html](https://m-language.github.io/m-spec/m.html)).
+[here](https://m-language.readthedocs.io/en/latest/tutorial/index.html).
 
 Current State
 -------------

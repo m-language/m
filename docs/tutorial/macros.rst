@@ -5,53 +5,141 @@ Macros
 ******
 
 Macros are the core of M's higher level abstractions; they allow you to use
-information from the compiler to modify expressions before runtime and create
-new semantics. Many features in this tutorial so far have actually been macros;
-for example, the ``nat`` macro, which turns a natural number into the expression
-required to create it. Later in this tutorial more advanced macros will be
-explored which allow things like data types, type systems, and more.
+information from the compiler to transform expressions and create new semantics. 
+To do this, M treats its own structure as a primitive type, and allows the 
+definition of function macros which operate on it.
 
 Macro Application
 =================
 
 Macros are applied just like functions, but instead of operating on the values
-of their arguments, they operate on the expressions of their arguments. 
+of their arguments, they operate on the expressions of their arguments.
 
 .. code-block:: lisp
 
-    ;; The application of the nat macro to the symbol 1
-    (nat 1)
+    # The identity function defined using the defn macro
+    (defn (id x) x)
 
-    ;; A function which ignores its argument and returns long-computation lazily
-    (delay long-computation)
+    # A recursive function defined using the defnrec macro
+    (defnrec (recursive x) (recursive x))
 
-Expressions
-===========
+Creating Expressions
+====================
 
-M expressions are either symbol expressions or list expressions. Both are
-represented with their respective data types, but cannot be operated on 
-directly; instead there are several internal macros for operating on them.
-
-- ``macro/list`` creates a list expression given a list of expressions.
-- ``macro/symbol`` creates a symbol expression given a symbol.
-- ``macro/match`` takes an expression and two functions, applies the first if the
-  the expression is a symbol, and applies the second if it is a list.
-
-Macro Definition
-================
-
-Macro definitions are of the form ``(macro <name> <value>)``, where name is the
-name of the macro and value is the value of the macro. They have identical
-semantics to definition expressions; their names cannot collide, their order
-does not matter, and they can be used as expressions which evaluate to their
-value.
+Quote expressions are of the form ``(quote <expr>)``, where ``expr`` is the 
+expression to evaluate to. Quote allows the creation of static expressions which
+can be manipulated by other functions.
 
 .. code-block:: lisp
 
-    ;; Macro which delays the evaluation of an expression
-    (macro delay
-      (fn exprs
-        (macro/list
-          (cons (macro/symbol (symbol fn))
-          (cons (macro/symbol (symbol ""))
-            exprs)))))
+    # The expression representing def
+    (quote def)
+
+    # The expression representing (fn x x)
+    (quote (fn x x))
+
+Combining Expressions
+=====================
+
+Expressions can be combining by applying them to other expressions. The
+application of two expressions is equivalent to the expression representing
+their application.
+
+.. code-block:: lisp
+
+    # The expression representing (fn x x)
+    ((quote fn) qx qx)
+    (def qx (quote x))
+
+Transforming Expressions
+========================
+
+Function macro expressions are of the form ``(fm <args> <val>)``, where where 
+``args`` is a list of argument names and ``val`` is the value of the function
+macro. When applied to an expression, a function macro quotes that expression
+and transforms it.
+
+.. code-block:: lisp
+
+    # A macro similar to defn
+    (def defn-
+      (fm [name args value]
+        ((quote def) name
+          ((quote fn) args value))))
+    
+    # The identity function defined using the defn- macro
+    (defn- id [x] x)
+
+Inspecting Expressions
+======================
+
+Case expressions are of the form ``(expr/case <expr> <sym-args> <sym> <nil-args> <nil> <cons-args> <cons>)``.
+
+- When ``expr`` evaluates to a symbol, evaluates to ``sym`` with ``sym-args`` defined as the symbol
+- When ``expr`` evaluates to an application with no arguments, evaluates to ``nil`` with ``nil-args`` defined as the function
+- When ``expr`` evaluates to an application with arguments, evaluates to ``cons`` with ``cons-args`` defined as the car and cdr
+
+.. code-block:: lisp
+
+    # The implementaion of defn
+    (def defn
+      (fm [signature value]
+        (expr/case signature
+          [name] ((quote def) name expr)
+          [signature] ((quote defn) signature expr)
+          [name args] ((quote def) name ((quote fn) args expr)))))
+    
+    # In the first case, (defn name value) => (def name value)
+    (defn id (fn x x))
+
+    # In the second case, (defn (name) value) => (def name value)
+    (defn (id) (fn x x))
+
+    # In the third case, (defn (name args) value) => (def name (fn args value))
+    (defn (id x) x)
+
+Symbol Concatenation
+====================
+
+Symbol concatation expressions are of the form ``(symbol/concat <sym1> <sym2>)``,
+where ``sym1`` and ``sym2`` are the symbols to be concatentated. Concatention is
+unique, so ``(symbol/concat (quote a) (quote b))`` is different from
+``(quote ab)``.
+
+.. code-block:: lisp
+
+    # a/b
+    (symbol/concat (quote a) (quote b))
+
+Symbol Equality
+===============
+
+Symbol equality expressions are of the form ``(symbol/eq <sym1> <sym2> <eq> <neq>)``,
+where ``sym1`` and ``sym2`` are the symbols to be tested, and ``eq`` and ``neq``
+are the branches to be executed.
+
+.. code-block:: lisp
+
+    # true
+    (symbol/eq (quote a) (quote a) true false)
+
+    # false
+    (symbol/eq (quote a) (quote b) true false)
+
+Currying
+========
+
+Internally, function macros are not curried, as they are required to return 
+expressions rather than functions. However, they can still be treated like they 
+are curried, and will work as expected.
+
+
+.. code-block:: lisp
+
+    # Defines inc with "currying"
+    ((def inc) (fn x (add 1 x)))
+
+    # Equivalent to the above
+    ((defn (inc x)) (add 1 x))
+
+

@@ -1,1 +1,0 @@
-Error: Definition name is not a symbol.

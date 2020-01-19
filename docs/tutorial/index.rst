@@ -11,5 +11,4 @@ The M Tutorial
    starting
    functions
    definitions
-   datatypes
    macros

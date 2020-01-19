@@ -5,8 +5,8 @@ Functions
 *********
 
 Unlike most programming languages, functions are the only fundamental objects in
-M. Every data type in M is represented as a function, even typically intrinsic ones
-like structs and integers. These representations will be covered in
+M. Every data type in M is represented as a function, even typically intrinsic 
+ones like structs and integers. These representations will be covered in
 `data types <datatypes.html>`_, and are optimized to their efficient machine
 representations where possible.
 
@@ -17,37 +17,37 @@ syntax sugar).
 Function Application
 ====================
 
-Application expressions are of the form ``(<function> <arguments...>)``, where 
-function is the function to be applied and arguments is a list of arguments to 
-the function.
+Function application of the form ``(<fn> <args...>)``, where ``fn`` is the 
+function to be applied and ``args`` is a list of arguments to the function.
 
 .. code-block:: lisp
 
-    ;; True
+    # True
     (not false)
 
-    ;; 4
-    (+ (nat 1) (nat 3))
+    # 4
+    (add 1 3)
 
-Functions are applied eagerly, so their arguments are always evaluated before
-the function, and arguments are evaluated left to right.
+Functions are applied lazily, so their arguments are only evaluated when used.
 
 Function Abstraction
 ====================
 
-Function expressions are of the form ``(fn <arguments...> <value>)``, where
-arguments is a list of argument names and value is the value of the function.
+Function expressions are of the form ``(fn <args...> <val>)``, where ``args`` is 
+a list of argument names and ``val`` is the value of the function.
 
 .. code-block:: lisp
 
-    ;; The identity function which always returns its argument.
+    # The identity function which always returns its argument
     (fn x x)
 
-    ;; The constant function which ignores its second argument.
-    (fn x _ x)
+    # The constant function which ignores its second argument
+    (fn [x y] x)
 
-    ;; The increment function.
-    (fn x (+ x (nat 1)))
+    # The increment function
+    (fn x (add x 1))
+
+Note that the syntaxes ``(f x)``, ``[f x]``, and ``{f x}`` are interchangable.
 
 Closures
 ========
@@ -58,11 +58,11 @@ function's closure, and persists as long as the function persists.
 
 .. code-block:: lisp
 
-    ;; The increment function expressed with closures; the variable x is bound
-    ;; to one, and the function of y stores this value in its closure.
+    #(The increment function expressed with closures; the variable x is bound
+      to 1, and the function of y stores this value in its closure)
     ((fn x
        (fn y
-         (+ x y)))
+         (add x y)))
      (nat 1))
 
 Currying
@@ -74,8 +74,8 @@ functions are curried.
 
 .. code-block:: lisp
 
-    ;; This has the same effect as the example above due to currying.
-    (+ (nat 1))
+    # This has the same effect as the example above due to currying.
+    (add 1)
 
 Multi-Argument Functions
 ========================
@@ -86,8 +86,8 @@ single arguments.
 
 .. code-block:: lisp
 
-    ;; The two-argument application function with syntax sugar.
-    (fn x y z (x y z))
+    # The two-argument application function with syntax sugar.
+    (fn [x y z] (x y z))
 
-    ;; The two-argument application function without syntax sugar.
+    # The two-argument application function without syntax sugar.
     (fn x (fn y (fn x ((x y) z))))

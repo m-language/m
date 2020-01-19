@@ -1,1 +1,0 @@
-Error: Macro name is not a symbol.

@@ -7,11 +7,11 @@ Getting Started
 Choosing a Backend
 ==================
 
-M has backends for many platforms, and though they can all compile the M
+M has backends for several platforms, and though they can all compile the M
 compiler, some provide interop with their platform that is not available with
 other backends. As such, it is recommended that you build using the backend that
-you are most comfortable with. If this does not matter to you, the M-JVM backend
-is currently the most optimized and most stable.
+you are most comfortable with. If this does not matter to you, the Haskell
+interpreter is currently the most stable.
 
 Setting up the M Compiler
 =========================
@@ -36,34 +36,15 @@ There are M plugins for several popular editors:
 If you want to add support for your favorite editor, please 
 `create a feature request <https://github.com/m-language/m-language/issues/new?assignees=aedans&labels=&template=feature_request.md&title=%5BFEATURE%5D>`_.
 
-Building M-JVM
-==============
+Building the Haskell Interpreter
+================================
 
-Before building M-JVM, you will need:
+Before building the Haskell Interpreter, you will need to install `Stack <https://docs.haskellstack.org/en/stable/README/>`_:
 
-- Java version 1.8 or higher.
-- Kotlin version 1.3 or higher.
-- Gradle version 4.4 or higher.
-
-Once these are installed, simply run ``./m.sh build`` or ``./m.bat build`` to build
-the compiler. Then you can run the compiler with ``./m.sh`` or ``./m.bat``.
+Once Stack is installed, simply ``cd m-hs`` and run ``stack run`` to run the 
+interpreter.
 
 Building M-JS
 =============
 
 TODO
-
-Building M-Native
-=================
-
-TODO
-
-Using the M Compiler
-====================
-
-Once the M compiler is built, it can be ran with the following arguments.
-
-.. code-block:: bash
-
-    m compile <backend> <in> <out> -- Compiles a file
-    m repl <in>                    -- Runs the M repl
