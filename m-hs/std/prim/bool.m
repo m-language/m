@@ -9,13 +9,13 @@
   
   #(True if its argument is false)
   (defn (not x) 
-    (if x false true))
+    (x false true))
   
   #(True if both arguments are true)
   (defn (and x y) 
-    (if x y false))
+    (x y false))
   
   #(True if either argument is true)
   (defn (or x y) 
-    (if x true y))
+    (x true y))
 })
