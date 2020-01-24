@@ -22,7 +22,7 @@ What it looks like
 # This is a comment
 
 # Definitions are global and unordered
-(def one)
+(def one 1)
 
 # Functions are single argument curried lambdas
 (def id (fn x x))
