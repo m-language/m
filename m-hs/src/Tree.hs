@@ -5,6 +5,9 @@ import           Data.HashMap                   ( Map )
 
 data Tree
     = Symbol String
+    | CharTree Char
+    | StringTree String
+    | IntegerTree Integer
     | Apply Tree [Tree]
     deriving (Eq)
 

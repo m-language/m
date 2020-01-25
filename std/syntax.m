@@ -24,7 +24,7 @@
 
 #(Creates a function which always returns the same result)
 (defn (const x) 
-  (fn "" x))
+  (fn y x))
 
 #(Composes two functions)
 (defn (compose f g)

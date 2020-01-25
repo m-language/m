@@ -16,6 +16,9 @@ import           Control.Monad.Except
 
 data Value
     = Function Int (Env -> [(Env, Tree)] -> EvalResult Value)
+    | CharValue Char
+    | StringValue String
+    | IntegerValue Integer
     | Expr Tree
 
 data Error
@@ -23,8 +26,11 @@ data Error
     | Undefined (Set String)
 
 instance Show Value where
-    show (Function n f) = "<function[" ++ show n ++ "]>"
-    show (Expr tree   ) = "'" ++ show tree
+    show (Function n f       ) = "<function[" ++ show n ++ "]>"
+    show (CharValue    char  ) = show char
+    show (StringValue  string) = show string
+    show (IntegerValue i     ) = show i
+    show (Expr         tree  ) = "'" ++ show tree
 
 instance Show Error where
     show (Error     string) = "Error: " ++ string
@@ -66,7 +72,10 @@ eval (env, (Symbol name)) = get >>= \globals -> case lookupEnv name env of
     Nothing    -> case lookupEnv name globals of
         Just value -> value
         Nothing    -> throwError $ Undefined $ Set.singleton name
-eval (env, (Apply fn args)) = do
+eval (env, (CharTree char)      ) = return $ CharValue char
+eval (env, (StringTree string)  ) = return $ StringValue string
+eval (env, (IntegerTree integer)) = return $ IntegerValue integer
+eval (env, (Apply fn args)      ) = do
     f <- eval (env, fn)
     apply env f $ map (env, ) args
 
@@ -79,6 +88,21 @@ evalToSymbol :: (Env, Tree) -> EvalResult String
 evalToSymbol tree = evalToExpr tree >>= \case
     (Symbol s) -> return s
     x          -> throwError $ Error $ "Expected symbol, found " ++ show x
+
+evalToChar :: (Env, Tree) -> EvalResult Char
+evalToChar tree = eval tree >>= \case
+    (CharValue char) -> return char
+    x -> throwError $ Error $ "Expected character, found " ++ show x
+
+evalToString :: (Env, Tree) -> EvalResult String
+evalToString tree = eval tree >>= \case
+    (StringValue string) -> return string
+    x -> throwError $ Error $ "Expected string, found " ++ show x
+
+evalToInteger :: (Env, Tree) -> EvalResult Integer
+evalToInteger tree = eval tree >>= \case
+    (IntegerValue i) -> return i
+    x -> throwError $ Error $ "Expected integer, found " ++ show x
 
 apply :: Env -> Value -> [(Env, Tree)] -> EvalResult Value
 apply env (Function n f) args =
@@ -93,19 +117,30 @@ apply env (Function n f) args =
 apply env (Expr tree) args = do
     evArgs <- mapM evalToExpr args
     return $ Expr $ if null evArgs then tree else Apply tree evArgs
+apply env x args = throwError $ Error $ "Expected function, found " ++ show x
 
 special :: Env
 special = Env $ Map.fromList
-    [ ("fn"           , return $ Function 2 fn')
-    , ("fm"           , return $ Function 2 fm')
-    , ("def"          , return $ Function 2 def')
-    , ("block"        , return $ Function 2 block')
-    , ("error"        , return $ Function 1 error')
-    , ("case@expr"    , return $ Function 7 case')
-    , ("eq@symbol"    , return $ Function 4 eq')
-    , ("concat@symbol", return $ Function 2 concat')
-    , ("quote"        , return $ Function 1 quote')
+    [ entry "fn"            2 fn'
+    , entry "fm"            2 fm'
+    , entry "def"           2 def'
+    , entry "block"         2 block'
+    , entry "error"         1 error'
+    , entry "quote"         1 quote'
+    , entry "case@expr"     7 caseExpr'
+    , entry "eq@symbol"     4 eqSymbol'
+    , entry "eq@char"       4 eqChar'
+    , entry "concat@symbol" 2 concatSymbol'
+    , entry "length@string" 1 lengthString'
+    , entry "get@string"    3 getString'
+    , entry "add@int"       2 addInt'
+    , entry "sub@int"       2 subInt'
+    , entry "mul@int"       2 mulInt'
+    , entry "div@int"       3 divInt'
+    , entry "lt@int"        4 ltInt'
+    , entry "gt@int"        4 gtInt'
     ]
+    where entry name i f = (name, return $ Function i f)
 
 getNames :: Tree -> EvalResult [String]
 getNames (Symbol name  ) = return [name]
@@ -162,10 +197,10 @@ block' env [result, exprs] = case snd exprs of
         eval result
 
 error' :: Env -> [(Env, Tree)] -> EvalResult Value
-error' env [expr] = evalToExpr expr >>= \e -> throwError $ Error $ show e
+error' env [expr] = evalToString expr >>= \e -> throwError $ Error e
 
-case' :: Env -> [(Env, Tree)] -> EvalResult Value
-case' env [expr, symArgs, sym, nilArgs, nil, apArgs, ap] =
+caseExpr' :: Env -> [(Env, Tree)] -> EvalResult Value
+caseExpr' env [expr, symArgs, sym, nilArgs, nil, apArgs, ap] =
     evalToExpr expr >>= doCase
   where
     doCase (Symbol name) = getNames (snd symArgs) >>= \case
@@ -183,17 +218,72 @@ case' env [expr, symArgs, sym, nilArgs, nil, apArgs, ap] =
             in  eval (env'', snd ap)
         xs -> throwError $ Error "Apply case should have 2 arguments"
 
-eq' :: Env -> [(Env, Tree)] -> EvalResult Value
-eq' env [expr, expr', t', f'] = do
+eqSymbol' :: Env -> [(Env, Tree)] -> EvalResult Value
+eqSymbol' env [expr, expr', t', f'] = do
     sym  <- evalToSymbol expr
     sym' <- evalToSymbol expr'
     if sym == sym' then eval t' else eval f'
 
-concat' :: Env -> [(Env, Tree)] -> EvalResult Value
-concat' env [expr, expr'] = do
+eqChar' :: Env -> [(Env, Tree)] -> EvalResult Value
+eqChar' env [char, char', t', f'] = do
+    evChar  <- evalToChar char
+    evChar' <- evalToChar char'
+    if evChar == evChar' then eval t' else eval f'
+
+concatSymbol' :: Env -> [(Env, Tree)] -> EvalResult Value
+concatSymbol' env [expr, expr'] = do
     sym  <- evalToSymbol expr
     sym' <- evalToSymbol expr'
     return $ Expr $ Symbol (sym ++ ('@' : sym'))
 
 quote' :: Env -> [(Env, Tree)] -> EvalResult Value
 quote' env [tree] = return $ Expr $ snd tree
+
+lengthString' :: Env -> [(Env, Tree)] -> EvalResult Value
+lengthString' env [string] =
+    evalToString string <&> IntegerValue . toInteger . length
+
+getString' :: Env -> [(Env, Tree)] -> EvalResult Value
+getString' env [string, index, oob] = do
+    evString <- evalToString string
+    evIndex  <- evalToInteger index
+    let i = fromInteger evIndex :: Int
+    if i < 0 || i >= length evString
+        then eval oob
+        else return $ CharValue $ evString !! i
+
+addInt' :: Env -> [(Env, Tree)] -> EvalResult Value
+addInt' env [a, b] = do
+    evA <- evalToInteger a
+    evB <- evalToInteger b
+    return $ IntegerValue (evA + evB)
+
+subInt' :: Env -> [(Env, Tree)] -> EvalResult Value
+subInt' env [a, b] = do
+    evA <- evalToInteger a
+    evB <- evalToInteger b
+    return $ IntegerValue (evA - evB)
+
+mulInt' :: Env -> [(Env, Tree)] -> EvalResult Value
+mulInt' env [a, b] = do
+    evA <- evalToInteger a
+    evB <- evalToInteger b
+    return $ IntegerValue (evA * evB)
+
+divInt' :: Env -> [(Env, Tree)] -> EvalResult Value
+divInt' env [a, b, zero] = do
+    evA <- evalToInteger a
+    evB <- evalToInteger b
+    if evB == 0 then eval zero else return $ IntegerValue (evA `quot` evB)
+
+ltInt' :: Env -> [(Env, Tree)] -> EvalResult Value
+ltInt' env [int, int', t', f'] = do
+    int  <- evalToInteger int
+    int' <- evalToInteger int'
+    if int < int' then eval t' else eval f'
+
+gtInt' :: Env -> [(Env, Tree)] -> EvalResult Value
+gtInt' env [int, int', t', f'] = do
+    int  <- evalToInteger int
+    int' <- evalToInteger int'
+    if int > int' then eval t' else eval f'

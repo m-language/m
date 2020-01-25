@@ -4,6 +4,7 @@ import           Tree
 import           Text.ParserCombinators.Parsec
 import           System.Environment
 import           Control.Monad
+import           Data.Functor
 
 lineCommentTail :: Parser ()
 lineCommentTail = void $ many $ noneOf "\n"
@@ -22,43 +23,54 @@ ignored :: Parser ()
 ignored = skipMany (comment <|> void space)
 
 opChar :: Parser Char
-opChar = oneOf "~`!@$%^&*-=+\\|;:'<>,.?/"
+opChar = oneOf "~`!@$%^&*-=+\\|;:<>,.?/"
 
 symbolChar :: Parser Char
-symbolChar = alphaNum
+symbolChar = letter
 
 symbolCdr :: Parser String
-symbolCdr = many (symbolChar <|> opChar)
+symbolCdr = many (symbolChar <|> digit <|> opChar)
 
 escapedQuote :: Parser Char
 escapedQuote = do
     quote <- string "\"\""
     return $ last quote
 
-parseInlineSymbol :: Parser String
-parseInlineSymbol = do
+parseSymbol :: Parser Tree
+parseSymbol = do
     car <- symbolChar
     cdr <- symbolCdr
-    return $ car : cdr
+    ignored
+    return $ Symbol $ car : cdr
 
-parseLiteralSymbol :: Parser String
-parseLiteralSymbol = do
+parseChar :: Parser Tree
+parseChar = do
+    char '\''
+    c <- noneOf "'"
+    char '\''
+    ignored
+    return $ CharTree c
+
+parseString :: Parser Tree
+parseString = do
     char '"'
     chars <- many (try escapedQuote <|> noneOf "\"")
     char '"'
-    return chars
-
-parseSymbol :: Parser Tree
-parseSymbol = do
-    symbol <- parseInlineSymbol <|> parseLiteralSymbol
     ignored
-    return $ Symbol symbol
+    return $ StringTree chars
+
+parseInteger :: Parser Tree
+parseInteger = do
+    sign   <- option "" $ string "-"
+    number <- many1 digit
+    ignored
+    return $ IntegerTree $ read (sign ++ number)
 
 parseList :: Char -> Char -> Parser Tree
 parseList open close = do
     char open
     ignored
-    fn <- parseExpr
+    fn   <- parseExpr
     args <- many parseExpr
     char close
     ignored
@@ -67,6 +79,9 @@ parseList open close = do
 parseAtom :: Parser Tree
 parseAtom =
     parseSymbol
+        <|> parseChar
+        <|> parseString
+        <|> parseInteger
         <|> parseList '(' ')'
         <|> parseList '[' ']'
         <|> parseList '{' '}'

@@ -13,15 +13,15 @@
 #(Imports a module dynamically)
 (defn (import-dyn module)
   (fm expr
-    (module (import-dyn' expr))))
+    (module (import-dyn1 expr))))
 
-(defn (import-dyn' expr name exports)
+(defn (import-dyn1 expr name exports)
   (case@expr exports
-    [symbol] ((quote let) symbol (concat@symbol name symbol) expr)
-    [car] ((quote let) car (concat@symbol name car) expr)
+    [symbol] ((quote let) symbol (concat@symbol symbol name) expr)
+    [car] ((quote let) car (concat@symbol car name) expr)
     [car cdr]
-      ((quote let) car (concat@symbol name car)
-        (import-dyn' expr name cdr))))
+      ((quote let) car (concat@symbol car name)
+        (import-dyn1 expr name cdr))))
 
 #(Defines a module given a name and a list of exported symbols)
 (defm (module name exports)
@@ -47,8 +47,8 @@
 
 #(Defines a variable in a module)
 (defm (module-def module name expr)
-  ((quote def') (concat@symbol module name)
+  ((quote def1) (concat@symbol name module)
     ((quote import-dyn) module expr)))
 
 #(An alias for def)
-(def def' def)
+(def def1 def)
