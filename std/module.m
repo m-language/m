@@ -3,7 +3,7 @@
 
 #(Evaluates an expression with a list of imported modules)
 (defm (import modules expr)
-  (expr/case modules
+  (case@expr modules
     [symbol] ((quote import-dyn) modules expr)
     [car] ((quote import) car expr)
     [car cdr]
@@ -16,11 +16,11 @@
     (module (import-dyn' expr))))
 
 (defn (import-dyn' expr name exports)
-  (expr/case exports
-    [symbol] ((quote let) symbol (symbol/concat name symbol) expr)
-    [car] ((quote let) car (symbol/concat name car) expr)
+  (case@expr exports
+    [symbol] ((quote let) symbol (concat@symbol name symbol) expr)
+    [car] ((quote let) car (concat@symbol name car) expr)
     [car cdr]
-      ((quote let) car (symbol/concat name car)
+      ((quote let) car (concat@symbol name car)
         (import-dyn' expr name cdr))))
 
 #(Defines a module given a name and a list of exported symbols)
@@ -33,7 +33,7 @@
 
 #(Defines a module and evaluates a list of expressions in the module)
 (defm (defmodule modules exports exprs)
-  (expr/case modules
+  (case@expr modules
     [name]
       ((quote block) name {
         ((quote module) name exports)
@@ -47,7 +47,7 @@
 
 #(Defines a variable in a module)
 (defm (module-def module name expr)
-  ((quote def') (symbol/concat module name)
+  ((quote def') (concat@symbol module name)
     ((quote import-dyn) module expr)))
 
 #(An alias for def)

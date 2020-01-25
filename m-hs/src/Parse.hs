@@ -22,7 +22,7 @@ ignored :: Parser ()
 ignored = skipMany (comment <|> void space)
 
 opChar :: Parser Char
-opChar = oneOf "!$%&*+|:<=>?@^~'=-"
+opChar = oneOf "~`!@$%^&*-=+\\|;:'<>,.?/"
 
 symbolChar :: Parser Char
 symbolChar = alphaNum
@@ -50,7 +50,7 @@ parseLiteralSymbol = do
 
 parseSymbol :: Parser Tree
 parseSymbol = do
-    symbol <- sepBy1 (parseInlineSymbol <|> parseLiteralSymbol) (char '/')
+    symbol <- parseInlineSymbol <|> parseLiteralSymbol
     ignored
     return $ Symbol symbol
 

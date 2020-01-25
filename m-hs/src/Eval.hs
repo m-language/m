@@ -20,7 +20,7 @@ data Value
 
 data Error
     = Error String
-    | Undefined (Set [String])
+    | Undefined (Set String)
 
 instance Show Value where
     show (Function n f) = "<function[" ++ show n ++ "]>"
@@ -30,15 +30,15 @@ instance Show Error where
     show (Error     string) = "Error: " ++ string
     show (Undefined ns    ) = "Undefined: " ++ show (map Symbol $ Set.toList ns)
 
-newtype Env = Env (Map [String] (EvalResult Value))
+newtype Env = Env (Map String (EvalResult Value))
 
-insertEnv :: [String] -> Value -> Env -> Env
+insertEnv :: String -> Value -> Env -> Env
 insertEnv name value (Env env) = Env $ Map.insert name (return value) env
 
-insertEnvLazy :: [String] -> EvalResult Value -> Env -> Env
+insertEnvLazy :: String -> EvalResult Value -> Env -> Env
 insertEnvLazy name value (Env env) = Env $ Map.insert name value env
 
-lookupEnv :: [String] -> Env -> Maybe (EvalResult Value)
+lookupEnv :: String -> Env -> Maybe (EvalResult Value)
 lookupEnv name (Env env) = Map.lookup name env
 
 type EvalResult = StateT Env (Either Error)
@@ -46,7 +46,7 @@ type EvalResult = StateT Env (Either Error)
 evalSeq :: Env -> [Tree] -> EvalResult ()
 evalSeq env = evalSeq' env False Set.empty []
   where
-    evalSeq' :: Env -> Bool -> Set [String] -> [Tree] -> [Tree] -> EvalResult ()
+    evalSeq' :: Env -> Bool -> Set String -> [Tree] -> [Tree] -> EvalResult ()
     evalSeq' env found errors []    [] = return ()
     evalSeq' env found errors defer [] = if found
         then evalSeq' env False Set.empty [] defer
@@ -75,7 +75,7 @@ evalToExpr tree = eval tree >>= \case
     (Expr tree) -> return tree
     x           -> throwError $ Error $ "Expected expression, found " ++ show x
 
-evalToSymbol :: (Env, Tree) -> EvalResult [String]
+evalToSymbol :: (Env, Tree) -> EvalResult String
 evalToSymbol tree = evalToExpr tree >>= \case
     (Symbol s) -> return s
     x          -> throwError $ Error $ "Expected symbol, found " ++ show x
@@ -96,25 +96,25 @@ apply env (Expr tree) args = do
 
 special :: Env
 special = Env $ Map.fromList
-    [ (["fn"]              , return $ Function 2 fn')
-    , (["fm"]              , return $ Function 2 fm')
-    , (["def"]             , return $ Function 2 def')
-    , (["block"]           , return $ Function 2 block')
-    , (["error"]           , return $ Function 1 error')
-    , (["expr", "case"]    , return $ Function 7 case')
-    , (["symbol", "eq"]    , return $ Function 4 eq')
-    , (["symbol", "concat"], return $ Function 2 concat')
-    , (["quote"]           , return $ Function 1 quote')
+    [ ("fn"           , return $ Function 2 fn')
+    , ("fm"           , return $ Function 2 fm')
+    , ("def"          , return $ Function 2 def')
+    , ("block"        , return $ Function 2 block')
+    , ("error"        , return $ Function 1 error')
+    , ("case@expr"    , return $ Function 7 case')
+    , ("eq@symbol"    , return $ Function 4 eq')
+    , ("concat@symbol", return $ Function 2 concat')
+    , ("quote"        , return $ Function 1 quote')
     ]
 
-getNames :: Tree -> EvalResult [[String]]
+getNames :: Tree -> EvalResult [String]
 getNames (Symbol name  ) = return [name]
 getNames (Apply fn args) = do
     fnNames  <- names [fn]
     argNames <- names args
     return $ fnNames ++ argNames
   where
-    names :: [Tree] -> EvalResult [[String]]
+    names :: [Tree] -> EvalResult [String]
     names []                    = return []
     names ((Symbol name) : cdr) = names cdr <&> (name :)
     names (ap@(Apply _ _) : cdr) =
@@ -126,7 +126,7 @@ fn' closure [args, value] = do
     return $ Function (length names) $ \env args ->
         fnApply closure names args $ snd value
 
-fnApply :: Env -> [[String]] -> [(Env, Tree)] -> Tree -> EvalResult Value
+fnApply :: Env -> [String] -> [(Env, Tree)] -> Tree -> EvalResult Value
 fnApply closure [] [] tree = eval (closure, tree)
 fnApply closure (name : names) (arg : args) tree =
     fnApply (insertEnvLazy name (eval arg) closure) names args tree
@@ -137,7 +137,7 @@ fm' closure [args, value] = do
     return $ Function (length names) $ \env args ->
         fmApply env closure names args $ snd value
 
-fmApply :: Env -> Env -> [[String]] -> [(Env, Tree)] -> Tree -> EvalResult Value
+fmApply :: Env -> Env -> [String] -> [(Env, Tree)] -> Tree -> EvalResult Value
 fmApply env closure [] [] tree = evalToExpr (closure, tree) >>= curry eval env
 fmApply env closure (name : names) (arg : args) tree =
     fmApply env (insertEnv name (Expr $ snd arg) closure) names args tree
@@ -193,7 +193,7 @@ concat' :: Env -> [(Env, Tree)] -> EvalResult Value
 concat' env [expr, expr'] = do
     sym  <- evalToSymbol expr
     sym' <- evalToSymbol expr'
-    return $ Expr $ Symbol (sym ++ sym')
+    return $ Expr $ Symbol (sym ++ ('@' : sym'))
 
 quote' :: Env -> [(Env, Tree)] -> EvalResult Value
 quote' env [tree] = return $ Expr $ snd tree
