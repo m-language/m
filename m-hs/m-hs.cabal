@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 19e2b8498dd2dd0a8c6b61f10ceab18cef752f986a77d603e4e60f0a4aec2baf
+-- hash: c79a2fb35b9a04dca68d306d42f08298b3445c7a8890600691bf53a4b223f036
 
 name:           m-hs
 version:        0.1.0.0
@@ -27,6 +27,7 @@ library
   exposed-modules:
       Eval
       Parse
+      Special
       Tree
   other-modules:
       Paths_m_hs

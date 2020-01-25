@@ -2,6 +2,7 @@ import           Parse
 import           Tree
 import           Command
 import           Eval
+import           Special
 
 import           Data.HashMap                   ( Map )
 import qualified Data.HashMap                  as Map

@@ -1,6 +1,6 @@
 #(An implementation of either as a higher order function whose argument is
   applied to the left or right value)
-(defmodule either [left right] {
+(defpackage either [left right] {
   #(Creates a left either)
   (defn (left value)
     (fn [l r]

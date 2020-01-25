@@ -1,6 +1,6 @@
 #(An implementation of booleans as two argument functions which ignore one 
   argument, where (true x y) = (x) and (false x y) = (y))
-(defmodule bool [true false not and or] {
+(defpackage bool [true false not and or] {
   #(The singleton truthy value, a function which ignores its second argument)
   (defn (true x y) x)
   

@@ -15,6 +15,11 @@
     [signature] ((quote defn) signature expr)
     [name args] ((quote def) name ((quote fn) args expr))))
 
+#(Macro for defining function macros)
+(defm (defnm signature args expr)
+  ((quote defn) signature
+    ((quote fm) args expr)))
+
 #(Macro for defining a local variable)
 (defm (let name value expr)
   ((quote fn) name expr value))
