@@ -15,7 +15,7 @@ import           Data.List
 import           Control.Monad.State
 import           Control.Monad.Except
 
-type Defs = [(String, Value)]
+type Defs = [(String, EvalResult Value)]
 
 data Value
     = Function Int (Env -> [(Env, Tree)] -> EvalResult Value)
@@ -35,8 +35,7 @@ instance Show Value where
     show (CharValue    c) = show c
     show (StringValue  s) = show s
     show (IntegerValue i) = show i
-    show (Define d) =
-        intercalate ", " $ map (\(n, v) -> n ++ " = " ++ show v) d
+    show (Define       d) = unwords $ map (\(n, v) -> n) d
 
 instance Show Error where
     show (Error     string) = "Error: " ++ string
@@ -48,8 +47,9 @@ insertEnv :: String -> Value -> Env -> Env
 insertEnv name value (Env env) = Env $ Map.insert name (return value) env
 
 unionEnv :: Defs -> Env -> Env
-unionEnv []                     env = env
-unionEnv ((name, value) : defs) env = unionEnv defs (insertEnv name value env)
+unionEnv [] env = env
+unionEnv ((name, value) : defs) env =
+    unionEnv defs $ insertEnvLazy name value env
 
 insertEnvLazy :: String -> EvalResult Value -> Env -> Env
 insertEnvLazy name value (Env env) = Env $ Map.insert name value env
@@ -137,4 +137,4 @@ apply env x args = throwError $ Error $ "Expected function, found " ++ show x
 applyDef :: Defs -> (Env, Tree) -> EvalResult Value
 applyDef [] expr = eval expr
 applyDef ((name, value) : defs) (env, tree) =
-    applyDef defs (insertEnv name value env, tree)
+    applyDef defs (insertEnvLazy name value env, tree)

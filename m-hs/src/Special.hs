@@ -73,9 +73,7 @@ fmApply env closure (name : names) (arg : args) tree =
 
 def' :: Env -> [(Env, Tree)] -> EvalResult Value
 def' env [names, value] = case snd names of
-    Symbol name -> do
-        ev  <- eval value
-        return $ Define [(name, ev)]
+    Symbol name -> return $ Define [(name, eval value)]
     x -> throwError $ Error $ "Expected symbol, found " ++ show x
 
 block' :: Env -> [(Env, Tree)] -> EvalResult Value
