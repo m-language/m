@@ -1,5 +1,9 @@
 #(Module for using M symbols)
-(defpackage (symbol bool) [eq concat neq] {
+(defmodule symbol {
+  #(Tests if two symbols are equal)
+  (def eq eq@symbol)
+
   #(The inverse of eq)
-  (defn (neq a b) (not@bool (eq a b)))
+  (defn (neq a b) 
+    ((bool not) (eq a b)))
 })

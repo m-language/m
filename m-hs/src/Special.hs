@@ -19,13 +19,12 @@ special = Env $ Map.fromList
     [ entry "fn"            2 fn'
     , entry "fm"            2 fm'
     , entry "def"           2 def'
-    , entry "block"         2 block'
+    , entry "block"         1 block'
     , entry "error"         1 error'
     , entry "quote"         1 quote'
     , entry "case@expr"     7 caseExpr'
     , entry "eq@symbol"     4 eqSymbol'
     , entry "eq@char"       4 eqChar'
-    , entry "concat@symbol" 2 concatSymbol'
     , entry "length@string" 1 lengthString'
     , entry "get@string"    3 getString'
     , entry "add@int"       2 addInt'
@@ -75,21 +74,14 @@ fmApply env closure (name : names) (arg : args) tree =
 def' :: Env -> [(Env, Tree)] -> EvalResult Value
 def' env [names, value] = case snd names of
     Symbol name -> do
-        env <- get
         ev  <- eval value
-        case lookupEnv name env of
-            Nothing -> modify $ insertEnv name ev
-            Just a ->
-                throwError $ Error $ "Cannot redefine " ++ show (Symbol name)
-        return ev
+        return $ Define [(name, ev)]
     x -> throwError $ Error $ "Expected symbol, found " ++ show x
 
 block' :: Env -> [(Env, Tree)] -> EvalResult Value
-block' env [result, exprs] = case snd exprs of
+block' env [exprs] = case snd exprs of
     Symbol name   -> eval (env, Symbol name)
-    Apply fn args -> do
-        evalSeq env (fn : args)
-        eval result
+    Apply fn args -> evalBlock env (fn : args) <&> Define
 
 error' :: Env -> [(Env, Tree)] -> EvalResult Value
 error' env [expr] = evalToString expr >>= \e -> throwError $ Error e
@@ -124,12 +116,6 @@ eqChar' env [char, char', t', f'] = do
     evChar  <- evalToChar char
     evChar' <- evalToChar char'
     if evChar == evChar' then eval t' else eval f'
-
-concatSymbol' :: Env -> [(Env, Tree)] -> EvalResult Value
-concatSymbol' env [expr, expr'] = do
-    sym  <- evalToSymbol expr
-    sym' <- evalToSymbol expr'
-    return $ Expr $ Symbol (sym ++ ('@' : sym'))
 
 quote' :: Env -> [(Env, Tree)] -> EvalResult Value
 quote' env [tree] = return $ Expr $ snd tree

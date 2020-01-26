@@ -11,26 +11,32 @@ import qualified Data.HashSet                  as Set
 import           Data.Functor
 import           Data.Bifunctor
 import           Data.Functor.Classes
+import           Data.List
 import           Control.Monad.State
 import           Control.Monad.Except
 
+type Defs = [(String, Value)]
+
 data Value
     = Function Int (Env -> [(Env, Tree)] -> EvalResult Value)
+    | Define Defs
+    | Expr Tree
     | CharValue Char
     | StringValue String
     | IntegerValue Integer
-    | Expr Tree
 
 data Error
     = Error String
     | Undefined (Set String)
 
 instance Show Value where
-    show (Function n f       ) = "<function[" ++ show n ++ "]>"
-    show (CharValue    char  ) = show char
-    show (StringValue  string) = show string
-    show (IntegerValue i     ) = show i
-    show (Expr         tree  ) = "'" ++ show tree
+    show (Function n f  ) = "<function>"
+    show (Expr         t) = "'" ++ show t
+    show (CharValue    c) = show c
+    show (StringValue  s) = show s
+    show (IntegerValue i) = show i
+    show (Define d) =
+        intercalate ", " $ map (\(n, v) -> n ++ " = " ++ show v) d
 
 instance Show Error where
     show (Error     string) = "Error: " ++ string
@@ -41,43 +47,50 @@ newtype Env = Env (Map String (EvalResult Value))
 insertEnv :: String -> Value -> Env -> Env
 insertEnv name value (Env env) = Env $ Map.insert name (return value) env
 
+unionEnv :: Defs -> Env -> Env
+unionEnv []                     env = env
+unionEnv ((name, value) : defs) env = unionEnv defs (insertEnv name value env)
+
 insertEnvLazy :: String -> EvalResult Value -> Env -> Env
 insertEnvLazy name value (Env env) = Env $ Map.insert name value env
 
 lookupEnv :: String -> Env -> Maybe (EvalResult Value)
 lookupEnv name (Env env) = Map.lookup name env
 
-type EvalResult = StateT Env (Either Error)
+type EvalResult = Either Error
 
-evalSeq :: Env -> [Tree] -> EvalResult ()
-evalSeq env = evalSeq' env False Set.empty []
-  where
-    evalSeq' :: Env -> Bool -> Set String -> [Tree] -> [Tree] -> EvalResult ()
-    evalSeq' env found errors []    [] = return ()
-    evalSeq' env found errors defer [] = if found
-        then evalSeq' env False Set.empty [] defer
-        else throwError $ Undefined errors
-    evalSeq' env found errors defer (car : cdr) = do
-        globals <- get
-        case runStateT (eval (env, car)) globals of
-            Right value ->
-                eval (env, car) >> evalSeq' env True errors defer cdr
-            Left (Undefined names) ->
-                evalSeq' env found (Set.union names errors) (car : defer) cdr
-            Left (Error string) -> throwError $ Error string
+evalBlock :: Env -> [Tree] -> EvalResult Defs
+evalBlock env = evalBlock' env False Set.empty []
+
+evalBlock' :: Env -> Bool -> Set String -> [Tree] -> [Tree] -> EvalResult Defs
+evalBlock' env found errors []    [] = return []
+evalBlock' env found errors defer [] = if found
+    then evalBlock' env False Set.empty [] defer
+    else throwError $ Undefined errors
+evalBlock' env found errors defer (car : cdr) = case evalToDefine (env, car) of
+    Right value -> do
+        defs  <- evalToDefine (env, car)
+        defs' <- evalBlock' (unionEnv defs env) True errors defer cdr
+        return $ defs ++ defs'
+    Left (Undefined names) ->
+        evalBlock' env found (Set.union names errors) (car : defer) cdr
+    Left (Error string) -> throwError $ Error string
 
 eval :: (Env, Tree) -> EvalResult Value
-eval (env, (Symbol name)) = get >>= \globals -> case lookupEnv name env of
+eval (env, (Symbol name)) = case lookupEnv name env of
     Just value -> value
-    Nothing    -> case lookupEnv name globals of
-        Just value -> value
-        Nothing    -> throwError $ Undefined $ Set.singleton name
+    Nothing    -> throwError $ Undefined $ Set.singleton name
 eval (env, (CharTree char)      ) = return $ CharValue char
 eval (env, (StringTree string)  ) = return $ StringValue string
 eval (env, (IntegerTree integer)) = return $ IntegerValue integer
 eval (env, (Apply fn args)      ) = do
     f <- eval (env, fn)
     apply env f $ map (env, ) args
+
+evalToDefine :: (Env, Tree) -> EvalResult Defs
+evalToDefine tree = eval tree >>= \case
+    (Define defs) -> return defs
+    x -> throwError $ Error $ "Expected expression, found " ++ show x
 
 evalToExpr :: (Env, Tree) -> EvalResult Tree
 evalToExpr tree = eval tree >>= \case
@@ -114,7 +127,14 @@ apply env (Function n f) args =
                 then apply env (Function n f) (take n args)
                     >>= \f -> apply env f (drop n args)
                 else f env args
+apply env (Define defs) args =
+    apply env (Function 1 $ \_ [expr] -> applyDef defs expr) args
 apply env (Expr tree) args = do
     evArgs <- mapM evalToExpr args
     return $ Expr $ if null evArgs then tree else Apply tree evArgs
 apply env x args = throwError $ Error $ "Expected function, found " ++ show x
+
+applyDef :: Defs -> (Env, Tree) -> EvalResult Value
+applyDef [] expr = eval expr
+applyDef ((name, value) : defs) (env, tree) =
+    applyDef defs (insertEnv name value env, tree)

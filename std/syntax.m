@@ -20,10 +20,6 @@
   ((quote defn) signature
     ((quote fm) args expr)))
 
-#(Macro for defining a local variable)
-(defm (let name value expr)
-  ((quote fn) name expr value))
-
 #(The identity function)
 (defn (id x) x)
 

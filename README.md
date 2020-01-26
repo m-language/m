@@ -36,7 +36,9 @@ What it looks like
 (defn (compose f g x) (f (g x)))
 
 # Modules are defined in module.m
-(defmodule (demo nat list bool data stdio) {
+(defmodule demo {
+  (import [nat list bool data stdio])
+
   # Natural numbers are defined in nat.m
   (def inc (add 1))
 

@@ -1,13 +1,23 @@
 #(Module for using M integers)
-(defpackage (int bool) [add sub mul div lt gt eq div-unsafe neg] {
+(defmodule int {
+  #(Adds two integers)
+  (def add add@int)
+
+  #(Subtracts two integers)
+  (def sub sub@int)
+
+  #(Multiplies two integers)
+  (def mul mul@int)
+
+  #(Divides two integers)
+  (def div div@int)
+
+  (def lt lt@int)
+  (def gt gt@int)
+
   #(Similar to div, but errors if the divisor is zero)
   (defn (div-unsafe x y)
     (div x y (error "Divisor is zero")))
- 
-  #(Tests for integer equality)
-  (defn (eq x y)
-    (lt x y false
-      (gt x y false true)))
 
   #(Negates x)
   (defn (neg x) (sub 0 x))

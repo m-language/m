@@ -1,6 +1,9 @@
 #(Module for using M characters)
-(defpackage (char bool) [eq neq] {
+(defmodule char {
+  #(Tests if two characters are equal)
+  (def eq eq@char)
+
   #(The inverse of eq)
-  (defn (neq a b) 
-    (not (eq a b)))
+  (defn (neq a b)
+    ((bool not) (eq a b)))
 })

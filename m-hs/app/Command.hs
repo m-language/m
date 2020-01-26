@@ -37,10 +37,12 @@ runParseCommand rest env = runDefault env $ do
 
 runEvalCommand :: String -> Env -> IO Env
 runEvalCommand rest env = runDefault env $ do
-    tree          <- printError $ parseRepl rest
-    (value, env') <- printError $ runStateT (eval (Env Map.empty, tree)) env
+    tree  <- printError $ parseRepl rest
+    value <- printError $ eval (env, tree)
     lift $ print value
-    return env'
+    return $ case value of
+        Define defs -> unionEnv defs env
+        x           -> env
 
 runLoadParseCommand :: String -> Env -> IO Env
 runLoadParseCommand rest env = runDefault env $ do
@@ -53,7 +55,8 @@ runLoadCommand :: String -> Env -> IO Env
 runLoadCommand rest env = runDefault env $ do
     files <- lift $ parseFiles $ words rest
     trees <- printError files
-    printError $ execStateT (evalSeq (Env Map.empty) trees) env
+    defs  <- printError $ evalBlock env trees
+    return $ unionEnv defs env
 
 parseFile :: String -> IO (Either ParseError [Tree])
 parseFile name = doesDirectoryExist name >>= \case
