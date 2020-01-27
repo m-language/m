@@ -18,6 +18,7 @@ import qualified Data.HashMap                  as Map
 import           Data.Bifunctor
 import           Control.Monad.State
 import           Control.Monad.Except
+import           Control.Monad.Reader
 import           System.Directory
 import           System.FilePath.Posix
 
@@ -38,7 +39,7 @@ runParseCommand rest env = runDefault env $ do
 runEvalCommand :: String -> Env -> IO Env
 runEvalCommand rest env = runDefault env $ do
     tree  <- printError $ parseRepl rest
-    value <- printError $ eval (env, tree)
+    value <- printError $ runReaderT (eval (Env Map.empty, tree)) env
     lift $ print value
     return $ case value of
         Define defs -> unionEnv defs env
@@ -55,7 +56,7 @@ runLoadCommand :: String -> Env -> IO Env
 runLoadCommand rest env = runDefault env $ do
     files <- lift $ parseFiles $ words rest
     trees <- printError files
-    defs  <- printError $ evalBlock env trees
+    defs  <- printError $ runReaderT (evalBlock (Env Map.empty) trees) env
     return $ unionEnv defs env
 
 parseFile :: String -> IO (Either ParseError [Tree])

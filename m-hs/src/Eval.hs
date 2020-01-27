@@ -12,8 +12,8 @@ import           Data.Functor
 import           Data.Bifunctor
 import           Data.Functor.Classes
 import           Data.List
-import           Control.Monad.State
 import           Control.Monad.Except
+import           Control.Monad.Reader
 
 type Defs = [(String, EvalResult Value)]
 
@@ -57,7 +57,7 @@ insertEnvLazy name value (Env env) = Env $ Map.insert name value env
 lookupEnv :: String -> Env -> Maybe (EvalResult Value)
 lookupEnv name (Env env) = Map.lookup name env
 
-type EvalResult = Either Error
+type EvalResult = ReaderT Env (Either Error)
 
 evalBlock :: Env -> [Tree] -> EvalResult Defs
 evalBlock env = evalBlock' env False Set.empty []
@@ -67,19 +67,24 @@ evalBlock' env found errors []    [] = return []
 evalBlock' env found errors defer [] = if found
     then evalBlock' env False Set.empty [] defer
     else throwError $ Undefined errors
-evalBlock' env found errors defer (car : cdr) = case evalToDefine (env, car) of
-    Right value -> do
-        defs  <- evalToDefine (env, car)
-        defs' <- evalBlock' (unionEnv defs env) True errors defer cdr
-        return $ defs ++ defs'
-    Left (Undefined names) ->
-        evalBlock' env found (Set.union names errors) (car : defer) cdr
-    Left (Error string) -> throwError $ Error string
+evalBlock' env found errors defer (car : cdr) =
+    let result = do
+            defs  <- evalToDefine (env, car)
+            defs' <- evalBlock' (unionEnv defs env) True errors defer cdr
+            return $ defs ++ defs'
+    in  catchError result $ \case
+            Undefined names ->
+                evalBlock' env found (Set.union names errors) (car : defer) cdr
+            Error string -> throwError $ Error string
 
 eval :: (Env, Tree) -> EvalResult Value
 eval (env, (Symbol name)) = case lookupEnv name env of
     Just value -> value
-    Nothing    -> throwError $ Undefined $ Set.singleton name
+    Nothing    -> do 
+        globals <- ask 
+        case lookupEnv name globals of
+            Just value -> value
+            Nothing -> throwError $ Undefined $ Set.singleton name
 eval (env, (CharTree char)      ) = return $ CharValue char
 eval (env, (StringTree string)  ) = return $ StringValue string
 eval (env, (IntegerTree integer)) = return $ IntegerValue integer
