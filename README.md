@@ -1,9 +1,6 @@
 M Language
 ==========
 
-**Note: M has recently undergone a complete rewrite, so some things may be
-mismatched or missing.**
-
 ![travis build](https://travis-ci.com/m-language/m-language.svg?branch=master)
 
 [The M programming language](https://m-language.github.io/) is a minimal 
