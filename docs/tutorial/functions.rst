@@ -4,15 +4,11 @@
 Functions
 *********
 
-Unlike most programming languages, functions are the only fundamental objects in
-M. Every data type in M is represented as a function, even typically intrinsic 
-ones like structs and integers. These representations will be covered in
-`data types <datatypes.html>`_, and are optimized to their efficient machine
-representations where possible.
-
-Functions in M are pure, meaning that they return the same result for the same
-input, and only ever take one argument (multi-argument functions are provided as
-syntax sugar).
+Functions are the fundamental data type in M. Every other type, except for a few
+primitive ones such as integers and expressions, is represented as a function, 
+even typically intrinsic ones like structs and booleans. Functions in M are 
+pure, meaning that they cannot have side effects like IO and mutation, and only 
+ever take one argument (multi-argument functions are provided as syntax sugar).
 
 Function Application
 ====================
@@ -60,10 +56,8 @@ function's closure, and persists as long as the function persists.
 
     #(The increment function expressed with closures; the variable x is bound
       to 1, and the function of y stores this value in its closure)
-    ((fn x
-       (fn y
-         (add x y)))
-     (nat 1))
+    ((fn x (fn y (add x y))) 
+     1)
 
 Currying
 ========

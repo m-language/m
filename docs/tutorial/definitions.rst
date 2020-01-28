@@ -5,8 +5,12 @@ Definitions
 ***********
 
 While it is possible to introduce local variables with functions, something more
-powerful is needed to abstract in larger programs. M's definitions have simple
-compositional semantics which allow them to to easily be extended.
+powerful is needed to abstract in larger programs. Definitions provide a simple
+way of providing both local and global variables without worrying about 
+includes or predeclarations.
+
+Definition Expressions
+======================
 
 Definition expressions are of the form ``(def <name> <val>)``, where ``name`` is
 the name of the definition and ``val`` is is the value of the definition.
@@ -19,20 +23,6 @@ the name of the definition and ``val`` is is the value of the definition.
     # The constant function which ignores its second argument.
     (def const (fn [x y] x))
 
-Name Collisions
-===============
-
-M does not allow name collisions and fails as soon as a definition with a name
-that has already been defined is introduced.
-
-.. code-block:: lisp
-
-    # 1
-    (def one 1)
-
-    # Error: one has already been defined
-    (def one (inc 0))
-
 Ordering
 ========
 
@@ -43,42 +33,45 @@ its first usage.
 .. code-block:: lisp
 
     # 3
-    (inc 2)
+    (def three (inc 2))
 
     # The increment function which adds one to its argument
     (def inc (add 1))
 
-Recursion
-=========
-
-M does not natively support recursion; it is instead emulated through the fixed
-point combinator as shown later in `recursion <recursion.html>`_.
-
-.. code-block:: lisp
-
-    # Error: could not find recursive
-    (def recursive (fn x (recursive x)))
-
 As Expressions
 ==============
 
-Definitions are expressions which return the value of what they define. Since
-they are expressions, they can also be used in functions and passed as 
-arguments.
+Definitions are expressions which return a definition value. When a definition
+value is applied, it evaluates its argument with the definition. This allows 
+definitions to be used to define local variables.
 
 .. code-block:: lisp
 
     # 3
-    ((def inc (add 1)) 2)
+    ((def inc (add 1))
+      (inc 2))
 
-    # Equivalent to the above
-    (def inc (add 1))
-    (inc 2)
+    # Equivalent to the above due to currying
+    (def inc (add 1)
+      (inc 2))
 
-    # Equivalent to the above
-    (inc 2)
-    ((fn one (def inc (add one)))
-      1)
+Block Expressions
+=================
+
+Block expressions are expressions of the form ``(block exprs)``, where ``exprs``
+is the list of expressions in the block. A block expression combines the
+definition values of all expressions in the block to create a single definition 
+value.
+
+.. code-block:: lisp
+
+    #(Defines three and inc)
+    (block {
+      (def three (inc 2))
+      (def inc (add 1))
+    })
+
+Semantically, the top level of an M program is a block expression.
 
 Cross File Definitions
 ======================

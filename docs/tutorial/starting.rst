@@ -4,15 +4,6 @@
 Getting Started
 ***************
 
-Choosing a Backend
-==================
-
-M has backends for several platforms, and though they can all compile the M
-compiler, some provide interop with their platform that is not available with
-other backends. As such, it is recommended that you build using the backend that
-you are most comfortable with. If this does not matter to you, the Haskell
-interpreter is currently the most stable.
-
 Setting up the M Compiler
 =========================
 
@@ -23,6 +14,14 @@ of your choice.
 .. code-block:: bash
 
     git clone https://github.com/m-language/m-language.git
+
+Building the Haskell Interpreter
+================================
+
+Before building the Haskell Interpreter, you will need to install `Stack <https://docs.haskellstack.org/en/stable/README/>`_:
+
+Once Stack is installed, simply ``cd m-hs`` and ``stack run`` to run the 
+interpreter.
 
 Setting up your Editor
 ======================
@@ -35,16 +34,3 @@ There are M plugins for several popular editors:
 
 If you want to add support for your favorite editor, please 
 `create a feature request <https://github.com/m-language/m-language/issues/new?assignees=aedans&labels=&template=feature_request.md&title=%5BFEATURE%5D>`_.
-
-Building the Haskell Interpreter
-================================
-
-Before building the Haskell Interpreter, you will need to install `Stack <https://docs.haskellstack.org/en/stable/README/>`_:
-
-Once Stack is installed, simply ``cd m-hs`` and run ``stack run`` to run the 
-interpreter.
-
-Building M-JS
-=============
-
-TODO

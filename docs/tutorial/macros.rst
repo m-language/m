@@ -20,9 +20,6 @@ of their arguments, they operate on the expressions of their arguments.
     # The identity function defined using the defn macro
     (defn (id x) x)
 
-    # A recursive function defined using the defnrec macro
-    (defnrec (recursive x) (recursive x))
-
 Creating Expressions
 ====================
 
@@ -98,34 +95,6 @@ Case expressions are of the form ``(expr/case <expr> <sym-args> <sym> <nil-args>
     # In the third case, (defn (name args) value) => (def name (fn args value))
     (defn (id x) x)
 
-Symbol Concatenation
-====================
-
-Symbol concatation expressions are of the form ``(symbol/concat <sym1> <sym2>)``,
-where ``sym1`` and ``sym2`` are the symbols to be concatentated. Concatention is
-unique, so ``(symbol/concat (quote a) (quote b))`` is different from
-``(quote ab)``.
-
-.. code-block:: lisp
-
-    # a/b
-    (symbol/concat (quote a) (quote b))
-
-Symbol Equality
-===============
-
-Symbol equality expressions are of the form ``(symbol/eq <sym1> <sym2> <eq> <neq>)``,
-where ``sym1`` and ``sym2`` are the symbols to be tested, and ``eq`` and ``neq``
-are the branches to be executed.
-
-.. code-block:: lisp
-
-    # true
-    (symbol/eq (quote a) (quote a) true false)
-
-    # false
-    (symbol/eq (quote a) (quote b) true false)
-
 Currying
 ========
 
@@ -133,13 +102,10 @@ Internally, function macros are not curried, as they are required to return
 expressions rather than functions. However, they can still be treated like they 
 are curried, and will work as expected.
 
-
 .. code-block:: lisp
 
-    # Defines inc with "currying"
+    # Defines inc with currying
     ((def inc) (fn x (add 1 x)))
 
     # Equivalent to the above
     ((defn (inc x)) (add 1 x))
-
-

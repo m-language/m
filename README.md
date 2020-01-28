@@ -5,12 +5,7 @@ M Language
 
 [The M programming language](https://m-language.github.io/) is a minimal 
 language, designed from the ground up to be as simple as possible for
-readability and expressiveness. 
-
-Getting Started
----------------
-
-See [the getting started guide](https://m-language.readthedocs.io/en/latest/tutorial/starting.html).
+usability and expressiveness. 
 
 What it looks like
 ------------------
@@ -43,13 +38,12 @@ What it looks like
   (defn (sum list)
     (fold list 0 add))
 
-  # Recursion is defined in recur.m
-  (defnrec (factorial x)
-    ((zero? x) 1
-      (mul x (factorial (dec x)))))
+  # Data types are defined in data.m
+  (defdata (point x y))
+  (def origin (point 0 0))
 
   # Processes are used for IO
-  (defnrec (echo log)
+  (defn (echo log)
     (do {
       (def line (read-line stdin))
       (run-async 
@@ -57,10 +51,6 @@ What it looks like
         (write-line log line))
       (echo log)
     }))
-
-  # Data types are defined in data.m
-  (defdata (point x y))
-  (def origin (point 0 0))
 })
 ```
 

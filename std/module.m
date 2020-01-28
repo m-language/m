@@ -1,5 +1,5 @@
 #(A simple module system which supports importing and exporting, where 
-  (defmodule) defines a module and (import) impor it)
+  (defmodule) defines a module and (import) imports it)
 
 #(Defins a module given a signature, a list of imports, and a list of 
   definitions)

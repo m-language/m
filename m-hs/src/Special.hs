@@ -23,7 +23,6 @@ special = Env $ Map.fromList
     , entry "error"         1 error'
     , entry "quote"         1 quote'
     , entry "case@expr"     7 caseExpr'
-    , entry "eq@symbol"     4 eqSymbol'
     , entry "eq@char"       4 eqChar'
     , entry "length@string" 1 lengthString'
     , entry "get@string"    3 getString'
@@ -102,12 +101,6 @@ caseExpr' env [expr, symArgs, sym, nilArgs, nil, apArgs, ap] =
                 env'' = insertEnv argName (Expr $ Apply car cdr) env'
             in  eval (env'', snd ap)
         xs -> throwError $ Error "Apply case should have 2 arguments"
-
-eqSymbol' :: Env -> [(Env, Tree)] -> EvalResult Value
-eqSymbol' env [expr, expr', t', f'] = do
-    sym  <- evalToSymbol expr
-    sym' <- evalToSymbol expr'
-    if sym == sym' then eval t' else eval f'
 
 eqChar' :: Env -> [(Env, Tree)] -> EvalResult Value
 eqChar' env [char, char', t', f'] = do
