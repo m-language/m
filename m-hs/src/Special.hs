@@ -73,7 +73,7 @@ fmApply env closure (name : names) (arg : args) tree =
 def' :: Env -> [(Env, Tree)] -> EvalResult Value
 def' env [names, value] = case snd names of
     Symbol name -> return $ Define [(name, eval value)]
-    x -> throwError $ Error $ "Expected symbol, found " ++ show x
+    x           -> throwError $ Error $ "Expected symbol, found " ++ show x
 
 block' :: Env -> [(Env, Tree)] -> EvalResult Value
 block' env [exprs] = case snd exprs of
@@ -87,10 +87,6 @@ caseExpr' :: Env -> [(Env, Tree)] -> EvalResult Value
 caseExpr' env [expr, symArgs, sym, nilArgs, nil, apArgs, ap] =
     evalToExpr expr >>= doCase
   where
-    doCase (Symbol name) = getNames (snd symArgs) >>= \case
-        [symName] ->
-            let env' = insertEnv symName (Expr $ Symbol name) (fst sym)
-            in  eval (env', snd sym)
     doCase (Apply fn []) = getNames (snd nilArgs) >>= \case
         [fnName] ->
             let env' = insertEnv fnName (Expr fn) (fst nil)
@@ -101,6 +97,10 @@ caseExpr' env [expr, symArgs, sym, nilArgs, nil, apArgs, ap] =
                 env'' = insertEnv argName (Expr $ Apply car cdr) env'
             in  eval (env'', snd ap)
         xs -> throwError $ Error "Apply case should have 2 arguments"
+    doCase expr = getNames (snd symArgs) >>= \case
+        [symName] ->
+            let env' = insertEnv symName (Expr expr) (fst sym)
+            in  eval (env', snd sym)
 
 eqChar' :: Env -> [(Env, Tree)] -> EvalResult Value
 eqChar' env [char, char', t', f'] = do
@@ -113,7 +113,7 @@ quote' env [tree] = return $ Expr $ snd tree
 
 lengthString' :: Env -> [(Env, Tree)] -> EvalResult Value
 lengthString' env [string] =
-    evalToString string <&> IntegerValue . toInteger . length
+    evalToString string <&> IntValue . toInteger . length
 
 getString' :: Env -> [(Env, Tree)] -> EvalResult Value
 getString' env [string, index, oob] = do
@@ -128,25 +128,25 @@ addInt' :: Env -> [(Env, Tree)] -> EvalResult Value
 addInt' env [a, b] = do
     evA <- evalToInteger a
     evB <- evalToInteger b
-    return $ IntegerValue (evA + evB)
+    return $ IntValue $ evA + evB
 
 subInt' :: Env -> [(Env, Tree)] -> EvalResult Value
 subInt' env [a, b] = do
     evA <- evalToInteger a
     evB <- evalToInteger b
-    return $ IntegerValue (evA - evB)
+    return $ IntValue $ evA - evB
 
 mulInt' :: Env -> [(Env, Tree)] -> EvalResult Value
 mulInt' env [a, b] = do
     evA <- evalToInteger a
     evB <- evalToInteger b
-    return $ IntegerValue (evA * evB)
+    return $ IntValue $ evA * evB
 
 divInt' :: Env -> [(Env, Tree)] -> EvalResult Value
 divInt' env [a, b, zero] = do
     evA <- evalToInteger a
     evB <- evalToInteger b
-    if evB == 0 then eval zero else return $ IntegerValue (evA `quot` evB)
+    if evB == 0 then eval zero else return $ IntValue $ evA `quot` evB
 
 ltInt' :: Env -> [(Env, Tree)] -> EvalResult Value
 ltInt' env [int, int', t', f'] = do

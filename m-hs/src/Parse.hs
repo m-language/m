@@ -64,7 +64,7 @@ parseInteger = do
     sign   <- option "" $ string "-"
     number <- many1 digit
     ignored
-    return $ IntegerTree $ read (sign ++ number)
+    return $ IntTree $ read (sign ++ number)
 
 parseList :: Char -> Char -> Parser Tree
 parseList open close = do

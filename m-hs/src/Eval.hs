@@ -23,19 +23,19 @@ data Value
     | Expr Tree
     | CharValue Char
     | StringValue String
-    | IntegerValue Integer
+    | IntValue Integer
 
 data Error
     = Error String
     | Undefined (Set String)
 
 instance Show Value where
-    show (Function n f  ) = "<function>"
-    show (Expr         t) = "'" ++ show t
-    show (CharValue    c) = show c
-    show (StringValue  s) = show s
-    show (IntegerValue i) = show i
-    show (Define       d) = unwords $ map (\(n, v) -> n) d
+    show (Function n f ) = "<function>"
+    show (Expr        t) = "'" ++ show t
+    show (CharValue   c) = show c
+    show (StringValue s) = show s
+    show (IntValue    i) = show i
+    show (Define      d) = unwords $ map (\(n, v) -> n) d
 
 instance Show Error where
     show (Error     string) = "Error: " ++ string
@@ -80,15 +80,15 @@ evalBlock' env found errors defer (car : cdr) =
 eval :: (Env, Tree) -> EvalResult Value
 eval (env, (Symbol name)) = case lookupEnv name env of
     Just value -> value
-    Nothing    -> do 
-        globals <- ask 
+    Nothing    -> do
+        globals <- ask
         case lookupEnv name globals of
             Just value -> value
-            Nothing -> throwError $ Undefined $ Set.singleton name
-eval (env, (CharTree char)      ) = return $ CharValue char
-eval (env, (StringTree string)  ) = return $ StringValue string
-eval (env, (IntegerTree integer)) = return $ IntegerValue integer
-eval (env, (Apply fn args)      ) = do
+            Nothing    -> throwError $ Undefined $ Set.singleton name
+eval (env, (CharTree char)    ) = return $ CharValue char
+eval (env, (StringTree string)) = return $ StringValue string
+eval (env, (IntTree integer)  ) = return $ IntValue integer
+eval (env, (Apply fn args)    ) = do
     f <- eval (env, fn)
     apply env f $ map (env, ) args
 
@@ -119,8 +119,8 @@ evalToString tree = eval tree >>= \case
 
 evalToInteger :: (Env, Tree) -> EvalResult Integer
 evalToInteger tree = eval tree >>= \case
-    (IntegerValue i) -> return i
-    x -> throwError $ Error $ "Expected integer, found " ++ show x
+    (IntValue i) -> return i
+    x            -> throwError $ Error $ "Expected integer, found " ++ show x
 
 apply :: Env -> Value -> [(Env, Tree)] -> EvalResult Value
 apply env (Function n f) args =
