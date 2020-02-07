@@ -1,3 +1,4 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE LambdaCase #-}
 
@@ -17,6 +18,10 @@ import           Control.Monad.Reader
 
 type Defs = [(String, EvalResult Value)]
 
+data Process
+    = Impure (IO Value)
+    | Do Process (Value -> EvalResult Process)
+
 data Value
     = Function Int (Env -> [(Env, Tree)] -> EvalResult Value)
     | Define Defs
@@ -24,24 +29,29 @@ data Value
     | CharValue Char
     | StringValue String
     | IntValue Integer
+    | ProcessValue Process
+    | Unit
 
 data Error
     = Error String
     | Undefined (Set String)
 
 instance Show Value where
-    show (Function n f ) = "<function>"
-    show (Expr        t) = "'" ++ show t
-    show (CharValue   c) = show c
-    show (StringValue s) = show s
-    show (IntValue    i) = show i
-    show (Define      d) = unwords $ map (\(n, v) -> n) d
+    show (Function n f  ) = "<function>"
+    show (Expr         t) = "'" ++ show t
+    show (CharValue    c) = show c
+    show (StringValue  s) = show s
+    show (IntValue     i) = show i
+    show (Define       d) = unwords $ map (\(n, v) -> n) d
+    show (ProcessValue p) = "<process>"
+    show Unit             = "()"
 
 instance Show Error where
     show (Error     string) = "Error: " ++ string
     show (Undefined ns    ) = "Undefined: " ++ show (map Symbol $ Set.toList ns)
 
 newtype Env = Env (Map String (EvalResult Value))
+    deriving (Semigroup)
 
 insertEnv :: String -> Value -> Env -> Env
 insertEnv name value (Env env) = Env $ Map.insert name (return value) env
@@ -57,7 +67,7 @@ insertEnvLazy name value (Env env) = Env $ Map.insert name value env
 lookupEnv :: String -> Env -> Maybe (EvalResult Value)
 lookupEnv name (Env env) = Map.lookup name env
 
-type EvalResult = ReaderT Env (Either Error)
+type EvalResult = ReaderT Env (Except Error)
 
 evalBlock :: Env -> [Tree] -> EvalResult Defs
 evalBlock env = evalBlock' env False Set.empty []
@@ -121,6 +131,11 @@ evalToInteger :: (Env, Tree) -> EvalResult Integer
 evalToInteger tree = eval tree >>= \case
     (IntValue i) -> return i
     x            -> throwError $ Error $ "Expected integer, found " ++ show x
+
+evalToProcess :: (Env, Tree) -> EvalResult Process
+evalToProcess tree = eval tree >>= \case
+    (ProcessValue p) -> return p
+    x -> throwError $ Error $ "Expected process, found " ++ show x
 
 apply :: Env -> Value -> [(Env, Tree)] -> EvalResult Value
 apply env (Function n f) args =

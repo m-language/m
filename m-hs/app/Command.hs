@@ -19,6 +19,7 @@ import           Data.Bifunctor
 import           Control.Monad.State
 import           Control.Monad.Except
 import           Control.Monad.Reader
+import           Control.Comonad
 import           System.Directory
 import           System.FilePath.Posix
 
@@ -32,31 +33,31 @@ runCommand name _ env =
 
 runParseCommand :: String -> Env -> IO Env
 runParseCommand rest env = runDefault env $ do
-    tree <- printError $ parseRepl rest
+    tree <- printEither $ parseRepl rest
     lift $ print tree
     return env
 
 runEvalCommand :: String -> Env -> IO Env
 runEvalCommand rest env = runDefault env $ do
-    tree  <- printError $ parseRepl rest
-    value <- printError $ runReaderT (eval (Env Map.empty, tree)) env
-    lift $ print value
-    return $ case value of
-        Define defs -> unionEnv defs env
-        x           -> env
+    tree  <- printEither $ parseRepl rest
+    value <- printExcept $ runReaderT (eval (Env Map.empty, tree)) env
+    case value of
+        ProcessValue p    -> runProcess env p $> env
+        Define       defs -> return $ unionEnv defs env
+        x                 -> lift $ print value $> env
 
 runLoadParseCommand :: String -> Env -> IO Env
 runLoadParseCommand rest env = runDefault env $ do
     files <- lift $ parseFiles $ words rest
-    trees <- printError files
+    trees <- printEither files
     forM_ trees (lift . print)
     return env
 
 runLoadCommand :: String -> Env -> IO Env
 runLoadCommand rest env = runDefault env $ do
     files <- lift $ parseFiles $ words rest
-    trees <- printError files
-    defs  <- printError $ runReaderT (evalBlock (Env Map.empty) trees) env
+    trees <- printEither files
+    defs  <- printExcept $ runReaderT (evalBlock (Env Map.empty) trees) env
     return $ unionEnv defs env
 
 parseFile :: String -> IO (Either ParseError [Tree])
@@ -71,10 +72,21 @@ parseFile name = doesDirectoryExist name >>= \case
 parseFiles :: [String] -> IO (Either ParseError [Tree])
 parseFiles names = mapM parseFile names <&> (\f -> sequence f <&> concat)
 
-printError :: (Show a) => Either a b -> MaybeT IO b
-printError error = case error of
+printExcept :: (Show a) => Except a b -> MaybeT IO b
+printExcept except = printEither $ extract $ runExceptT except
+
+printEither :: (Show a) => Either a b -> MaybeT IO b
+printEither error = case error of
     Left  e -> lift (print e) >> empty
     Right b -> return b
 
 runDefault :: a -> MaybeT IO a -> IO a
 runDefault a maybeT = runMaybeT maybeT <&> fromMaybe a
+
+runProcess :: Env -> Process -> MaybeT IO (EvalResult Value)
+runProcess env (Impure a) = lift $ return <$> a
+runProcess env (Do process fn) = do
+    value <- runProcess env process
+    proc <- return $ value >>= fn
+    process' <- printExcept $ runReaderT proc env
+    runProcess env process'

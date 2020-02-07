@@ -21,6 +21,8 @@ dependencies:
 - haskeline
 - parsec
 - filepath
+- generic-deriving
+- comonad
 - base >= 4.7 && < 5
 name: m-hs
 version: 0.1.0.0

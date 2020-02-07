@@ -16,22 +16,22 @@ import           Control.Monad.Except
 
 special :: Env
 special = Env $ Map.fromList
-    [ entry "fn"            2 fn'
-    , entry "fm"            2 fm'
-    , entry "def"           2 def'
-    , entry "block"         1 block'
-    , entry "error"         1 error'
-    , entry "quote"         1 quote'
-    , entry "case@expr"     7 caseExpr'
-    , entry "eq@char"       4 eqChar'
-    , entry "length@string" 1 lengthString'
-    , entry "get@string"    3 getString'
-    , entry "add@int"       2 addInt'
-    , entry "sub@int"       2 subInt'
-    , entry "mul@int"       2 mulInt'
-    , entry "div@int"       3 divInt'
-    , entry "lt@int"        4 ltInt'
-    , entry "gt@int"        4 gtInt'
+    [ entry "fn"          2 fn'
+    , entry "fm"          2 fm'
+    , entry "def"         2 def'
+    , entry "block"       1 block'
+    , entry "error"       1 error'
+    , entry "quote"       1 quote'
+    , entry "case@expr"   7 caseExpr'
+    , entry "eq@char"     4 eqChar'
+    , entry "case@string" 4 caseString'
+    , entry "add@int"     2 addInt'
+    , entry "sub@int"     2 subInt'
+    , entry "mul@int"     2 mulInt'
+    , entry "div@int"     3 divInt'
+    , entry "lt@int"      4 ltInt'
+    , entry "gt@int"      4 gtInt'
+    , entry "do@process"  3 doProcess'
     ]
     where entry name i f = (name, return $ Function i f)
 
@@ -111,18 +111,16 @@ eqChar' env [char, char', t', f'] = do
 quote' :: Env -> [(Env, Tree)] -> EvalResult Value
 quote' env [tree] = return $ Expr $ snd tree
 
-lengthString' :: Env -> [(Env, Tree)] -> EvalResult Value
-lengthString' env [string] =
-    evalToString string <&> IntValue . toInteger . length
-
-getString' :: Env -> [(Env, Tree)] -> EvalResult Value
-getString' env [string, index, oob] = do
-    evString <- evalToString string
-    evIndex  <- evalToInteger index
-    let i = fromInteger evIndex :: Int
-    if i < 0 || i >= length evString
-        then eval oob
-        else return $ CharValue $ evString !! i
+caseString' :: Env -> [(Env, Tree)] -> EvalResult Value
+caseString' env [expr, nil, consArgs, cons] = evalToString expr >>= doCase
+  where
+    doCase []          = eval nil
+    doCase (car : cdr) = getNames (snd consArgs) >>= \case
+        [fnName, argName] ->
+            let env'  = insertEnv fnName (CharValue car) (fst cons)
+                env'' = insertEnv argName (StringValue cdr) env'
+            in  eval (env'', snd cons)
+        xs -> throwError $ Error "Cons case should have 2 arguments"
 
 addInt' :: Env -> [(Env, Tree)] -> EvalResult Value
 addInt' env [a, b] = do
@@ -159,3 +157,10 @@ gtInt' env [int, int', t', f'] = do
     int  <- evalToInteger int
     int' <- evalToInteger int'
     if int > int' then eval t' else eval f'
+
+doProcess' :: Env -> [(Env, Tree)] -> EvalResult Value
+doProcess' env [proc, names, map] = case snd names of
+    Symbol name -> do
+        process <- evalToProcess proc
+        return $ ProcessValue $ Do process (\arg -> evalToProcess (insertEnv name arg env, snd map))
+    x -> throwError $ Error $ "Expected symbol, found " ++ show x

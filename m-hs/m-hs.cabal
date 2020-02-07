@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c79a2fb35b9a04dca68d306d42f08298b3445c7a8890600691bf53a4b223f036
+-- hash: d3a0d0adb3ccde0c27a4c516015d91711f96897b196117deaa453a3d67e76e0a
 
 name:           m-hs
 version:        0.1.0.0
@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Eval
+      IO
       Parse
       Special
       Tree
@@ -36,8 +37,10 @@ library
   build-depends:
       HUnit
     , base >=4.7 && <5
+    , comonad
     , directory
     , filepath
+    , generic-deriving
     , hashmap
     , haskeline
     , mtl
@@ -56,8 +59,10 @@ executable m-hs-exe
   build-depends:
       HUnit
     , base >=4.7 && <5
+    , comonad
     , directory
     , filepath
+    , generic-deriving
     , hashmap
     , haskeline
     , m-hs
@@ -77,8 +82,10 @@ test-suite m-hs-test
   build-depends:
       HUnit
     , base >=4.7 && <5
+    , comonad
     , directory
     , filepath
+    , generic-deriving
     , hashmap
     , haskeline
     , m-hs

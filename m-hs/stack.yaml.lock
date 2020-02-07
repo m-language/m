@@ -60,6 +60,20 @@ packages:
       sha256: acea875d61ee692b87eef45d1e6f95e87bdb2289395c82d3e3972ea6e42fde50
   original:
     hackage: filepath-1.4.2.1
+- completed:
+    hackage: generic-deriving-1.13@sha256:eb57b01c73e27cbf60a907d03833dfac493e2a5d4446ef8706ad3ad27f10fd56,4183
+    pantry-tree:
+      size: 2191
+      sha256: 01e4a758005af017a89ce615018e03a778c77f984a4bd8722ad8974b7294b02e
+  original:
+    hackage: generic-deriving-1.13
+- completed:
+    hackage: comonad-5.0.6@sha256:65117d3d9e75ded548d2bbbd5ca9f5e6e1e42ecee08175aa6a77666753f797e3,3348
+    pantry-tree:
+      size: 1819
+      sha256: b48148ddd6bc8640126f4d034de93b9e6d114ba5c71e3272580285582c99109e
+  original:
+    hackage: comonad-5.0.6
 snapshots:
 - completed:
     size: 525663

@@ -18,6 +18,7 @@ import           Control.Monad.Trans
 import           System.Console.Haskeline
 import           System.IO
 import           System.Environment
+import           IO
 
 loop :: Env -> InputT IO ()
 loop env = do
@@ -39,5 +40,5 @@ process line = runEvalCommand line
 main :: IO ()
 main = do
     args <- getArgs
-    env  <- runLoadCommand (unwords args) special
+    env  <- runLoadCommand (unwords args) (special <> io)
     runInputT defaultSettings $ loop env
