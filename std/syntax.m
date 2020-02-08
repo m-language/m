@@ -5,14 +5,14 @@
   (fm [signature expr]
     (case@expr signature
       [name] ((quote def) name expr)
-      [signature] ((quote defm) signature expr)
+      (error "Nil signature")
       [name args] ((quote def) name ((quote fm) args expr)))))
 
 #(Macro for defining functions)
 (defm (defn signature expr)
   (case@expr signature
     [name] ((quote def) name expr)
-    [signature] ((quote defn) signature expr)
+    (error "Nil signature")
     [name args] ((quote def) name ((quote fn) args expr))))
 
 #(Macro for defining function macros)

@@ -22,7 +22,7 @@ special = Env $ Map.fromList
     , entry "block"       1 block'
     , entry "error"       1 error'
     , entry "quote"       1 quote'
-    , entry "case@expr"   7 caseExpr'
+    , entry "case@expr"   6 caseExpr'
     , entry "eq@char"     4 eqChar'
     , entry "case@string" 4 caseString'
     , entry "add@int"     2 addInt'
@@ -36,16 +36,13 @@ special = Env $ Map.fromList
     where entry name i f = (name, return $ Function i f)
 
 getNames :: Tree -> EvalResult [String]
-getNames (Symbol name  ) = return [name]
-getNames (Apply fn args) = do
-    fnNames  <- names [fn]
-    argNames <- names args
-    return $ fnNames ++ argNames
+getNames (Symbol name) = return [name]
+getNames (Apply  args) = names args
   where
     names :: [Tree] -> EvalResult [String]
     names []                    = return []
     names ((Symbol name) : cdr) = names cdr <&> (name :)
-    names (ap@(Apply _ _) : cdr) =
+    names (ap@(Apply _) : cdr) =
         throwError $ Error $ "Expected symbol, found " ++ show ap
 
 fn' :: Env -> [(Env, Tree)] -> EvalResult Value
@@ -77,24 +74,21 @@ def' env [names, value] = case snd names of
 
 block' :: Env -> [(Env, Tree)] -> EvalResult Value
 block' env [exprs] = case snd exprs of
-    Symbol name   -> eval (env, Symbol name)
-    Apply fn args -> evalBlock env (fn : args) <&> Define
+    Symbol name -> eval (env, Symbol name)
+    Apply  args -> evalBlock env args <&> Define
 
 error' :: Env -> [(Env, Tree)] -> EvalResult Value
 error' env [expr] = evalToString expr >>= \e -> throwError $ Error e
 
 caseExpr' :: Env -> [(Env, Tree)] -> EvalResult Value
-caseExpr' env [expr, symArgs, sym, nilArgs, nil, apArgs, ap] =
+caseExpr' env [expr, symArgs, sym, nil, apArgs, ap] =
     evalToExpr expr >>= doCase
   where
-    doCase (Apply fn []) = getNames (snd nilArgs) >>= \case
-        [fnName] ->
-            let env' = insertEnv fnName (Expr fn) (fst nil)
-            in  eval (env', snd nil)
-    doCase (Apply fn (car : cdr)) = getNames (snd apArgs) >>= \case
+    doCase (Apply []) = eval (env, snd nil)
+    doCase (Apply (fn : args)) = getNames (snd apArgs) >>= \case
         [fnName, argName] ->
             let env'  = insertEnv fnName (Expr fn) (fst ap)
-                env'' = insertEnv argName (Expr $ Apply car cdr) env'
+                env'' = insertEnv argName (Expr $ Apply args) env'
             in  eval (env'', snd ap)
         xs -> throwError $ Error "Apply case should have 2 arguments"
     doCase expr = getNames (snd symArgs) >>= \case
@@ -162,5 +156,7 @@ doProcess' :: Env -> [(Env, Tree)] -> EvalResult Value
 doProcess' env [proc, names, map] = case snd names of
     Symbol name -> do
         process <- evalToProcess proc
-        return $ ProcessValue $ Do process (\arg -> evalToProcess (insertEnv name arg env, snd map))
+        return $ ProcessValue $ Do
+            process
+            (\arg -> evalToProcess (insertEnv name arg env, snd map))
     x -> throwError $ Error $ "Expected symbol, found " ++ show x

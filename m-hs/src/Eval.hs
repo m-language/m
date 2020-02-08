@@ -30,7 +30,6 @@ data Value
     | StringValue String
     | IntValue Integer
     | ProcessValue Process
-    | Unit
 
 data Error
     = Error String
@@ -44,7 +43,6 @@ instance Show Value where
     show (IntValue     i) = show i
     show (Define       d) = unwords $ map (\(n, v) -> n) d
     show (ProcessValue p) = "<process>"
-    show Unit             = "()"
 
 instance Show Error where
     show (Error     string) = "Error: " ++ string
@@ -98,7 +96,8 @@ eval (env, (Symbol name)) = case lookupEnv name env of
 eval (env, (CharTree char)    ) = return $ CharValue char
 eval (env, (StringTree string)) = return $ StringValue string
 eval (env, (IntTree integer)  ) = return $ IntValue integer
-eval (env, (Apply fn args)    ) = do
+eval (env, (Apply [])         ) = return nil
+eval (env, (Apply (fn : args))) = do
     f <- eval (env, fn)
     apply env f $ map (env, ) args
 
@@ -151,10 +150,13 @@ apply env (Define defs) args =
     apply env (Function 1 $ \_ [expr] -> applyDef defs expr) args
 apply env (Expr tree) args = do
     evArgs <- mapM evalToExpr args
-    return $ Expr $ if null evArgs then tree else Apply tree evArgs
+    return $ Expr $ if null evArgs then tree else Apply (tree : evArgs)
 apply env x args = throwError $ Error $ "Expected function, found " ++ show x
 
 applyDef :: Defs -> (Env, Tree) -> EvalResult Value
 applyDef [] expr = eval expr
 applyDef ((name, value) : defs) (env, tree) =
     applyDef defs (insertEnvLazy name value env, tree)
+
+nil :: Value
+nil = Expr $ Apply []

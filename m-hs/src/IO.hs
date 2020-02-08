@@ -14,4 +14,4 @@ stdin = ProcessValue $ Impure $ CharValue <$> getChar
 
 stdout :: Env -> [(Env, Tree)] -> EvalResult Value
 stdout env [char] =
-    evalToChar char <&> \c -> ProcessValue $ Impure $ putChar c <&> const Unit
+    evalToChar char <&> \c -> ProcessValue $ Impure $ putChar c <&> const nil

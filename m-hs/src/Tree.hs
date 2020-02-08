@@ -8,7 +8,7 @@ data Tree
     | CharTree Char
     | StringTree String
     | IntTree Integer
-    | Apply Tree [Tree]
+    | Apply [Tree]
     deriving (Eq)
 
 instance Show Tree where
@@ -16,4 +16,4 @@ instance Show Tree where
     show (CharTree   char  ) = show char
     show (StringTree string) = show string
     show (IntTree    int   ) = show int
-    show (Apply fn args    ) = "(" ++ unwords (map show (fn : args)) ++ ")"
+    show (Apply      args  ) = "(" ++ unwords (map show args) ++ ")"

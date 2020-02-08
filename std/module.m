@@ -11,5 +11,5 @@
 (defm (import imports)
   (case@expr imports
     [name] name
-    [car] ((quote import) car)
+    id
     [car cdr] ((quote compose) car ((quote import) cdr))))

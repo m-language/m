@@ -70,11 +70,10 @@ parseList :: Char -> Char -> Parser Tree
 parseList open close = do
     char open
     ignored
-    fn   <- parseExpr
     args <- many parseExpr
     char close
     ignored
-    return $ Apply fn args
+    return $ Apply args
 
 parseAtom :: Parser Tree
 parseAtom =
