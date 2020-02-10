@@ -10,5 +10,8 @@
 (defm (import imports)
   (case@expr imports
     [name] name
-    (block {})
-    [car cdr] ((quote compose) car ((quote import) cdr))))
+    ((quote block) {})
+    [car cdr] ((quote block) { 
+      car 
+      ((quote import) cdr)
+    })))
