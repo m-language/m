@@ -6,12 +6,19 @@ import qualified Data.HashMap                  as Map
 import           Data.Functor
 
 io :: Env
-io = Env $ Map.fromList [("stdin", return stdin), entry "stdout" 1 stdout]
+io = Env $ Map.fromList
+    [ entry "stdout" 1 stdout'
+    , ("stdin"  , return stdin')
+    , ("newline@char", return newline')
+    ]
     where entry name i f = (name, return $ Function i f)
 
-stdin :: Value
-stdin = ProcessValue $ Impure $ CharValue <$> getChar
-
-stdout :: Env -> [(Env, Tree)] -> EvalResult Value
-stdout env [char] =
+stdout' :: Env -> [(Env, Tree)] -> EvalResult Value
+stdout' env [char] =
     evalToChar char <&> \c -> ProcessValue $ Impure $ putChar c <&> const nil
+
+stdin' :: Value
+stdin' = ProcessValue $ Impure $ CharValue <$> getChar
+
+newline' :: Value
+newline' = CharValue '\n'

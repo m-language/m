@@ -41,7 +41,7 @@ instance Show Value where
     show (CharValue    c) = show c
     show (StringValue  s) = show s
     show (IntValue     i) = show i
-    show (Define       d) = unwords $ map (\(n, v) -> n) d
+    show (Define       d) = unwords $ map fst d
     show (ProcessValue p) = "<process>"
 
 instance Show Error where

@@ -16,22 +16,23 @@ import           Control.Monad.Except
 
 special :: Env
 special = Env $ Map.fromList
-    [ entry "fn"          2 fn'
-    , entry "fm"          2 fm'
-    , entry "def"         2 def'
-    , entry "block"       1 block'
-    , entry "error"       1 error'
-    , entry "quote"       1 quote'
-    , entry "case@expr"   6 caseExpr'
-    , entry "eq@char"     4 eqChar'
-    , entry "case@string" 4 caseString'
-    , entry "add@int"     2 addInt'
-    , entry "sub@int"     2 subInt'
-    , entry "mul@int"     2 mulInt'
-    , entry "div@int"     3 divInt'
-    , entry "lt@int"      4 ltInt'
-    , entry "gt@int"      4 gtInt'
-    , entry "do@process"  3 doProcess'
+    [ entry "fn"             2 fn'
+    , entry "fm"             2 fm'
+    , entry "def"            2 def'
+    , entry "block"          1 block'
+    , entry "error"          1 error'
+    , entry "quote"          1 quote'
+    , entry "case@expr"      6 caseExpr'
+    , entry "eq@char"        4 eqChar'
+    , entry "case@string"    4 caseString'
+    , entry "add@int"        2 addInt'
+    , entry "sub@int"        2 subInt'
+    , entry "mul@int"        2 mulInt'
+    , entry "div@int"        3 divInt'
+    , entry "lt@int"         4 ltInt'
+    , entry "gt@int"         4 gtInt'
+    , entry "do@process"     3 doProcess'
+    , entry "impure@process" 1 impureProcess'
     ]
     where entry name i f = (name, return $ Function i f)
 
@@ -84,7 +85,7 @@ caseExpr' :: Env -> [(Env, Tree)] -> EvalResult Value
 caseExpr' env [expr, symArgs, sym, nil, apArgs, ap] =
     evalToExpr expr >>= doCase
   where
-    doCase (Apply []) = eval (env, snd nil)
+    doCase (Apply []         ) = eval (env, snd nil)
     doCase (Apply (fn : args)) = getNames (snd apArgs) >>= \case
         [fnName, argName] ->
             let env'  = insertEnv fnName (Expr fn) (fst ap)
@@ -160,3 +161,8 @@ doProcess' env [proc, names, map] = case snd names of
             process
             (\arg -> evalToProcess (insertEnv name arg env, snd map))
     x -> throwError $ Error $ "Expected symbol, found " ++ show x
+
+impureProcess' :: Env -> [(Env, Tree)] -> EvalResult Value
+impureProcess' env [value] = do
+    evValue <- eval value
+    return $ ProcessValue $ Impure $ return evValue
