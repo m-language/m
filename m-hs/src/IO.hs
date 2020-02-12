@@ -9,7 +9,7 @@ io :: Env
 io = Env $ Map.fromList
     [ entry "stdout" 1 stdout'
     , ("stdin"  , return stdin')
-    , ("newline@char", return newline')
+    , ("newline", return newline')
     ]
     where entry name i f = (name, return $ Function i f)
 

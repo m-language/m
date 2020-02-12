@@ -3,14 +3,14 @@
 #(Macro for defining macros)
 (def defm
   (fm [signature expr]
-    (case@expr signature
+    ((expr-ops case) signature
       [name] ((quote def) name expr)
       (error "Nil signature")
       [name args] ((quote def) name ((quote fm) args expr)))))
 
 #(Macro for defining functions)
 (defm (defn signature expr)
-  (case@expr signature
+  ((expr-ops case) signature
     [name] ((quote def) name expr)
     (error "Nil signature")
     [name args] ((quote def) name ((quote fn) args expr))))

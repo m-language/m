@@ -8,7 +8,7 @@
 
 #(Imports a list of modules)
 (defm (import imports)
-  (case@expr imports
+  ((expr-ops case) imports
     [name] name
     ((quote block) {})
     [car cdr] ((quote block) {

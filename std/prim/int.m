@@ -1,22 +1,6 @@
 #(Module for using M integers)
 (defmodule int {
-  #(Adds two integers)
-  (def add add@int)
-
-  #(Subtracts two integers)
-  (def sub sub@int)
-
-  #(Multiplies two integers)
-  (def mul mul@int)
-
-  #(Divides two integers)
-  (def div div@int)
-
-  #(Tests if an integer is less than another)
-  (def lt lt@int)
-
-  #(Tests if an integer is greater than another)
-  (def gt gt@int)
+  (import int-ops)
 
   #(The additive identity of integers)
   (def zero 0)

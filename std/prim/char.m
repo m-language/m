@@ -1,7 +1,6 @@
 #(Module for using M characters)
 (defmodule char {
-  #(Tests if two characters are equal)
-  (def eq eq@char)
+  (import char-ops)
 
   #(The newline character '\n')
   (def newline newline@char)

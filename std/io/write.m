@@ -4,7 +4,7 @@
 
   #(Writes a newline to an output)
   (defn (write-newline output)
-    (output (char newline)))
+    (output newline))
 
   #(Writes a fold of characters to an output)
   (defn (write-fold fold output)
