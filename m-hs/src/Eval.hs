@@ -16,15 +16,13 @@ import           Data.List
 import           Control.Monad.Except
 import           Control.Monad.Reader
 
-type Defs = [(String, EvalResult Value)]
-
 data Process
     = Impure (IO Value)
     | Do Process (Value -> EvalResult Process)
 
 data Value
     = Function Int (Env -> [(Env, Tree)] -> EvalResult Value)
-    | Define Defs
+    | Define Env
     | Expr Tree
     | CharValue Char
     | StringValue String
@@ -36,13 +34,13 @@ data Error
     | Undefined (Set String)
 
 instance Show Value where
-    show (Function n f  ) = "<function>"
-    show (Expr         t) = "'" ++ show t
-    show (CharValue    c) = show c
-    show (StringValue  s) = show s
-    show (IntValue     i) = show i
-    show (Define       d) = "{" ++ unwords (map fst d) ++ "}"
-    show (ProcessValue p) = "<process>"
+    show (Function n f        ) = "<function>"
+    show (Expr         t      ) = "'" ++ show t
+    show (CharValue    c      ) = show c
+    show (StringValue  s      ) = show s
+    show (IntValue     i      ) = show i
+    show (Define       (Env e)) = "{" ++ unwords (Map.keys e) ++ "}"
+    show (ProcessValue p      ) = "<process>"
 
 instance Show Error where
     show (Error     string) = "Error: " ++ string
@@ -54,10 +52,8 @@ newtype Env = Env (Map String (EvalResult Value))
 insertEnv :: String -> Value -> Env -> Env
 insertEnv name value (Env env) = Env $ Map.insert name (return value) env
 
-unionEnv :: Defs -> Env -> Env
-unionEnv [] env = env
-unionEnv ((name, value) : defs) env =
-    unionEnv defs $ insertEnvLazy name value env
+unionEnv :: Env -> Env -> Env
+unionEnv (Env a) (Env b) = Env $ Map.union a b
 
 insertEnvLazy :: String -> EvalResult Value -> Env -> Env
 insertEnvLazy name value (Env env) = Env $ Map.insert name value env
@@ -67,11 +63,11 @@ lookupEnv name (Env env) = Map.lookup name env
 
 type EvalResult = ReaderT Env (Except Error)
 
-evalBlock :: Env -> [Tree] -> EvalResult Defs
+evalBlock :: Env -> [Tree] -> EvalResult Env
 evalBlock env = evalBlock' env False Set.empty []
 
-evalBlock' :: Env -> Bool -> Set String -> [Tree] -> [Tree] -> EvalResult Defs
-evalBlock' env found errors []    [] = return []
+evalBlock' :: Env -> Bool -> Set String -> [Tree] -> [Tree] -> EvalResult Env
+evalBlock' env found errors []    [] = return $ Env Map.empty
 evalBlock' env found errors defer [] = if found
     then evalBlock' env False Set.empty [] defer
     else throwError $ Undefined errors
@@ -79,7 +75,7 @@ evalBlock' env found errors defer (car : cdr) =
     let result = do
             defs  <- evalToDefine (env, car)
             defs' <- evalBlock' (unionEnv defs env) True errors defer cdr
-            return $ defs ++ defs'
+            return $ unionEnv defs defs'
     in  catchError result $ \case
             Undefined names ->
                 evalBlock' env found (Set.union names errors) (car : defer) cdr
@@ -101,7 +97,7 @@ eval (env, (Apply (fn : args))) = do
     f <- eval (env, fn)
     apply env f $ map (env, ) args
 
-evalToDefine :: (Env, Tree) -> EvalResult Defs
+evalToDefine :: (Env, Tree) -> EvalResult Env
 evalToDefine tree = eval tree >>= \case
     (Define defs) -> return defs
     x -> throwError $ Error $ "Expected expression, found " ++ show x
@@ -153,10 +149,8 @@ apply env (Expr tree) args = do
     return $ Expr $ if null evArgs then tree else Apply (tree : evArgs)
 apply env x args = throwError $ Error $ "Expected function, found " ++ show x
 
-applyDef :: Defs -> (Env, Tree) -> EvalResult Value
-applyDef [] expr = eval expr
-applyDef ((name, value) : defs) (env, tree) =
-    applyDef defs (insertEnvLazy name value env, tree)
+applyDef :: Env -> (Env, Tree) -> EvalResult Value
+applyDef env' (env, tree) = eval (unionEnv env env', tree)
 
 nil :: Value
 nil = Expr $ Apply []

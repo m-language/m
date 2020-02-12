@@ -70,7 +70,7 @@ fmApply env closure (name : names) (arg : args) tree =
 
 def' :: Env -> [(Env, Tree)] -> EvalResult Value
 def' env [names, value] = case snd names of
-    Symbol name -> return $ Define [(name, eval value)]
+    Symbol name -> return $ Define $ Env $ Map.singleton name $ eval value
     x           -> throwError $ Error $ "Expected symbol, found " ++ show x
 
 block' :: Env -> [(Env, Tree)] -> EvalResult Value
