@@ -3,6 +3,6 @@
   (import process-ops)
 
   #(Combines two processes)
-  (defn (combine-process a b)
-    (do a result b))
+  (defn (combine a b)
+    (do a (fn result b)))
 })

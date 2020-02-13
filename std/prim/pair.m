@@ -3,9 +3,8 @@
   value of the pair)
 (defmodule pair {
   #(Creates a pair of two values)
-  (defn (pair first second)
-    (fn f
-      (f first second)))
+  (defn (pair first second f)
+    (f first second))
 
   #(The first value of a pair)
   (defn (first pair)

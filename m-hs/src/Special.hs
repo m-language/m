@@ -14,21 +14,25 @@ import           Data.Functor.Classes
 import           Control.Monad.State
 import           Control.Monad.Except
 
-entry name i f = (name, return $ Function i f)
+value name v = (name, return v)
+
+function name i f = (name, return $ Function i f)
+
+macro name i f = (name, return $ Macro i f)
 
 special :: Env
 special = Env $ Map.fromList
-    [ ("expr-ops"   , return expr')
-    , ("int-ops"    , return int')
-    , ("char-ops"   , return char')
-    , ("string-ops" , return string')
-    , ("process-ops", return process')
-    , entry "fn"    2 fn'
-    , entry "fm"    2 fm'
-    , entry "def"   2 def'
-    , entry "block" 1 block'
-    , entry "error" 1 error'
-    , entry "quote" 1 quote'
+    [ macro "fn"    2 fn'
+    , macro "fm"    2 fm'
+    , macro "def"   2 def'
+    , macro "block" 1 block'
+    , macro "quote" 1 quote'
+    , function "error" 1 error'
+    , value "expr-ops"    expr'
+    , value "int-ops"     int'
+    , value "char-ops"    char'
+    , value "string-ops"  string'
+    , value "process-ops" process'
     ]
 
 getNames :: Tree -> EvalResult [String]
@@ -41,129 +45,118 @@ getNames (Apply  args) = names args
     names (ap@(Apply _) : cdr) =
         throwError $ Error $ "Expected symbol, found " ++ show ap
 
-fn' :: Env -> [(Env, Tree)] -> EvalResult Value
+fn' :: Env -> [Tree] -> EvalResult Value
 fn' closure [args, value] = do
-    names <- getNames $ snd args
+    names <- getNames args
     return $ Function (length names) $ \env args ->
-        fnApply closure names args $ snd value
+        fnApply closure names args value
 
-fnApply :: Env -> [String] -> [(Env, Tree)] -> Tree -> EvalResult Value
+fnApply :: Env -> [String] -> [EvalResult Value] -> Tree -> EvalResult Value
 fnApply closure [] [] tree = eval (closure, tree)
 fnApply closure (name : names) (arg : args) tree =
-    fnApply (insertEnvLazy name (eval arg) closure) names args tree
+    fnApply (insertEnvLazy name arg closure) names args tree
 
-fm' :: Env -> [(Env, Tree)] -> EvalResult Value
+fm' :: Env -> [Tree] -> EvalResult Value
 fm' closure [args, value] = do
-    names <- getNames $ snd args
-    return $ Function (length names) $ \env args ->
-        fmApply env closure names args $ snd value
+    names <- getNames args
+    return $ Macro (length names) $ \env args ->
+        fmApply env closure names args value
 
-fmApply :: Env -> Env -> [String] -> [(Env, Tree)] -> Tree -> EvalResult Value
-fmApply env closure [] [] tree = evalToExpr (closure, tree) >>= curry eval env
+fmApply :: Env -> Env -> [String] -> [Tree] -> Tree -> EvalResult Value
+fmApply env closure [] [] tree =
+    asExpr (eval (closure, tree)) >>= curry eval env
 fmApply env closure (name : names) (arg : args) tree =
-    fmApply env (insertEnv name (Expr $ snd arg) closure) names args tree
+    fmApply env (insertEnv name (Expr arg) closure) names args tree
 
-def' :: Env -> [(Env, Tree)] -> EvalResult Value
-def' env [names, value] = case snd names of
-    Symbol name -> return $ Define $ Env $ Map.singleton name $ eval value
-    x           -> throwError $ Error $ "Expected symbol, found " ++ show x
+def' :: Env -> [Tree] -> EvalResult Value
+def' env [names, value] = case names of
+    Symbol name ->
+        return $ Define $ Env $ Map.singleton name $ eval (env, value)
+    x -> throwError $ Error $ "Expected symbol, found " ++ show x
 
-block' :: Env -> [(Env, Tree)] -> EvalResult Value
-block' env [exprs] = case snd exprs of
+block' :: Env -> [Tree] -> EvalResult Value
+block' env [exprs] = case exprs of
     Symbol name -> eval (env, Symbol name)
     Apply  args -> evalBlock env args <&> Define
 
-error' :: Env -> [(Env, Tree)] -> EvalResult Value
-error' env [expr] = evalToString expr >>= \e -> throwError $ Error e
+quote' :: Env -> [Tree] -> EvalResult Value
+quote' env [tree] = return $ Expr tree
 
-quote' :: Env -> [(Env, Tree)] -> EvalResult Value
-quote' env [tree] = return $ Expr $ snd tree
+error' :: Env -> [EvalResult Value] -> EvalResult Value
+error' env [expr] = asString expr >>= \e -> throwError $ Error e
 
 expr' :: Value
-expr' = Define $ Env $ Map.fromList [entry "case" 6 case']
+expr' = Define $ Env $ Map.fromList [function "case" 4 case']
   where
-    case' env [expr, symArgs, sym, nil, apArgs, ap] =
-        evalToExpr expr >>= doCase
+    case' env [expr, sym, nil, ap] = asExpr expr >>= doCase
       where
-        doCase (Apply []         ) = eval (env, snd nil)
-        doCase (Apply (fn : args)) = getNames (snd apArgs) >>= \case
-            [fnName, argName] ->
-                let env'  = insertEnv fnName (Expr fn) (fst ap)
-                    env'' = insertEnv argName (Expr $ Apply args) env'
-                in  eval (env'', snd ap)
-            xs -> throwError $ Error "Apply case should have 2 arguments"
-        doCase expr = getNames (snd symArgs) >>= \case
-            [symName] ->
-                let env' = insertEnv symName (Expr expr) (fst sym)
-                in  eval (env', snd sym)
+        doCase (Apply []         ) = nil
+        doCase (Apply (fn : args)) = do
+            evAp <- ap
+            applyFn env evAp [return (Expr fn), return (Expr $ Apply args)]
+        doCase expr = sym
 
 int' :: Value
 int' = Define $ Env $ Map.fromList
-    [ entry "add" 2 add'
-    , entry "sub" 2 sub'
-    , entry "mul" 2 mul'
-    , entry "div" 3 div'
-    , entry "lt"  4 lt'
-    , entry "gt"  4 gt'
+    [ function "add" 2 add'
+    , function "sub" 2 sub'
+    , function "mul" 2 mul'
+    , function "div" 3 div'
+    , function "lt"  4 lt'
+    , function "gt"  4 gt'
     ]
   where
     add' env [a, b] = do
-        evA <- evalToInteger a
-        evB <- evalToInteger b
+        evA <- asInteger a
+        evB <- asInteger b
         return $ IntValue $ evA + evB
     sub' env [a, b] = do
-        evA <- evalToInteger a
-        evB <- evalToInteger b
+        evA <- asInteger a
+        evB <- asInteger b
         return $ IntValue $ evA - evB
     mul' env [a, b] = do
-        evA <- evalToInteger a
-        evB <- evalToInteger b
+        evA <- asInteger a
+        evB <- asInteger b
         return $ IntValue $ evA * evB
     div' env [a, b, zero] = do
-        evA <- evalToInteger a
-        evB <- evalToInteger b
-        if evB == 0 then eval zero else return $ IntValue $ evA `quot` evB
+        evA <- asInteger a
+        evB <- asInteger b
+        if evB == 0 then zero else return $ IntValue $ evA `quot` evB
     lt' env [int, int', t', f'] = do
-        int  <- evalToInteger int
-        int' <- evalToInteger int'
-        if int < int' then eval t' else eval f'
+        int  <- asInteger int
+        int' <- asInteger int'
+        if int < int' then t' else f'
     gt' env [int, int', t', f'] = do
-        int  <- evalToInteger int
-        int' <- evalToInteger int'
-        if int > int' then eval t' else eval f'
+        int  <- asInteger int
+        int' <- asInteger int'
+        if int > int' then t' else f'
 
 char' :: Value
-char' = Define $ Env $ Map.fromList [entry "eq" 4 eqChar']
+char' = Define $ Env $ Map.fromList [function "eq" 4 eqChar']
   where
     eqChar' env [char, char', t', f'] = do
-        evChar  <- evalToChar char
-        evChar' <- evalToChar char'
-        if evChar == evChar' then eval t' else eval f'
+        evChar  <- asChar char
+        evChar' <- asChar char'
+        if evChar == evChar' then t' else f'
 
 string' :: Value
-string' = Define $ Env $ Map.fromList [entry "case" 4 case']
+string' = Define $ Env $ Map.fromList [function "case" 3 case']
   where
-    case' env [expr, nil, consArgs, cons] = evalToString expr >>= doCase
+    case' env [expr, nil, cons] = asString expr >>= doCase
       where
-        doCase []          = eval nil
-        doCase (car : cdr) = getNames (snd consArgs) >>= \case
-            [fnName, argName] ->
-                let env'  = insertEnv fnName (CharValue car) (fst cons)
-                    env'' = insertEnv argName (StringValue cdr) env'
-                in  eval (env'', snd cons)
-            xs -> throwError $ Error "Cons case should have 2 arguments"
+        doCase []          = nil
+        doCase (a : b) = do
+            evCons <- cons
+            applyFn env evCons [return (CharValue a), return (StringValue b)]
 
 process' :: Value
 process' = Define $ Env $ Map.fromList
-    [entry "do" 3 do', entry "impure" 1 impure']
+    [function "do" 2 do', function "impure" 1 impure']
   where
-    do' env [proc, names, map] = case snd names of
-        Symbol name -> do
-            process <- evalToProcess proc
-            return $ ProcessValue $ Do
-                process
-                (\arg -> evalToProcess (insertEnv name arg env, snd map))
-        x -> throwError $ Error $ "Expected symbol, found " ++ show x
-    impure' env [value] = do
-        evValue <- eval value
-        return $ ProcessValue $ Impure $ return evValue
+    do' env [proc, map] = do
+        process <- asProcess proc
+        evMap <- map
+        return $ ProcessValue $ Do
+            process
+            (\arg -> asProcess $ applyFn env evMap [return arg])
+    impure' env [value] = ProcessValue . Impure . return <$> value

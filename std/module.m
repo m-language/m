@@ -9,9 +9,10 @@
 #(Imports a list of modules)
 (defm (import imports)
   ((expr-ops case) imports
-    [name] name
+    imports
     ((quote block) {})
-    [car cdr] ((quote block) {
-      car
-      ((quote import) cdr)
-    })))
+    (fn [car cdr] 
+      ((quote block) {
+        car
+        ((quote import) cdr)
+      }))))

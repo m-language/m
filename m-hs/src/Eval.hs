@@ -21,7 +21,8 @@ data Process
     | Do Process (Value -> EvalResult Process)
 
 data Value
-    = Function Int (Env -> [(Env, Tree)] -> EvalResult Value)
+    = Function Int (Env -> [EvalResult Value] -> EvalResult Value)
+    | Macro Int (Env -> [Tree] -> EvalResult Value)
     | Define Env
     | Expr Tree
     | CharValue Char
@@ -35,6 +36,7 @@ data Error
 
 instance Show Value where
     show (Function n f        ) = "<function>"
+    show (Macro    n f        ) = "<macro>"
     show (Expr         t      ) = "'" ++ show t
     show (CharValue    c      ) = show c
     show (StringValue  s      ) = show s
@@ -73,7 +75,7 @@ evalBlock' env found errors defer [] = if found
     else throwError $ Undefined errors
 evalBlock' env found errors defer (car : cdr) =
     let result = do
-            defs  <- evalToDefine (env, car)
+            defs  <- asDefine $ eval (env, car)
             defs' <- evalBlock' (unionEnv defs env) True errors defer cdr
             return $ unionEnv defs defs'
     in  catchError result $ \case
@@ -97,60 +99,69 @@ eval (env, (Apply (fn : args))) = do
     f <- eval (env, fn)
     apply env f $ map (env, ) args
 
-evalToDefine :: (Env, Tree) -> EvalResult Env
-evalToDefine tree = eval tree >>= \case
+asDefine :: EvalResult Value -> EvalResult Env
+asDefine tree = tree >>= \case
     (Define defs) -> return defs
     x -> throwError $ Error $ "Expected expression, found " ++ show x
 
-evalToExpr :: (Env, Tree) -> EvalResult Tree
-evalToExpr tree = eval tree >>= \case
+asExpr :: EvalResult Value -> EvalResult Tree
+asExpr tree = tree >>= \case
     (Expr tree) -> return tree
     x           -> throwError $ Error $ "Expected expression, found " ++ show x
 
-evalToSymbol :: (Env, Tree) -> EvalResult String
-evalToSymbol tree = evalToExpr tree >>= \case
+asSymbol :: EvalResult Value -> EvalResult String
+asSymbol tree = asExpr tree >>= \case
     (Symbol s) -> return s
     x          -> throwError $ Error $ "Expected symbol, found " ++ show x
 
-evalToChar :: (Env, Tree) -> EvalResult Char
-evalToChar tree = eval tree >>= \case
+asChar :: EvalResult Value -> EvalResult Char
+asChar tree = tree >>= \case
     (CharValue char) -> return char
     x -> throwError $ Error $ "Expected character, found " ++ show x
 
-evalToString :: (Env, Tree) -> EvalResult String
-evalToString tree = eval tree >>= \case
+asString :: EvalResult Value -> EvalResult String
+asString tree = tree >>= \case
     (StringValue string) -> return string
     x -> throwError $ Error $ "Expected string, found " ++ show x
 
-evalToInteger :: (Env, Tree) -> EvalResult Integer
-evalToInteger tree = eval tree >>= \case
+asInteger :: EvalResult Value -> EvalResult Integer
+asInteger tree = tree >>= \case
     (IntValue i) -> return i
     x            -> throwError $ Error $ "Expected integer, found " ++ show x
 
-evalToProcess :: (Env, Tree) -> EvalResult Process
-evalToProcess tree = eval tree >>= \case
+asProcess :: EvalResult Value -> EvalResult Process
+asProcess tree = tree >>= \case
     (ProcessValue p) -> return p
     x -> throwError $ Error $ "Expected process, found " ++ show x
 
 apply :: Env -> Value -> [(Env, Tree)] -> EvalResult Value
-apply env (Function n f) args =
+apply env (Macro n f) args =
     let argsLength = length args
-    in  if length args < n
-            then return $ Function (n - argsLength) $ \env args' ->
-                apply env (Function n f) (args ++ args')
+    in  if argsLength < n
+            then return $ Macro (n - argsLength) $ \env args' ->
+                apply env (Macro n f) (args ++ map (env, ) args')
             else if argsLength > n
-                then apply env (Function n f) (take n args)
+                then apply env (Macro n f) (take n args)
                     >>= \f -> apply env f (drop n args)
-                else f env args
+                else f env $ map snd args
 apply env (Define defs) args =
-    apply env (Function 1 $ \_ [expr] -> applyDef defs expr) args
+    apply env (Macro 1 $ \env [expr] -> eval (unionEnv env defs, expr)) args
 apply env (Expr tree) args = do
-    evArgs <- mapM evalToExpr args
+    evArgs <- mapM (asExpr . eval) args
     return $ Expr $ if null evArgs then tree else Apply (tree : evArgs)
-apply env x args = throwError $ Error $ "Expected function, found " ++ show x
+apply env x args = applyFn env x $ map eval args
 
-applyDef :: Env -> (Env, Tree) -> EvalResult Value
-applyDef env' (env, tree) = eval (unionEnv env env', tree)
+applyFn :: Env -> Value -> [EvalResult Value] -> EvalResult Value
+applyFn env (Function n f) args =
+    let argsLength = length args
+    in  if argsLength < n
+            then return $ Function (n - argsLength) $ \env args' ->
+                applyFn env (Function n f) (args ++ args')
+            else if argsLength > n
+                then applyFn env (Function n f) (take n args)
+                    >>= \v -> applyFn env v (drop n args)
+                else f env args
+applyFn env x args = throwError $ Error $ "Expected function, found " ++ show x
 
 nil :: Value
 nil = Expr $ Apply []

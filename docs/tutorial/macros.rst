@@ -70,11 +70,11 @@ and transforms it.
 Inspecting Expressions
 ======================
 
-Case expressions are of the form ``(expr/case <expr> <sym-args> <sym> <nil-args> <nil> <cons-args> <cons>)``.
+Case expressions are of the form ``(expr/case <expr> <sym> <nil> <cons>)``.
 
-- When ``expr`` evaluates to a symbol, evaluates to ``sym`` with ``sym-args`` defined as the symbol
-- When ``expr`` evaluates to an application with no arguments, evaluates to ``nil`` with ``nil-args`` defined as the function
-- When ``expr`` evaluates to an application with arguments, evaluates to ``cons`` with ``cons-args`` defined as the car and cdr
+- When ``expr`` evaluates to a symbol, evaluates to ``sym``
+- When ``expr`` evaluates to an application with no arguments, evaluates to ``nil``
+- When ``expr`` evaluates to an application with arguments, evaluates to ``cons`` and applies cons with the car and cdr
 
 .. code-block:: lisp
 
@@ -82,18 +82,20 @@ Case expressions are of the form ``(expr/case <expr> <sym-args> <sym> <nil-args>
     (def defn
       (fm [signature value]
         (expr/case signature
-          [name] ((quote def) name expr)
-          [signature] ((quote defn) signature expr)
-          [name args] ((quote def) name ((quote fn) args expr)))))
+          ((quote def) signature expr)
+          (error "Nil signature")
+          (fn [name args] 
+            ((quote def) name 
+              ((quote fn) args expr))))))
     
     # In the first case, (defn name value) => (def name value)
     (defn id (fn x x))
 
-    # In the second case, (defn (name) value) => (def name value)
-    (defn (id) (fn x x))
-
     # In the third case, (defn (name args) value) => (def name (fn args value))
     (defn (id x) x)
+
+    # In the second case, (defn (name) value) => (error "Nil signature")
+    (defn () (fn x x))
 
 Currying
 ========

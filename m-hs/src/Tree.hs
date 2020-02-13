@@ -1,7 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
 module Tree where
-
-import           Data.HashMap                   ( Map )
 
 data Tree
     = Symbol String
