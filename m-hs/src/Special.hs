@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Special where
 
 import           Eval
@@ -36,13 +34,13 @@ special = Env $ Map.fromList
     ]
 
 getNames :: Tree -> EvalResult [String]
-getNames (Symbol name) = return [name]
-getNames (Apply  args) = names args
+getNames (SymbolTree name) = return [name]
+getNames (ApplyTree args) = names args
   where
     names :: [Tree] -> EvalResult [String]
     names []                    = return []
-    names ((Symbol name) : cdr) = names cdr <&> (name :)
-    names (ap@(Apply _) : cdr) =
+    names ((SymbolTree name) : cdr) = names cdr <&> (name :)
+    names (ap@(ApplyTree _) : cdr) =
         throwError $ Error $ "Expected symbol, found " ++ show ap
 
 fn' :: Env -> [Tree] -> EvalResult Value
@@ -70,14 +68,14 @@ fmApply env closure (name : names) (arg : args) tree =
 
 def' :: Env -> [Tree] -> EvalResult Value
 def' env [names, value] = case names of
-    Symbol name ->
+    SymbolTree name ->
         return $ Define $ Env $ Map.singleton name $ eval (env, value)
     x -> throwError $ Error $ "Expected symbol, found " ++ show x
 
 block' :: Env -> [Tree] -> EvalResult Value
 block' env [exprs] = case exprs of
-    Symbol name -> eval (env, Symbol name)
-    Apply  args -> evalBlock env args <&> Define
+    SymbolTree name -> eval (env, SymbolTree name)
+    ApplyTree  args -> evalBlock env args <&> Define
 
 quote' :: Env -> [Tree] -> EvalResult Value
 quote' env [tree] = return $ Expr tree
@@ -90,10 +88,10 @@ expr' = Define $ Env $ Map.fromList [function "case" 4 case']
   where
     case' env [expr, sym, nil, ap] = asExpr expr >>= doCase
       where
-        doCase (Apply []         ) = nil
-        doCase (Apply (fn : args)) = do
+        doCase (ApplyTree []         ) = nil
+        doCase (ApplyTree (fn : args)) = do
             evAp <- ap
-            applyFn env evAp [return (Expr fn), return (Expr $ Apply args)]
+            applyFn env evAp [return (Expr fn), return (Expr $ ApplyTree args)]
         doCase expr = sym
 
 int' :: Value

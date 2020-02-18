@@ -46,7 +46,7 @@ instance Show Value where
 
 instance Show Error where
     show (Error     string) = "Error: " ++ string
-    show (Undefined ns    ) = "Undefined: " ++ show (map Symbol $ Set.toList ns)
+    show (Undefined ns    ) = "Undefined: " ++ unwords (Set.toList ns)
 
 newtype Env = Env (Map String (EvalResult Value))
     deriving (Semigroup)
@@ -84,18 +84,18 @@ evalBlock' env found errors defer (car : cdr) =
             Error string -> throwError $ Error string
 
 eval :: (Env, Tree) -> EvalResult Value
-eval (env, (Symbol name)) = case lookupEnv name env of
+eval (env, (SymbolTree name)) = case lookupEnv name env of
     Just value -> value
     Nothing    -> do
         globals <- ask
         case lookupEnv name globals of
             Just value -> value
             Nothing    -> throwError $ Undefined $ Set.singleton name
-eval (env, (CharTree char)    ) = return $ CharValue char
-eval (env, (StringTree string)) = return $ StringValue string
-eval (env, (IntTree integer)  ) = return $ IntValue integer
-eval (env, (Apply [])         ) = return nil
-eval (env, (Apply (fn : args))) = do
+eval (env, (IntTree integer)      ) = return $ IntValue integer
+eval (env, (CharTree char)        ) = return $ CharValue char
+eval (env, (StringTree string)    ) = return $ StringValue string
+eval (env, (ApplyTree [])         ) = return nil
+eval (env, (ApplyTree (fn : args))) = do
     f <- eval (env, fn)
     apply env f $ map (env, ) args
 
@@ -111,8 +111,8 @@ asExpr tree = tree >>= \case
 
 asSymbol :: EvalResult Value -> EvalResult String
 asSymbol tree = asExpr tree >>= \case
-    (Symbol s) -> return s
-    x          -> throwError $ Error $ "Expected symbol, found " ++ show x
+    (SymbolTree s) -> return s
+    x              -> throwError $ Error $ "Expected symbol, found " ++ show x
 
 asChar :: EvalResult Value -> EvalResult Char
 asChar tree = tree >>= \case
@@ -148,7 +148,7 @@ apply env (Define defs) args =
     apply env (Macro 1 $ \env [expr] -> eval (unionEnv env defs, expr)) args
 apply env (Expr tree) args = do
     evArgs <- mapM (asExpr . eval) args
-    return $ Expr $ if null evArgs then tree else Apply (tree : evArgs)
+    return $ Expr $ if null evArgs then tree else ApplyTree $ tree : evArgs
 apply env x args = applyFn env x $ map eval args
 
 applyFn :: Env -> Value -> [EvalResult Value] -> EvalResult Value
@@ -164,4 +164,4 @@ applyFn env (Function n f) args =
 applyFn env x args = throwError $ Error $ "Expected function, found " ++ show x
 
 nil :: Value
-nil = Expr $ Apply []
+nil = Expr $ ApplyTree []

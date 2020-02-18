@@ -1,16 +1,16 @@
 module Tree where
 
 data Tree
-    = Symbol String
+    = SymbolTree String
+    | IntTree Integer
     | CharTree Char
     | StringTree String
-    | IntTree Integer
-    | Apply [Tree]
+    | ApplyTree [Tree]
     deriving (Eq)
 
 instance Show Tree where
-    show (Symbol     name  ) = name
+    show (SymbolTree name  ) = name
+    show (IntTree    int   ) = show int
     show (CharTree   char  ) = show char
     show (StringTree string) = show string
-    show (IntTree    int   ) = show int
-    show (Apply      args  ) = "(" ++ unwords (map show args) ++ ")"
+    show (ApplyTree  args  ) = "(" ++ unwords (map show args) ++ ")"

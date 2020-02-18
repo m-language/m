@@ -41,7 +41,7 @@ parseSymbol = do
     car <- symbolChar
     cdr <- symbolCdr
     ignored
-    return $ Symbol $ car : cdr
+    return $ SymbolTree $ car : cdr
 
 parseChar :: Parser Tree
 parseChar = do
@@ -73,7 +73,7 @@ parseList open close = do
     args <- many parseExpr
     char close
     ignored
-    return $ Apply args
+    return $ ApplyTree args
 
 parseAtom :: Parser Tree
 parseAtom =
