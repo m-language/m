@@ -1,9 +1,9 @@
 module Command where
 
-import Control.Comonad (extract)
-import Control.Monad.Except (Except, runExceptT)
+import Control.Monad.Except (runExceptT)
 import Control.Monad.Maybe.Trans (MaybeT, runMaybeT)
 import Control.Monad.Reader (runReaderT)
+import Control.Monad.Trampoline (runTrampoline)
 import Control.Monad.Writer.Trans (lift)
 import Control.MonadZero (empty)
 import Data.Either (Either(..))
@@ -56,7 +56,7 @@ runEvalCommand :: String -> Env -> Effect Env
 runEvalCommand rest env =
   runDefault env do
     tree <- printEither $ parseRepl rest
-    value <- printExcept $ runReaderT (eval (Tuple (Env Map.empty) tree)) env
+    value <- printEither $ runTrampoline $ runExceptT $ runReaderT (eval (Tuple (Env Map.empty) tree)) env
     case value of
       ProcessValue p -> runProcess env p $> env
       Define defs -> pure $ unionEnv defs env
@@ -75,7 +75,7 @@ runLoadCommand rest env =
   runDefault env do
     files <- lift $ parseFiles $ fromFoldable $ words rest
     trees <- printEither files
-    defs <- printExcept $ runReaderT (evalBlock (Env Map.empty) trees) env
+    defs <- printEither $ runTrampoline $ runExceptT $ runReaderT (evalBlock (Env Map.empty) trees) env
     pure $ unionEnv defs env
 
 parseFile :: String -> Effect (Either ParseError (List Tree))
@@ -92,9 +92,6 @@ parseFile name =
 parseFiles :: List String -> Effect (Either ParseError (List Tree))
 parseFiles names = traverse parseFile names <#> (\f -> sequence f <#> concat)
 
-printExcept :: forall a b. (Show a) => Except a b -> MaybeT Effect b
-printExcept except = printEither $ extract $ runExceptT except
-
 printEither :: forall a b. (Show a) => Either a b -> MaybeT Effect b
 printEither error = case error of
   Left e -> lift (log (show e)) *> empty
@@ -105,9 +102,8 @@ runDefault a maybeT = runMaybeT maybeT <#> fromMaybe a
 
 runProcess :: Env -> Process -> MaybeT Effect (EvalResult Value)
 runProcess env (Impure a) = lift $ pure <$> a
-
 runProcess env (Do process fn) = do
   value <- runProcess env process
   proc <- pure $ value >>= fn
-  process' <- printExcept $ runReaderT proc env
+  process' <- printEither $ runTrampoline $ runExceptT $ runReaderT proc env
   runProcess env process'

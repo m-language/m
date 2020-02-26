@@ -1,6 +1,7 @@
 module Eval where
 
-import Control.Monad.Except (Except, catchError, throwError)
+import Control.Monad.Except (ExceptT, catchError, throwError)
+import Control.Monad.Trampoline (Trampoline)
 import Control.Monad.Reader (ReaderT, ask)
 import Data.Array as Array
 import Data.BigInt (BigInt, toString)
@@ -70,8 +71,7 @@ insertEnvLazy name value (Env env) = Env $ Map.insert name value env
 lookupEnv :: String -> Env -> Maybe (EvalResult Value)
 lookupEnv name (Env env) = Map.lookup name env
 
-type EvalResult
-  = ReaderT Env (Except Error)
+type EvalResult = ReaderT Env (ExceptT Error Trampoline)
 
 evalBlock :: Env -> List Tree -> EvalResult Env
 evalBlock env = evalBlock' env false Set.empty Nil
