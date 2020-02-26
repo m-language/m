@@ -57,6 +57,9 @@ instance showError :: Show Error where
 newtype Env
   = Env (Map String (EvalResult Value))
 
+instance envMonoid :: Monoid Env where
+  mempty = Env mempty
+
 instance envSemigroup :: Semigroup Env where
   append (Env a) (Env b) = Env (append a b)
 

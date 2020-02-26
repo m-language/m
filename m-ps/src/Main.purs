@@ -1,29 +1,33 @@
 module Main where
 
 import Command
+
+import Data.Monoid (mempty)
+import Data.Ord ((>))
 import Control.Monad.State (StateT, evalStateT, execStateT, get, put)
+import Data.Array as Array
+import Data.Array.NonEmpty (elemLastIndex)
+import Data.Char.Unicode (isSpace)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Tuple (Tuple(..))
-import Effect (Effect)
-import Effect.Console (log)
-import Eval (Env)
-import IO (Input(..), io)
-import Node.ReadLine (Interface, createConsoleInterface, noCompletion, question)
-import Prelude (Unit, bind, not, otherwise, pure, show, unit, void, ($), (<#>), (<>), (==))
-import Special (special)
-import Data.Array as Array
-import Data.Char.Unicode (isSpace)
 import Data.String (joinWith, length, drop)
 import Data.String.CodeUnits (singleton, takeWhile)
 import Data.String.Unsafe (charAt)
+import Data.Tuple (Tuple(..))
+import Effect (Effect)
 import Effect.Class (liftEffect)
+import Effect.Console (log)
 import Effect.Exception (Error) as Exception
-import Effect.Exception (try)
+import Effect.Exception (throwException, try)
+import Eval (Env)
+import IO (Input(..), io)
 import Node.Encoding (Encoding(..))
 import Node.Process (argv, stdout, stdin)
+import Node.ReadLine (Interface, createConsoleInterface, noCompletion, question)
 import Node.Stream as Stream
 import Partial.Unsafe (unsafePartial)
+import Prelude (Unit, bind, not, otherwise, pure, show, unit, void, when, ($), (<#>), (<>), (==))
+import Special (special)
 
 unwords :: Array String -> String
 unwords = joinWith " "
@@ -78,5 +82,6 @@ main :: Effect Unit
 main = do
   interface <- createConsoleInterface noCompletion
   args <- argv <#> Array.drop 2
-  env <- runLoadCommand (unwords args) ((unsafePartial special) <> (unsafePartial (io basicIO)))
+  let initialEnv = ((unsafePartial special) <> (unsafePartial (io basicIO)))
+  env <- if (Array.length args) > 0 then runLoadCommand (unwords args) initialEnv else pure initialEnv
   evalStateT (loop interface) env
