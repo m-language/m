@@ -12,7 +12,6 @@ import Control.MonadZero
 import Data.Bifunctor
 import Data.Either
 import Data.Foldable
-import Data.Foldable
 import Data.Functor
 import Data.List
 import Data.Maybe
@@ -59,40 +58,36 @@ runCommand name _ env = log ("Unrecognized command " <> name) *> pure env
 
 runParseCommand :: String -> Env -> Effect Env
 runParseCommand rest env =
-  runDefault env
-    $ do
-        tree <- printEither $ parseRepl rest
-        lift $ log (show tree)
-        pure env
+  runDefault env do
+    tree <- printEither $ parseRepl rest
+    lift $ log (show tree)
+    pure env
 
 runEvalCommand :: String -> Env -> Effect Env
 runEvalCommand rest env =
-  runDefault env
-    $ do
-        tree <- printEither $ parseRepl rest
-        value <- printExcept $ runReaderT (eval (Tuple (Env Map.empty) tree)) env
-        case value of
-          ProcessValue p -> runProcess env p $> env
-          Define defs -> pure $ unionEnv defs env
-          x -> lift $ log (show value) $> env
+  runDefault env do
+    tree <- printEither $ parseRepl rest
+    value <- printExcept $ runReaderT (eval (Tuple (Env Map.empty) tree)) env
+    case value of
+      ProcessValue p -> runProcess env p $> env
+      Define defs -> pure $ unionEnv defs env
+      x -> lift $ log (show value) $> env
 
 runLoadParseCommand :: String -> Env -> Effect Env
 runLoadParseCommand rest env =
-  runDefault env
-    $ do
-        files <- lift $ parseFiles $ fromFoldable $ words rest
-        trees <- printEither files
-        for_ trees (lift <<< logShow)
-        pure env
+  runDefault env do
+    files <- lift $ parseFiles $ fromFoldable $ words rest
+    trees <- printEither files
+    for_ trees (lift <<< logShow)
+    pure env
 
 runLoadCommand :: String -> Env -> Effect Env
 runLoadCommand rest env =
-  runDefault env
-    $ do
-        files <- lift $ parseFiles $ fromFoldable $ words rest
-        trees <- printEither files
-        defs <- printExcept $ runReaderT (evalBlock (Env Map.empty) trees) env
-        pure $ unionEnv defs env
+  runDefault env do
+    files <- lift $ parseFiles $ fromFoldable $ words rest
+    trees <- printEither files
+    defs <- printExcept $ runReaderT (evalBlock (Env Map.empty) trees) env
+    pure $ unionEnv defs env
 
 parseFile :: String -> Effect (Either ParseError (List Tree))
 parseFile name =
