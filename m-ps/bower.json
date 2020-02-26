@@ -18,7 +18,8 @@
     "purescript-transformers": "^4.2.0",
     "purescript-parsing": "^5.0.3",
     "purescript-node-process": "^7.0.0",
-    "purescript-node-readline": "^4.0.1"
+    "purescript-node-readline": "^4.0.1",
+    "purescript-bigints": "^4.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"

@@ -2,11 +2,9 @@ module Main where
 
 import Command
 
-import Data.Monoid (mempty)
 import Data.Ord ((>))
 import Control.Monad.State (StateT, evalStateT, execStateT, get, put)
 import Data.Array as Array
-import Data.Array.NonEmpty (elemLastIndex)
 import Data.Char.Unicode (isSpace)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -18,7 +16,7 @@ import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Console (log)
 import Effect.Exception (Error) as Exception
-import Effect.Exception (throwException, try)
+import Effect.Exception (try)
 import Eval (Env)
 import IO (Input(..), io)
 import Node.Encoding (Encoding(..))
@@ -26,7 +24,7 @@ import Node.Process (argv, stdout, stdin)
 import Node.ReadLine (Interface, createConsoleInterface, noCompletion, question)
 import Node.Stream as Stream
 import Partial.Unsafe (unsafePartial)
-import Prelude (Unit, bind, not, otherwise, pure, show, unit, void, when, ($), (<#>), (<>), (==))
+import Prelude (Unit, bind, not, otherwise, pure, show, unit, void, ($), (<#>), (<>), (==))
 import Special (special)
 
 unwords :: Array String -> String

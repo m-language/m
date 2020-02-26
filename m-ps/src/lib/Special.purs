@@ -1,18 +1,16 @@
 module Special where
 
-import Prelude
+import Control.Monad.Except (throwError)
+import Data.Array as Array
+import Data.BigInt (fromInt)
 import Data.List ((:), List(..))
 import Data.List as List
-import Data.Array as Array
-import Data.String.CodeUnits as String
-import Eval
-import Tree
 import Data.Map as Map
-import Data.Bifunctor
-import Control.Monad.State
-import Control.Monad.Except
-import Data.Tuple
-import Control.MonadZero
+import Data.String.CodeUnits as String
+import Data.Tuple (Tuple(..), curry)
+import Eval (Env(..), Error(..), EvalResult, Process(..), Value(..), applyFn, asChar, asExpr, asInteger, asProcess, asString, eval, evalBlock, insertEnv, insertEnvLazy)
+import Prelude (class Monad, bind, pure, show, ($), (*), (+), (-), (/), (<), (<#>), (<$>), (<<<), (<>), (==), (>), (>>=), (>>>))
+import Tree (Tree(..))
 
 value :: forall m. Monad m => String -> Value -> Tuple String (m Value)
 value name v = Tuple name (pure v)
@@ -135,7 +133,7 @@ int' =
   div' env (a : b : zero : Nil) = do
     evA <- asInteger a
     evB <- asInteger b
-    if evB == 0 then
+    if evB == fromInt 0 then
       zero
     else
       pure $ IntValue $ (evA / evB)

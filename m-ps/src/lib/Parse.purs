@@ -1,23 +1,19 @@
 module Parse where
 
-import Prelude
-import Tree
-import Control.Monad
-import Data.Functor
-import Control.Apply
+import Text.Parsing.Parser.String
+import Control.Alternative ((<|>))
+import Data.Array (many, some)
+import Data.BigInt (fromString)
+import Data.Either (Either)
+import Data.List (List, fromFoldable)
+import Data.Maybe (fromMaybe)
+import Data.String.CodeUnits (fromCharArray, toCharArray, singleton)
+import Prelude (Unit, bind, discard, map, pure, unit, void, ($), (*>), (<#>), (<>))
 import Text.Parsing.Parser (ParseError, runParser, fail)
 import Text.Parsing.Parser (Parser) as P
-import Text.Parsing.Parser.String
-import Text.Parsing.Parser.Token
-import Text.Parsing.Parser.Combinators
-import Data.Either
-import Data.List hiding (many, some)
-import Data.Array (many, some)
-import Data.Char
-import Data.Maybe
-import Control.Alternative
-import Data.Int (fromString)
-import Data.String.CodeUnits (fromCharArray, toCharArray, singleton)
+import Text.Parsing.Parser.Combinators (option, skipMany, try)
+import Text.Parsing.Parser.Token (digit, letter, space)
+import Tree (Tree(..))
 
 type Parser a
   = P.Parser String a

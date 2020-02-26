@@ -1,26 +1,21 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE LambdaCase #-}
 module Eval where
 
-import Prelude
-import Effect
-import Tree
+import Control.Monad.Except (Except, catchError, throwError)
+import Control.Monad.Reader (ReaderT, ask)
+import Data.Array as Array
+import Data.BigInt (BigInt, toString)
+import Data.List (List(..), drop, length, null, take, (:))
 import Data.Map (Map)
 import Data.Map as Map
+import Data.Maybe (Maybe(..))
 import Data.Set (Set)
 import Data.Set as Set
-import Data.Functor
-import Data.Bifunctor
-import Data.List
-import Data.Maybe
-import Control.Monad.Except
-import Control.Monad.Reader
-import Control.Monad
-import Data.Tuple
-import Data.Traversable (traverse)
-import Data.Array as Array
 import Data.String.Common (joinWith)
+import Data.Traversable (traverse)
+import Data.Tuple (Tuple(..), snd)
+import Effect (Effect)
+import Prelude (class Monoid, class Semigroup, class Show, append, bind, map, mempty, pure, show, ($), (-), (<), (<<<), (<>), (>), (>>=))
+import Tree (Tree(..))
 
 data Process
   = Impure (Effect Value)
@@ -33,7 +28,7 @@ data Value
   | Expr Tree
   | CharValue Char
   | StringValue String
-  | IntValue Int
+  | IntValue BigInt
   | ProcessValue Process
 
 data Error
@@ -46,7 +41,7 @@ instance showValue :: Show Value where
   show (Expr t) = "'" <> show t
   show (CharValue c) = show c
   show (StringValue s) = show s
-  show (IntValue i) = show i
+  show (IntValue i) = toString i
   show (Define (Env e)) = "{" <> (joinWith " " (Array.fromFoldable (Map.keys e))) <> "}"
   show (ProcessValue p) = "<process>"
 
@@ -158,7 +153,7 @@ asString tree =
         (StringValue string) -> pure string
         x -> throwError $ Error $ "Expected string, found " <> show x
 
-asInteger :: EvalResult Value -> EvalResult Int
+asInteger :: EvalResult Value -> EvalResult BigInt
 asInteger tree =
   tree
     >>= \x -> case x of
