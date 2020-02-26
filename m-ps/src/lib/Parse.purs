@@ -15,8 +15,7 @@ import Text.Parsing.Parser.Combinators (option, skipMany, try)
 import Text.Parsing.Parser.Token (digit, letter, space)
 import Tree (Tree(..))
 
-type Parser a
-  = P.Parser String a
+type Parser a = P.Parser String a
 
 lineCommentTail :: Parser Unit
 lineCommentTail = void $ many $ noneOf [ '\n' ]

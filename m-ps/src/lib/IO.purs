@@ -1,13 +1,11 @@
 module IO where
 
-import Data.Functor
-import Data.List
-import Effect
-import Eval
-import Prelude
-import Special
-import Tree
+import Data.List (List(..), (:))
 import Data.Map as Map
+import Effect (Effect)
+import Eval (Env(..), EvalResult, Process(..), Value(..), asChar, nil)
+import Prelude (Unit, const, ($), (<#>), (<$>))
+import Special (function, value)
 
 newtype Input
   = Input
@@ -16,13 +14,11 @@ newtype Input
   }
 
 io :: Partial => Input -> Env
-io (Input i) =
-  Env
-    $ Map.fromFoldable
-        [ function "stdout" 1 (stdout' i.putChar)
-        , value "stdin" (stdin' i.getChar)
-        , value "newline" newline'
-        ]
+io (Input i) = Env $ Map.fromFoldable
+    [ function "stdout" 1 (stdout' i.putChar)
+    , value "stdin" (stdin' i.getChar)
+    , value "newline" newline'
+    ]
 
 stdout' :: Partial => (Char -> Effect Unit) -> Env -> List (EvalResult Value) -> EvalResult Value
 stdout' putChar env (char : Nil) = asChar char <#> \c -> ProcessValue $ Impure $ putChar c <#> const nil

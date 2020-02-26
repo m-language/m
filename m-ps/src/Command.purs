@@ -1,38 +1,31 @@
 module Command where
 
-import Control.Applicative
-import Control.Comonad
-import Control.Monad.Except
-import Control.Monad.Maybe.Trans
-import Control.Monad.Reader
-import Control.Monad.State
-import Control.Monad.Trans.Class
-import Control.Monad.Writer.Trans
-import Control.MonadZero
-import Data.Bifunctor
-import Data.Either
-import Data.Foldable
-import Data.Functor
-import Data.List
-import Data.Maybe
-import Data.Traversable
-import Data.Tuple
-import Effect
-import Effect.Console
-import Eval
-import Node.FS
-import Node.FS.Sync
-import Parse
-import Prelude
-import Tree
+import Control.Comonad (extract)
+import Control.Monad.Except (Except, runExceptT)
+import Control.Monad.Maybe.Trans (MaybeT, runMaybeT)
+import Control.Monad.Reader (runReaderT)
+import Control.Monad.Writer.Trans (lift)
+import Control.MonadZero (empty)
+import Data.Either (Either(..))
+import Data.List (List, concat, fromFoldable)
 import Data.Map as Map
+import Data.Maybe (fromMaybe)
 import Data.String (Pattern(..), split)
+import Data.Traversable (for_, sequence, traverse)
+import Data.Tuple (Tuple(..))
+import Effect (Effect)
 import Effect.Class.Console (logShow)
+import Effect.Console (log)
+import Eval (Env(..), EvalResult, Process(..), Value(..), eval, evalBlock, unionEnv)
 import Node.Encoding (Encoding(..))
 import Node.FS.Stats (isDirectory)
+import Node.FS.Sync (readTextFile, readdir, stat)
 import Node.Path (FilePath)
 import Node.Path as Path
+import Parse (parseProgram, parseRepl)
+import Prelude (class Show, bind, discard, map, pure, show, ($), ($>), (*>), (<#>), (<$>), (<<<), (<>), (>>=))
 import Text.Parsing.Parser (ParseError)
+import Tree (Tree)
 
 listDirectory :: FilePath -> Effect (Array FilePath)
 listDirectory = readdir
@@ -47,13 +40,9 @@ words = split (Pattern " ")
 
 runCommand :: String -> String -> Env -> Effect Env
 runCommand "parse" rest env = runParseCommand rest env
-
 runCommand "eval" rest env = runEvalCommand rest env
-
 runCommand "load-parse" rest env = runLoadParseCommand rest env
-
 runCommand "load" rest env = runLoadCommand rest env
-
 runCommand name _ env = log ("Unrecognized command " <> name) *> pure env
 
 runParseCommand :: String -> Env -> Effect Env
