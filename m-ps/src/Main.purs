@@ -58,6 +58,7 @@ loop interface = do
 
 process :: String -> Env -> Effect Env
 process line env
+  | length line == 0 = pure env
   | charAt 0 line == ':' =
     let Tuple command rest = break $ drop 1 line
     in  runCommand command rest env
