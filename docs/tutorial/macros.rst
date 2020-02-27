@@ -7,7 +7,7 @@ Macros
 Macros are the core of M's higher level abstractions; they allow you to use
 information from the compiler to transform expressions and create new semantics. 
 To do this, M treats its own structure as a primitive type, and allows the 
-definition of function macros which operate on it.
+definition of functions which operate on it.
 
 Macro Application
 =================
@@ -38,7 +38,7 @@ can be manipulated by other functions.
 Combining Expressions
 =====================
 
-Expressions can be combining by applying them to other expressions. The
+Expressions can be combined by applying them to other expressions. The
 application of two expressions is equivalent to the expression representing
 their application.
 
@@ -51,10 +51,10 @@ their application.
 Transforming Expressions
 ========================
 
-Function macro expressions are of the form ``(fm <args> <val>)``, where where 
-``args`` is a list of argument names and ``val`` is the value of the function
-macro. When applied to an expression, a function macro quotes that expression
-and transforms it.
+Function macros are of the form ``(fm <args> <val>)``, where where ``args`` is a 
+list of argument names and ``val`` is the value of the function macro. When 
+applied to an expression, a function macro quotes that expression and transforms 
+it.
 
 .. code-block:: lisp
 
@@ -70,18 +70,18 @@ and transforms it.
 Inspecting Expressions
 ======================
 
-Case expressions are of the form ``(expr/case <expr> <sym> <nil> <cons>)``.
+Case expressions are of the form ``(case <expr> <sym> <nil> <cons>)``.
 
 - When ``expr`` evaluates to a symbol, evaluates to ``sym``
 - When ``expr`` evaluates to an application with no arguments, evaluates to ``nil``
-- When ``expr`` evaluates to an application with arguments, evaluates to ``cons`` and applies cons with the car and cdr
+- When ``expr`` evaluates to an application with arguments, evaluates to ``cons`` and applies cons to the car and cdr
 
 .. code-block:: lisp
 
-    # The implementaion of defn
+    # The implementation of defn
     (def defn
       (fm [signature value]
-        (expr/case signature
+        (case signature
           ((quote def) signature expr)
           (error "Nil signature")
           (fn [name args] 

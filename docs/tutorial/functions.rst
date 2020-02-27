@@ -4,16 +4,16 @@
 Functions
 *********
 
-Functions are the fundamental data type in M. Every other type, except for a few
-primitive ones such as integers and expressions, is represented as a function, 
-even typically intrinsic ones like structs and booleans. Functions in M are 
-pure, meaning that they cannot have side effects like IO and mutation, and only 
+Functions are the fundamental data type in M. Every type, except for a few
+primitives such as integers and expressions, is represented as a function, 
+even typically intrinsic types like structures and booleans. Functions in M are 
+pure, meaning that they cannot have side effects like IO or mutation, and only 
 ever take one argument (multi-argument functions are provided as syntax sugar).
 
 Function Application
 ====================
 
-Function application of the form ``(<fn> <args...>)``, where ``fn`` is the 
+Function application is of the form ``(<fn> <args...>)``, where ``fn`` is the 
 function to be applied and ``args`` is a list of arguments to the function.
 
 .. code-block:: lisp
@@ -29,7 +29,7 @@ Functions are applied lazily, so their arguments are only evaluated when used.
 Function Abstraction
 ====================
 
-Function expressions are of the form ``(fn <args...> <val>)``, where ``args`` is 
+Function abstraction is of the form ``(fn <args> <val>)``, where ``args`` is 
 a list of argument names and ``val`` is the value of the function.
 
 .. code-block:: lisp
@@ -43,19 +43,22 @@ a list of argument names and ``val`` is the value of the function.
     # The increment function
     (fn x (add x 1))
 
-Note that the syntaxes ``(f x)``, ``[f x]``, and ``{f x}`` are interchangable.
+Note that the syntaxes ``(f x)``, ``[f x]``, and ``{f x}`` are interchangeable;
+parentheses are used when applying functions, brackets are used when passing a 
+list of expressions which will not be evaluated, and braces are used when 
+passing a list of expressions which will be evaluated.
 
 Closures
 ========
 
 Closures are a property of functions where the variables of an outside scope are
 captured by a function. The values of these variables are stored in the
-function's closure, and persists as long as the function persists.
+function's closure, and persists for as long as the function persists.
 
 .. code-block:: lisp
 
-    #(The increment function expressed with closures; the variable x is bound
-      to 1, and the function of y stores this value in its closure)
+    # The increment function expressed with closures; the variable x is bound
+    # to 1, and the function of y stores this value in its closure
     ((fn x (fn y (add x y))) 
      1)
 
@@ -64,7 +67,7 @@ Currying
 
 Curried functions are functions which use closures to take their arguments one
 at a time, allowing for partial application of their arguments. In M, all
-functions are curried.
+functions are curried, including internal functions.
 
 .. code-block:: lisp
 
@@ -75,8 +78,8 @@ Multi-Argument Functions
 ========================
 
 Multi-argument functions in M are actually just syntax sugar for curried
-functions. Likewise, multi-argument application is just repeated application of
-single arguments.
+functions. Likewise, multi-argument application is just syntax sugar for 
+curried application.
 
 .. code-block:: lisp
 

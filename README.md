@@ -3,56 +3,9 @@ M Language
 
 ![travis build](https://travis-ci.com/m-language/m-language.svg?branch=master)
 
-[The M programming language](https://m-language.github.io/) is a minimal 
-language, designed from the ground up to be as simple as possible for
-usability and expressiveness. 
-
-What it looks like
-------------------
-
-```
-# This is a comment
-
-# Definitions are global and unordered
-(def one 1)
-
-# Functions are single argument curried lambdas
-(def id (fn x x))
-(def const (fn [x y] x))
-
-# Application is also curried
-(def swap (fn [f x y] (f y x)))
-
-# New forms can be constructed using macros
-(def defn ...)   # implementation elided
-(defn (compose f g x) (f (g x)))
-
-# Modules are defined in module.m
-(defmodule demo {
-  (import [nat list bool data stdio])
-
-  # Natural numbers are defined in nat.m
-  (def inc (add 1))
-
-  # Lists are defined in list.m
-  (defn (sum list)
-    (fold list 0 add))
-
-  # Data types are defined in data.m
-  (defdata (point x y))
-  (def origin (point 0 0))
-
-  # Processes are used for IO
-  (defn (echo log)
-    (do {
-      (def line (read-line stdin))
-      (run-async 
-        (write-line stdout line)
-        (write-line log line))
-      (echo log)
-    }))
-})
-```
+[The M programming language](https://m-language.github.io/) is a minimal
+language primarily inspired by Lisp and Haskell, designed from the ground up to
+be as simple as possible for usability and expressiveness.
 
 For more information, an in-depth tutorial can be found
 [here](https://m-language.readthedocs.io/en/latest/tutorial/index.html).

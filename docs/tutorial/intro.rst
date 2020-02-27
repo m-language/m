@@ -9,11 +9,10 @@ as important as expressiveness; or, put another way, that a program which cannot
 be reasoned about is little better than no program at all. Many features of
 modern programming languages complicate programs unnecessarily, and combining
 these features increases complexity exponentially. For the programmer, this
-means time wasted trying to figure out what a program does; or worse, being
-wrong about what a program does. For the tooling, this means less support, worse
-performance, and more bugs.
+means time wasted trying to figure out what a program does. For the tooling, 
+this means less support, worse performance, and more bugs.
 
-M attempts to replace these complicated language features with primitive
+M attempts to replace these complicated language features with straightforward
 abstractions, making programs simpler and easier to reason about. While many
 of these features are still available in M, they are provided through the
 composition of abstractions rather than as part of the language, allowing them 
@@ -23,7 +22,7 @@ removing it is as simple as inlining said function.
 
 Despite this emphasis on simplicity, M maintains (and even exceeds) the
 expressiveness of most other programming languages. The ability to define new
-features in M makes adding "missing" ones simple, and no tooling needs to be
+features in M makes adding missing ones simple, and no tooling needs to be
 updated to support them. Modifications of features can be used along side one
 another, and complete paradigm switches can be made local to a single function.
 
@@ -39,5 +38,5 @@ assume any prior knowledge, familiarity the Lambda Calculus, other Lisps, and
 functional programming in general will be useful. Though many of the topics
 covered are relatively simple, the ways in which they interact can be difficult
 to understand if you are not already familiar with them. Every concept will be
-explained at least briefly, but fully exploring concepts like monads and macros
-is beyond the scope of this tutorial.
+explained at least briefly, but fully exploring concepts like monads and lazy
+evaluation is beyond the scope of this tutorial.

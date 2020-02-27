@@ -6,8 +6,8 @@ Definitions
 
 While it is possible to introduce local variables with functions, something more
 powerful is needed to abstract in larger programs. Definitions provide a simple
-way of providing both local and global variables without worrying about 
-includes or predeclarations.
+way of providing both local and global variables without worrying about includes 
+or pre-declarations.
 
 Definition Expressions
 ======================
@@ -38,12 +38,11 @@ its first usage.
     # The increment function which adds one to its argument
     (def inc (add 1))
 
-As Expressions
-==============
+Definitions as Expressions
+==========================
 
-Definitions are expressions which return a definition value. When a definition
-value is applied, it evaluates its argument with the definition. This allows 
-definitions to be used to define local variables.
+Definitions are expressions which return an environment. When an environment is
+applied, it evaluates its argument within the environment.
 
 .. code-block:: lisp
 
@@ -60,12 +59,11 @@ Block Expressions
 
 Block expressions are expressions of the form ``(block exprs)``, where ``exprs``
 is the list of expressions in the block. A block expression combines the
-definition values of all expressions in the block to create a single definition 
-value.
+environments of all expressions in the block to create a single environment.
 
 .. code-block:: lisp
 
-    #(Defines three and inc)
+    # Defines three and inc
     (block {
       (def three (inc 2))
       (def inc (add 1))
@@ -77,11 +75,10 @@ Cross File Definitions
 ======================
 
 M's definitions are designed in such a way that two definitions in two different
-files are equivalent to the same two definitions in the same file. In other
-words, it does not matter where the definitions are stored as long as the M
-compiler can find them.
+files are equivalent to two definitions in the same file. In other words, it 
+does not matter where the definitions are stored as long as the M compiler can 
+find them.
 
 By default, the M compiler looks in the current directory for definitions. This 
 is semantically equivalent to combining every file in your project into one 
-file, though optimizations are in place to avoid compiling unused files. This 
-functionality also extends to the REPL.
+file, though optimizations are in place to avoid compiling unused definitions.
