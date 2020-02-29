@@ -7,7 +7,7 @@
     (out newline))
 
   #(Writes a fold of characters to an output)
-  (defn (write-fold fold output)
+  (defn (write-fold fold out)
     (fold (impure ' ')
       (fn [acc char]
         (combine acc (out char)))))
