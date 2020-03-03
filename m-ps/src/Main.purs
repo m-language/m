@@ -2,13 +2,14 @@ module Main where
 
 import Command
 
+import Control.Monad((>>=))
 import Control.Monad.State (StateT, evalStateT, execStateT, get, put)
 import Data.Array as Array
 import Data.Char.Unicode (isSpace)
 import Data.Either (Either(..))
+import Data.Maybe (Maybe(..))
 import Data.String (joinWith, length, drop)
-import Data.String.CodeUnits (singleton, takeWhile)
-import Data.String.Unsafe (charAt)
+import Data.String.CodeUnits (charAt, singleton, takeWhile)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Class (liftEffect)
@@ -24,10 +25,10 @@ import Partial.Unsafe (unsafePartial)
 import Prelude (Unit, bind, not, otherwise, pure, show, unit, void, ($), (<#>), (<>), (==))
 import Special (special)
 
-foreign import readInputCharImpl :: Effect String
+foreign import readInputCharImpl :: (forall a. a -> Maybe a) -> (forall a. Maybe a) -> Effect (Maybe String)
 
-readInputChar :: Effect Char
-readInputChar = readInputCharImpl <#> charAt 0
+readInputChar :: Effect (Maybe Char)
+readInputChar = readInputCharImpl Just Nothing <#> \m -> m >>= charAt 0
 
 unwords :: Array String -> String
 unwords = joinWith " "
@@ -59,7 +60,7 @@ loop interface = do
 process :: String -> Env -> Effect Env
 process line env
   | length line == 0 = pure env
-  | charAt 0 line == ':' =
+  | charAt 0 line == Just ':' =
     let Tuple command rest = break $ drop 1 line
     in  runCommand command rest env
   | otherwise = runEvalCommand line env
