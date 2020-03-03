@@ -30,9 +30,6 @@ foreign import readInputCharImpl :: (forall a. a -> Maybe a) -> (forall a. Maybe
 readInputChar :: Effect (Maybe Char)
 readInputChar = readInputCharImpl Just Nothing <#> \m -> m >>= charAt 0
 
-unwords :: Array String -> String
-unwords = joinWith " "
-
 break :: String -> Tuple String String
 break s = 
   let prefix = takeWhile (not isSpace) s
