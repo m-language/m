@@ -8,7 +8,7 @@ import Data.Array as Array
 import Data.Char.Unicode (isSpace)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
-import Data.String (joinWith, length, drop)
+import Data.String (length, drop)
 import Data.String.CodeUnits (charAt, singleton, takeWhile)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
