@@ -42,7 +42,7 @@ runCommand :: String -> String -> Env -> Effect Env
 runCommand "parse" rest env = runParseCommand rest env
 runCommand "eval" rest env = runEvalCommand rest env
 runCommand "load-parse" rest env = runLoadParseCommand rest env
-runCommand "load" rest env = runLoadCommand rest env
+runCommand "load" rest env = runLoadCommand (words rest) env
 runCommand name _ env = log ("Unrecognized command " <> name) *> pure env
 
 runParseCommand :: String -> Env -> Effect Env
@@ -58,9 +58,9 @@ runEvalCommand rest env =
     tree <- printEither $ parseRepl rest
     value <- printEither $ runTrampoline $ runExceptT $ runReaderT (eval (Tuple (Env Map.empty) tree)) env
     case value of
-      ProcessValue p -> runProcess env p $> env
+      ProcessValue p -> runProcess env p *> (lift $ log "") $> env
       Define defs -> pure $ unionEnv defs env
-      x -> lift $ log (show value) $> env
+      x -> lift $ logShow value $> env
 
 runLoadParseCommand :: String -> Env -> Effect Env
 runLoadParseCommand rest env =
@@ -70,10 +70,10 @@ runLoadParseCommand rest env =
     for_ trees (lift <<< logShow)
     pure env
 
-runLoadCommand :: String -> Env -> Effect Env
-runLoadCommand rest env =
+runLoadCommand :: Array String -> Env -> Effect Env
+runLoadCommand paths env =
   runDefault env do
-    files <- lift $ parseFiles $ fromFoldable $ words rest
+    files <- lift $ parseFiles $ fromFoldable paths
     trees <- printEither files
     defs <- printEither $ runTrampoline $ runExceptT $ runReaderT (evalBlock (Env Map.empty) trees) env
     pure $ unionEnv defs env
