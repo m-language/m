@@ -72,6 +72,6 @@ main :: Effect Unit
 main = do
   interface <- createConsoleInterface noCompletion
   args <- argv <#> Array.drop 2
-  let initialEnv = ((unsafePartial special) <> (unsafePartial (io basicIO)))
+  let initialEnv = unsafePartial (special <> (io basicIO))
   env <- runLoadCommand args initialEnv
   evalStateT (loop interface) env
