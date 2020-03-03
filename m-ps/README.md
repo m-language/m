@@ -4,14 +4,14 @@ An implementation of M in purescript.
 
 ## Getting Started
 
-### Install dependencies
+### Install Dependencies
 
 ```bash
 bower install
 npm install
 ```
 
-### Building & Running the REPL
+### Build & Run the REPL
 
 ```bash
 pulp build
