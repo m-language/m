@@ -9,19 +9,16 @@ Setting up the M Compiler
 
 The M compiler does not need any special setup to work; simply clone
 `The M Compiler <https://github.com/m-language/m-language>`_ in the directory
-of your choice.
+of your choice, install the dependencies, and run.
 
 .. code-block:: bash
 
-    git clone https://github.com/m-language/m-language.git
-
-Building the Haskell Interpreter
-================================
-
-Before building the Haskell Interpreter, you will need to install `Stack <https://docs.haskellstack.org/en/stable/README/>`_:
-
-Once Stack is installed, simply ``cd m-hs`` and ``stack run`` to run the 
-interpreter.
+    git clone https://github.com/m-language/m.git
+    cd m/m-ps
+    bower install
+    npm install
+    pulp build
+    npm run repl
 
 Setting up your Editor
 ======================
