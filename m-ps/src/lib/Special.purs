@@ -81,7 +81,7 @@ quote' :: Partial => Env -> List Tree -> EvalResult Value
 quote' env (tree : Nil) = pure $ Expr tree
 
 error' :: Partial => Env -> List (EvalResult Value) -> EvalResult Value
-error' env (expr : Nil) = asString expr >>= \e -> throwError $ Error e
+error' env (expr : Nil) = asString expr >>= (throwError <<< Error)
 
 expr' :: Partial => Value
 expr' = Define $ Env $ Map.fromFoldable [ function "case" 4 case' ]
@@ -152,8 +152,8 @@ string' = Define $ Env $ Map.fromFoldable [ function "case" 3 case' ]
           evCons <- cons
           applyFn env evCons
             ( List.fromFoldable
-                [ pure (CharValue (a))
-                , pure (StringValue $ (String.fromCharArray (Array.fromFoldable b)))
+                [ pure (CharValue a)
+                , pure (StringValue $ String.fromCharArray $ Array.fromFoldable b)
                 ]
             )
 
