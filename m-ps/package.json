@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "repl": "pulp run -- ../std"
+    "repl": "pulp run -- ../std ../examples"
   },
   "dependencies": {
     "big-integer": "^1.6.48"
