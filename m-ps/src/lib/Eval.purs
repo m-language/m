@@ -50,8 +50,7 @@ instance showError :: Show Error where
   show (Error string) = "Error: " <> string
   show (Undefined ns) = "Undefined: " <> (joinWith " " (Array.fromFoldable ns))
 
-newtype Env
-  = Env (Map String (EvalResult Value))
+newtype Env = Env (Map String (EvalResult Value))
 
 instance envMonoid :: Monoid Env where
   mempty = Env mempty
@@ -143,6 +142,7 @@ asProcess tree = tree >>= \x -> case x of
   err -> throwError $ Error $ "Expected process, found " <> show err
 
 apply :: Env -> Value -> List (Tuple Env Tree) -> EvalResult Value
+apply env f Nil = pure f
 apply env (Macro n f) args
   | length args < n = 
       pure $ Macro (n - length args) \env' args' ->
@@ -151,13 +151,9 @@ apply env (Macro n f) args
       apply env (Macro n f) (take n args) 
           >>= \v -> apply env v (drop n args)
   | otherwise = f env $ map snd args
-apply env (Define defs) args =
-  apply env
-    ( Macro 1 \env' exprs -> case exprs of
-        expr : Nil -> eval (Tuple (unionEnv env' defs) expr)
-        _ -> throwError $ Error $ "Impossible"
-    )
-    args
+apply env (Define defs) (arg : args) = do
+  f <- eval $ Tuple (unionEnv env defs) (snd arg)
+  apply env f args
 apply env (Expr tree) args = do
   evArgs <- traverse (asExpr <<< eval) args
   pure $ Expr $ if null evArgs then tree else ApplyTree $ tree : evArgs
