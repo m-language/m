@@ -3,37 +3,54 @@ module Special where
 import Control.Monad.Except (throwError)
 import Data.Array as Array
 import Data.BigInt (fromInt)
-import Data.List ((:), List(..))
+import Data.List ((:), List(..), drop, length, take)
 import Data.List as List
 import Data.Map as Map
 import Data.String.CodeUnits as String
 import Data.Tuple (Tuple(..), curry)
-import Eval (Env(..), Error(..), EvalResult, Process(..), Value(..), applyFn, asChar, asExpr, asInteger, asProcess, asString, eval, evalBlock, insertEnv, insertEnvLazy)
-import Prelude (bind, pure, show, ($), (*), (+), (-), (/), (<), (<#>), (<$>), (<<<), (<>), (==), (>), (>>=), (>>>))
+import Eval (Env(..), Error(..), EvalResult, Process(..), Value(..), apply, applyFn, asChar, asExpr, asInteger, asProcess, asString, eval, evalBlock, insertEnv, insertEnvLazy)
+import Prelude (bind, otherwise, pure, show, ($), (*), (+), (-), (/), (<), (<#>), (<$>), (<<<), (<>), (==), (>), (>>=), (>>>))
 import Tree (Tree(..))
 
-value :: String -> Value -> Tuple String (EvalResult Value)
-value name v = Tuple name $ pure v
+function :: Int -> (Env -> List (EvalResult Value) -> EvalResult Value) -> Value
+function n f = Function fn
+  where
+    fn :: Env -> List (EvalResult Value) -> EvalResult Value
+    fn env args
+      | length args < n = 
+          pure $ function (n - length args) \env' args' -> 
+            applyFn env' (function n f) (args <> args')
+      | length args > n = 
+          applyFn env (function n f) (take n args) >>= \v ->
+            applyFn env v (drop n args)
+      | otherwise = f env args
 
-function :: String -> Int -> (Env -> List (EvalResult Value) -> EvalResult Value) -> Tuple String (EvalResult Value)
-function name i f = Tuple name $ pure $ Function i f
-
-macro :: String -> Int -> (Env -> List Tree -> EvalResult Value) -> Tuple String (EvalResult Value)
-macro name i f = Tuple name $ pure $ Macro i f
+macro :: Int -> (Env -> List Tree -> EvalResult Value) -> Value
+macro n f = Macro fn
+  where
+    fn :: Env -> List Tree -> EvalResult Value
+    fn env args
+      | length args < n = 
+          pure $ macro (n - length args) \env' args' -> 
+            apply env' (macro n f) (args <> args')
+      | length args > n = 
+          apply env (macro n f) (take n args) >>= \v ->
+            apply env v (drop n args)
+      | otherwise = f env args
 
 special :: Partial => Env
 special = Env $ Map.fromFoldable
-    [ macro "fn" 2 fn'
-    , macro "fm" 2 fm'
-    , macro "def" 2 def'
-    , macro "block" 1 block'
-    , macro "quote" 1 quote'
-    , function "error" 1 error'
-    , value "expr-ops" expr'
-    , value "int-ops" int'
-    , value "char-ops" char'
-    , value "string-ops" string'
-    , value "process-ops" process'
+    [ Tuple "fn" $ pure $ macro 2 fn'
+    , Tuple "fm" $ pure $ macro 2 fm'
+    , Tuple "def" $ pure $ macro 2 def'
+    , Tuple "block" $ pure $ macro 1 block'
+    , Tuple "quote" $ pure $ macro 1 quote'
+    , Tuple "error" $ pure $ function 1 error'
+    , Tuple "expr-ops" $ pure expr'
+    , Tuple "int-ops" $ pure int'
+    , Tuple "char-ops" $ pure char'
+    , Tuple "string-ops" $ pure string'
+    , Tuple "process-ops" $ pure process'
     ]
 
 getNames :: Tree -> EvalResult (List String)
@@ -49,18 +66,18 @@ getNames expr = throwError $ Error $ "Expected symbol, found " <> show expr
 fn' :: Partial => Env -> List Tree -> EvalResult Value
 fn' closure (argsNames : expr : Nil) = do
   names <- getNames argsNames
-  pure $ Function (List.length names) \env args ->
+  pure $ function (length names) \env args ->
       fnApply closure names args expr
 
 fnApply :: Partial => Env -> List String -> List (EvalResult Value) -> Tree -> EvalResult Value
-fnApply closure Nil Nil tree = eval (Tuple closure tree)
+fnApply closure Nil Nil tree = eval $ Tuple closure tree
 fnApply closure (name : names) (arg : args) tree = 
   fnApply (insertEnvLazy name arg closure) names args tree
 
 fm' :: Partial => Env -> List Tree -> EvalResult Value
 fm' closure (argNames : expr : Nil) = do
   names <- getNames argNames
-  pure $ Macro (List.length names) \env args ->
+  pure $ macro (length names) \env args ->
       fmApply env closure names args expr
 
 fmApply :: Partial => Env -> Env -> List String -> List Tree -> Tree -> EvalResult Value
@@ -75,8 +92,8 @@ def' env (names : expr : Nil) = case names of
 
 block' :: Partial => Env -> List Tree -> EvalResult Value
 block' env (exprs : Nil) = case exprs of
-  SymbolTree name -> eval (Tuple env (SymbolTree name))
-  ApplyTree args -> evalBlock env args <#> Define
+  SymbolTree name -> eval $ Tuple env $ SymbolTree name
+  ApplyTree args -> Define <$> evalBlock env args
 
 quote' :: Partial => Env -> List Tree -> EvalResult Value
 quote' env (tree : Nil) = pure $ Expr tree
@@ -85,7 +102,7 @@ error' :: Partial => Env -> List (EvalResult Value) -> EvalResult Value
 error' env (expr : Nil) = asString expr >>= (throwError <<< Error)
 
 expr' :: Partial => Value
-expr' = Define $ Env $ Map.fromFoldable [ function "case" 4 case' ]
+expr' = Define $ Env $ Map.fromFoldable [ Tuple "case" $ pure $ function 4 case' ]
   where
     case' env (expr : sym : nil : ap : Nil) = asExpr expr >>= doCase
       where
@@ -97,12 +114,12 @@ expr' = Define $ Env $ Map.fromFoldable [ function "case" 4 case' ]
 
 int' :: Partial => Value
 int' = Define $ Env $ Map.fromFoldable
-    [ function "add" 2 add'
-    , function "sub" 2 sub'
-    , function "mul" 2 mul'
-    , function "div" 3 div'
-    , function "lt" 4 lt'
-    , function "gt" 4 gt'
+    [ Tuple "add" $ pure $ function 2 add'
+    , Tuple "sub" $ pure $ function 2 sub'
+    , Tuple "mul" $ pure $ function 2 mul'
+    , Tuple "div" $ pure $ function 3 div'
+    , Tuple "lt" $ pure $ function 4 lt'
+    , Tuple "gt" $ pure $ function 4 gt'
     ]
   where
     add' env (a : b : Nil) = do
@@ -136,7 +153,7 @@ int' = Define $ Env $ Map.fromFoldable
       if evA > evB then t' else f'
 
 char' :: Partial => Value
-char' = Define $ Env $ Map.fromFoldable [ function "eq" 4 eqChar' ]
+char' = Define $ Env $ Map.fromFoldable [ Tuple "eq" $ pure $ function 4 eqChar' ]
   where
     eqChar' env (a : b : t' : f' : Nil) = do
       evA <- asChar a
@@ -144,28 +161,29 @@ char' = Define $ Env $ Map.fromFoldable [ function "eq" 4 eqChar' ]
       if evA == evB then t' else f'
 
 string' :: Partial => Value
-string' = Define $ Env $ Map.fromFoldable [ function "case" 3 case' ]
+string' = Define $ Env $ Map.fromFoldable [ Tuple "case" $ pure $ function 3 case' ]
   where
     case' env (expr : nil : cons : Nil) = asString expr <#> (String.toCharArray >>> List.fromFoldable) >>= doCase
       where
         doCase Nil = nil
         doCase (a : b) = do
           evCons <- cons
-          applyFn env evCons
-            ( List.fromFoldable
-                [ pure (CharValue a)
-                , pure (StringValue $ String.fromCharArray $ Array.fromFoldable b)
-                ]
-            )
+          applyFn env evCons $ List.fromFoldable
+            [ pure (CharValue a)
+            , pure (StringValue $ String.fromCharArray $ Array.fromFoldable b)
+            ]
 
 process' :: Partial => Value
-process' = Define $ Env $ Map.fromFoldable [ function "do" 2 do', function "impure" 1 impure' ]
+process' = Define $ Env $ Map.fromFoldable 
+    [ Tuple "do" $ pure $ function 2 do'
+    , Tuple "impure" $ pure $ function 1 impure' 
+    ]
   where
     do' env (proc : map : Nil) = do
       process <- asProcess proc
       evMap <- map
       pure $ ProcessValue $ Do
-          process
-          \arg -> asProcess $ applyFn env evMap $ List.singleton $ pure arg
+        process
+        \arg -> asProcess $ applyFn env evMap $ List.singleton $ pure arg
 
     impure' env (val : Nil) = ProcessValue <<< Impure <<< pure <$> val

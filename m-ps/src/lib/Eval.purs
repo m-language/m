@@ -5,7 +5,7 @@ import Control.Monad.Trampoline (Trampoline)
 import Control.Monad.Reader (ReaderT, ask)
 import Data.Array as Array
 import Data.BigInt (BigInt, toString)
-import Data.List (List(..), drop, length, null, take, (:))
+import Data.List (List(..), null, (:))
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
@@ -13,9 +13,9 @@ import Data.Set (Set)
 import Data.Set as Set
 import Data.String.Common (joinWith)
 import Data.Traversable (traverse)
-import Data.Tuple (Tuple(..), snd)
+import Data.Tuple (Tuple(..))
 import Effect (Effect)
-import Prelude (class Monoid, class Semigroup, class Show, append, bind, map, mempty, otherwise, pure, show, ($), (-), (<), (<<<), (<>), (>), (>>=))
+import Prelude (class Monoid, class Semigroup, class Show, append, bind, map, mempty, pure, show, ($), (<<<), (<>), (>>=))
 import Tree (Tree(..))
 
 data Process
@@ -23,8 +23,8 @@ data Process
   | Do Process (Value -> EvalResult Process)
 
 data Value
-  = Function Int (Env -> List (EvalResult Value) -> EvalResult Value)
-  | Macro Int (Env -> List Tree -> EvalResult Value)
+  = Function (Env -> List (EvalResult Value) -> EvalResult Value)
+  | Macro (Env -> List Tree -> EvalResult Value)
   | Define Env
   | Expr Tree
   | CharValue Char
@@ -37,8 +37,8 @@ data Error
   | Undefined (Set String)
 
 instance showValue :: Show Value where
-  show (Function n f) = "<function>"
-  show (Macro n f) = "<macro>"
+  show (Function f) = "<function>"
+  show (Macro f) = "<macro>"
   show (Expr t) = "'" <> show t
   show (CharValue c) = show c
   show (StringValue s) = show s
@@ -48,7 +48,7 @@ instance showValue :: Show Value where
 
 instance showError :: Show Error where
   show (Error string) = "Error: " <> string
-  show (Undefined ns) = "Undefined: " <> (joinWith " " (Array.fromFoldable ns))
+  show (Undefined ns) = "Undefined: " <> (joinWith " " $ Array.fromFoldable ns)
 
 newtype Env = Env (Map String (EvalResult Value))
 
@@ -56,7 +56,7 @@ instance envMonoid :: Monoid Env where
   mempty = Env mempty
 
 instance envSemigroup :: Semigroup Env where
-  append (Env a) (Env b) = Env (append a b)
+  append (Env a) (Env b) = Env $ append a b
 
 insertEnv :: String -> Value -> Env -> Env
 insertEnv name value (Env env) = Env $ Map.insert name (pure value) env
@@ -141,14 +141,7 @@ asProcess tree = tree >>= \x -> case x of
 
 apply :: Env -> Value -> List Tree -> EvalResult Value
 apply env f Nil = pure f
-apply env (Macro n f) args
-  | length args < n = 
-      pure $ Macro (n - length args) \env' args' ->
-          apply env' (Macro n f) (args <> args')
-  | length args > n = 
-      apply env (Macro n f) (take n args) 
-          >>= \v -> apply env v (drop n args)
-  | otherwise = f env args
+apply env (Macro f) args = f env args
 apply env (Define defs) (arg : args) = do
   f <- eval $ Tuple (unionEnv env defs) arg
   apply env f args
@@ -158,14 +151,7 @@ apply env (Expr tree) args = do
 apply env x args = applyFn env x $ map eval $ map (Tuple env) args
 
 applyFn :: Env -> Value -> List (EvalResult Value) -> EvalResult Value
-applyFn env (Function n f) args
-  | length args < n = 
-      pure $ Function (n - length args) \env' args' ->
-          applyFn env' (Function n f) (args <> args')
-  | length args > n =
-      applyFn env (Function n f) (take n args)
-          >>= \v -> applyFn env v (drop n args)
-  | otherwise = f env args
+applyFn env (Function f) args = f env args
 applyFn env x args = throwError $ Error $ "Expected function, found " <> show x
 
 nil :: Value
