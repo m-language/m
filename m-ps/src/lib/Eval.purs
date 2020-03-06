@@ -43,7 +43,7 @@ instance showValue :: Show Value where
   show (CharValue c) = show c
   show (StringValue s) = show s
   show (IntValue i) = toString i
-  show (Define (Env e)) = "{" <> (joinWith " " (Array.fromFoldable (Map.keys e))) <> "}"
+  show (Define (Env e)) = "{" <> (joinWith " " $ Array.fromFoldable $ Map.keys e) <> "}"
   show (ProcessValue p) = "<process>"
 
 instance showError :: Show Error where
@@ -80,15 +80,13 @@ evalBlock' env found errors Nil Nil = pure $ Env Map.empty
 evalBlock' env true errors defer Nil = evalBlock' env false Set.empty Nil defer
 evalBlock' env false errors defer Nil = throwError $ Undefined errors
 evalBlock' env found errors defer (car : cdr) =
-  let
-    result = do
-      defs <- asDefine $ eval (Tuple env car)
-      defs' <- evalBlock' (unionEnv defs env) true errors defer cdr
-      pure $ unionEnv defs defs'
-  in
-    catchError result \x -> case x of
-      Undefined names -> evalBlock' env found (Set.union names errors) (car : defer) cdr
-      Error string -> throwError $ Error string
+  let result = do
+        defs <- asDefine $ eval (Tuple env car)
+        defs' <- evalBlock' (unionEnv defs env) true errors defer cdr
+        pure $ unionEnv defs defs'
+  in  catchError result \x -> case x of
+        Undefined names -> evalBlock' env found (Set.union names errors) (car : defer) cdr
+        Error string -> throwError $ Error string
 
 eval :: Tuple Env Tree -> EvalResult Value
 eval (Tuple env (SymbolTree name)) = case lookupEnv name env of
@@ -104,7 +102,7 @@ eval (Tuple env (StringTree string)) = pure $ StringValue string
 eval (Tuple env (ApplyTree Nil)) = pure nil
 eval (Tuple env (ApplyTree (fn : args))) = do
   f <- eval (Tuple env fn)
-  apply env f $ map (Tuple env) args
+  apply env f args
 
 asDefine :: EvalResult Value -> EvalResult Env
 asDefine tree = tree >>= \x -> case x of
@@ -141,23 +139,23 @@ asProcess tree = tree >>= \x -> case x of
   (ProcessValue p) -> pure p
   err -> throwError $ Error $ "Expected process, found " <> show err
 
-apply :: Env -> Value -> List (Tuple Env Tree) -> EvalResult Value
+apply :: Env -> Value -> List Tree -> EvalResult Value
 apply env f Nil = pure f
 apply env (Macro n f) args
   | length args < n = 
       pure $ Macro (n - length args) \env' args' ->
-          apply env' (Macro n f) (args <> map (Tuple env') args')
+          apply env' (Macro n f) (args <> args')
   | length args > n = 
       apply env (Macro n f) (take n args) 
           >>= \v -> apply env v (drop n args)
-  | otherwise = f env $ map snd args
+  | otherwise = f env args
 apply env (Define defs) (arg : args) = do
-  f <- eval $ Tuple (unionEnv env defs) (snd arg)
+  f <- eval $ Tuple (unionEnv env defs) arg
   apply env f args
 apply env (Expr tree) args = do
-  evArgs <- traverse (asExpr <<< eval) args
+  evArgs <- traverse (asExpr <<< eval) $ map (Tuple env) args
   pure $ Expr $ if null evArgs then tree else ApplyTree $ tree : evArgs
-apply env x args = applyFn env x $ map eval args
+apply env x args = applyFn env x $ map eval $ map (Tuple env) args
 
 applyFn :: Env -> Value -> List (EvalResult Value) -> EvalResult Value
 applyFn env (Function n f) args

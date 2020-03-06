@@ -9,16 +9,16 @@ import Data.Map as Map
 import Data.String.CodeUnits as String
 import Data.Tuple (Tuple(..), curry)
 import Eval (Env(..), Error(..), EvalResult, Process(..), Value(..), applyFn, asChar, asExpr, asInteger, asProcess, asString, eval, evalBlock, insertEnv, insertEnvLazy)
-import Prelude (class Monad, bind, pure, show, ($), (*), (+), (-), (/), (<), (<#>), (<$>), (<<<), (<>), (==), (>), (>>=), (>>>))
+import Prelude (bind, pure, show, ($), (*), (+), (-), (/), (<), (<#>), (<$>), (<<<), (<>), (==), (>), (>>=), (>>>))
 import Tree (Tree(..))
 
-value :: forall m. Monad m => String -> Value -> Tuple String (m Value)
+value :: String -> Value -> Tuple String (EvalResult Value)
 value name v = Tuple name $ pure v
 
-function :: forall m. Monad m => String -> Int -> (Env -> List (EvalResult Value) -> EvalResult Value) -> Tuple String (m Value)
+function :: String -> Int -> (Env -> List (EvalResult Value) -> EvalResult Value) -> Tuple String (EvalResult Value)
 function name i f = Tuple name $ pure $ Function i f
 
-macro :: forall m. Monad m => String -> Int -> (Env -> List Tree -> EvalResult Value) -> Tuple String (m Value)
+macro :: String -> Int -> (Env -> List Tree -> EvalResult Value) -> Tuple String (EvalResult Value)
 macro name i f = Tuple name $ pure $ Macro i f
 
 special :: Partial => Env
@@ -36,14 +36,15 @@ special = Env $ Map.fromFoldable
     , value "process-ops" process'
     ]
 
-getNames :: Partial => Tree -> EvalResult (List String)
+getNames :: Tree -> EvalResult (List String)
 getNames (SymbolTree name) = pure $ name : Nil
 getNames (ApplyTree args) = names args
   where
     names :: List Tree -> EvalResult (List String)
     names Nil = pure Nil
     names ((SymbolTree name) : cdr) = names cdr <#> ((:) name)
-    names (ap@(ApplyTree _) : cdr) = throwError $ Error $ "Expected symbol, found " <> show ap
+    names expr = throwError $ Error $ "Expected symbol, found " <> show expr
+getNames expr = throwError $ Error $ "Expected symbol, found " <> show expr
 
 fn' :: Partial => Env -> List Tree -> EvalResult Value
 fn' closure (argsNames : expr : Nil) = do
