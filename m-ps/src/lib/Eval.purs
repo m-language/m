@@ -101,7 +101,7 @@ eval (Tuple env (CharTree char)) = pure $ CharValue char
 eval (Tuple env (StringTree string)) = pure $ StringValue string
 eval (Tuple env (ApplyTree Nil)) = pure nil
 eval (Tuple env (ApplyTree (fn : args))) = do
-  f <- eval (Tuple env fn)
+  f <- eval $ Tuple env fn
   apply env f args
 
 asDefine :: EvalResult Value -> EvalResult Env

@@ -27,6 +27,7 @@ There are M plugins for several popular editors:
 
 - `VSCode <https://github.com/m-language/vscode-m>`_
 - `Vim <https://github.com/m-language/vim-m>`_
+- `Sublime <https://github.com/stuin/M-Sublime>`_
 - `IDEA <https://github.com/m-language/intellij-m>`_
 
 If you want to add support for your favorite editor, please 
