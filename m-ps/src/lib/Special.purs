@@ -8,7 +8,7 @@ import Data.List as List
 import Data.Map as Map
 import Data.String.CodeUnits as String
 import Data.Tuple (Tuple(..), curry)
-import Eval (Env(..), Error(..), EvalResult, Process(..), Value(..), apply, applyFn, asChar, asExpr, asInteger, asProcess, asString, eval, evalBlock, insertEnv, insertEnvLazy)
+import Eval (Env(..), Error(..), EvalResult, Process(..), Value(..), apply, applyFn, asChar, asExpr, asInteger, asString, eval, evalBlock, insertEnv, insertEnvLazy)
 import Prelude (bind, otherwise, pure, show, ($), (*), (+), (-), (/), (<), (<#>), (<$>), (<<<), (<>), (==), (>), (>>=), (>>>))
 import Tree (Tree(..))
 
@@ -46,11 +46,11 @@ special = Env $ Map.fromFoldable
     , Tuple "block" $ pure $ macro 1 block'
     , Tuple "quote" $ pure $ macro 1 quote'
     , Tuple "error" $ pure $ function 1 error'
+    , Tuple "impure" $ pure $ function 1 impure' 
     , Tuple "expr-ops" $ pure expr'
     , Tuple "int-ops" $ pure int'
     , Tuple "char-ops" $ pure char'
     , Tuple "string-ops" $ pure string'
-    , Tuple "process-ops" $ pure process'
     ]
 
 getNames :: Tree -> EvalResult (List String)
@@ -100,6 +100,9 @@ quote' env (tree : Nil) = pure $ Expr tree
 
 error' :: Partial => Env -> List (EvalResult Value) -> EvalResult Value
 error' env (expr : Nil) = asString expr >>= (throwError <<< Error)
+
+impure' :: Partial => Env -> List (EvalResult Value) -> EvalResult Value
+impure' env (val : Nil) = ProcessValue <<< Impure <<< pure <$> val
 
 expr' :: Partial => Value
 expr' = Define $ Env $ Map.fromFoldable [ Tuple "case" $ pure $ function 4 case' ]
@@ -172,18 +175,3 @@ string' = Define $ Env $ Map.fromFoldable [ Tuple "case" $ pure $ function 3 cas
             [ pure (CharValue a)
             , pure (StringValue $ String.fromCharArray $ Array.fromFoldable b)
             ]
-
-process' :: Partial => Value
-process' = Define $ Env $ Map.fromFoldable 
-    [ Tuple "do" $ pure $ function 2 do'
-    , Tuple "impure" $ pure $ function 1 impure' 
-    ]
-  where
-    do' env (proc : map : Nil) = do
-      process <- asProcess proc
-      evMap <- map
-      pure $ ProcessValue $ Do
-        process
-        \arg -> asProcess $ applyFn env evMap $ List.singleton $ pure arg
-
-    impure' env (val : Nil) = ProcessValue <<< Impure <<< pure <$> val

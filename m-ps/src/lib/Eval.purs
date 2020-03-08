@@ -5,7 +5,7 @@ import Control.Monad.Trampoline (Trampoline)
 import Control.Monad.Reader (ReaderT, ask)
 import Data.Array as Array
 import Data.BigInt (BigInt, toString)
-import Data.List (List(..), null, (:))
+import Data.List (List(..), null, (:), singleton)
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
@@ -81,7 +81,7 @@ evalBlock' env true errors defer Nil = evalBlock' env false Set.empty Nil defer
 evalBlock' env false errors defer Nil = throwError $ Undefined errors
 evalBlock' env found errors defer (car : cdr) =
   let result = do
-        defs <- asDefine $ eval (Tuple env car)
+        defs <- asDefine $ eval $ Tuple env car
         defs' <- evalBlock' (unionEnv defs env) true errors defer cdr
         pure $ unionEnv defs defs'
   in  catchError result \x -> case x of
@@ -151,7 +151,12 @@ apply env (Expr tree) args = do
 apply env x args = applyFn env x $ map eval $ map (Tuple env) args
 
 applyFn :: Env -> Value -> List (EvalResult Value) -> EvalResult Value
+applyFn env f Nil = pure f
 applyFn env (Function f) args = f env args
+applyFn env (ProcessValue process) (map : args) = do
+  evMap <- map
+  let f = ProcessValue $ Do process \arg -> asProcess $ applyFn env evMap $ singleton $ pure arg
+  applyFn env f args
 applyFn env x args = throwError $ Error $ "Expected function, found " <> show x
 
 nil :: Value
