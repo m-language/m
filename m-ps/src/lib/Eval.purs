@@ -50,7 +50,7 @@ instance showError :: Show Error where
   show (Error string) = "Error: " <> string
   show (Undefined ns) = "Undefined: " <> (joinWith " " $ Array.fromFoldable ns)
 
-newtype Env = Env (Map String (EvalResult Value))
+newtype Env = Env (Map String Value)
 
 instance envMonoid :: Monoid Env where
   mempty = Env mempty
@@ -59,15 +59,12 @@ instance envSemigroup :: Semigroup Env where
   append (Env a) (Env b) = Env $ append a b
 
 insertEnv :: String -> Value -> Env -> Env
-insertEnv name value (Env env) = Env $ Map.insert name (pure value) env
+insertEnv name value (Env env) = Env $ Map.insert name value env
 
 unionEnv :: Env -> Env -> Env
 unionEnv (Env a) (Env b) = Env $ Map.union a b
 
-insertEnvLazy :: String -> EvalResult Value -> Env -> Env
-insertEnvLazy name value (Env env) = Env $ Map.insert name value env
-
-lookupEnv :: String -> Env -> Maybe (EvalResult Value)
+lookupEnv :: String -> Env -> Maybe Value
 lookupEnv name (Env env) = Map.lookup name env
 
 type EvalResult = ReaderT Env (ExceptT Error Trampoline)
@@ -90,11 +87,11 @@ evalBlock' env found errors defer (car : cdr) =
 
 eval :: Tuple Env Tree -> EvalResult Value
 eval (Tuple env (SymbolTree name)) = case lookupEnv name env of
-  Just value -> value
+  Just value -> pure value
   Nothing -> do
     globals <- ask
     case lookupEnv name globals of
-      Just value -> value
+      Just value -> pure value
       Nothing -> throwError $ Undefined $ Set.singleton name
 eval (Tuple env (IntTree integer)) = pure $ IntValue integer
 eval (Tuple env (CharTree char)) = pure $ CharValue char
@@ -107,17 +104,12 @@ eval (Tuple env (ApplyTree (fn : args))) = do
 asDefine :: EvalResult Value -> EvalResult Env
 asDefine tree = tree >>= \x -> case x of
   (Define defs) -> pure defs
-  err -> throwError $ Error $ "Expected expression, found " <> show err
+  err -> throwError $ Error $ "Expected definition, found " <> show err
 
 asExpr :: EvalResult Value -> EvalResult Tree
 asExpr tree = tree >>= \x -> case x of
   (Expr t) -> pure t
   err -> throwError $ Error $ "Expected expression, found " <> show err
-
-asSymbol :: EvalResult Value -> EvalResult String
-asSymbol tree = asExpr tree >>= \x -> case x of
-  (SymbolTree s) -> pure s
-  err -> throwError $ Error $ "Expected symbol, found " <> show err
 
 asChar :: EvalResult Value -> EvalResult Char
 asChar tree = tree >>= \x -> case x of

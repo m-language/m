@@ -24,7 +24,7 @@ function to be applied and ``args`` is a list of arguments to the function.
     # 4
     (add 1 3)
 
-Functions are applied lazily, so their arguments are only evaluated when used.
+Functions are applied eagerly, and their evaluation order is undefined.
 
 Function Abstraction
 ====================
