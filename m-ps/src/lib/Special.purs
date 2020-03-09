@@ -1,16 +1,31 @@
 module Special where
 
-import Control.Monad.Except (throwError)
+import Control.Monad.Except (class MonadError, throwError)
 import Data.Array as Array
 import Data.BigInt (fromInt)
 import Data.List ((:), List(..), drop, length, take)
 import Data.List as List
 import Data.Map as Map
+import Data.Maybe (Maybe(..), maybe)
 import Data.String.CodeUnits as String
 import Data.Tuple (Tuple(..), curry)
+import Data.Typelevel.Num (class Nat, d1, d2, toInt)
+import Data.Vec (Vec)
+import Data.Vec as Vec
 import Eval (Env(..), Error(..), EvalResult, Process(..), Value(..), apply, applyFn, asChar, asExpr, asInteger, asString, eval, evalBlock, insertEnv)
-import Prelude (bind, otherwise, pure, show, ($), (*), (+), (-), (/), (<), (<#>), (<$>), (<<<), (<>), (==), (>), (>>=), (>>>))
+import Prelude (bind, map, otherwise, pure, show, ($), (*), (+), (-), (/), (<), (<#>), (<$>), (<<<), (<>), (==), (>), (>>=), (>>>))
 import Tree (Tree(..))
+
+except :: forall m e a. MonadError e m => e -> Maybe a -> m a
+except e v = maybe (throwError e) pure v
+
+functionN :: forall n. Nat n => n -> (Env -> Vec n (EvalResult Value) -> EvalResult Value) -> Value
+functionN d fn = function (toInt d) func
+  where 
+    func :: Nat n => Env -> List (EvalResult Value) -> EvalResult Value
+    func env = \args -> case Vec.fromArray $ Array.fromFoldable args of
+      Just vec -> fn env vec
+      Nothing -> throwError $ Error $ "Expected " <> show (toInt d) <> " arguments, got " <> (show $ length args)
 
 function :: Int -> (Env -> List (EvalResult Value) -> EvalResult Value) -> Value
 function n f = Function fn
@@ -178,3 +193,15 @@ string' = Define $ Env $ Map.fromFoldable [ Tuple "case" $ function 3 case' ]
             [ pure (CharValue a)
             , pure (StringValue $ String.fromCharArray $ Array.fromFoldable b)
             ]
+
+
+mkPair :: Value -> Value -> Value
+mkPair fst snd = functionN d1 $ \env -> \fn -> do
+  fnValue <- Vec.head fn
+  applyFn env fnValue $ map pure $ fst : snd : Nil
+
+true' :: Value
+true' = functionN d2 $ \_ -> \vec -> Vec.head vec
+
+false' :: Value
+false' = functionN d2 $ \_ -> \vec -> Vec.index vec d1

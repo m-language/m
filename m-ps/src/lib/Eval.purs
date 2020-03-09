@@ -14,6 +14,7 @@ import Data.Set as Set
 import Data.String.Common (joinWith)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
+import Data.Typelevel.Num (d1, d2)
 import Effect (Effect)
 import Prelude (class Monoid, class Semigroup, class Show, append, bind, map, mempty, pure, show, ($), (<<<), (<>), (>>=))
 import Tree (Tree(..))

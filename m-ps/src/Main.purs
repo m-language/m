@@ -2,7 +2,7 @@ module Main where
 
 import Command
 
-import Control.Monad((>>=))
+import Control.Monad ((>>=))
 import Control.Monad.State (StateT, evalStateT, execStateT, get, put)
 import Data.Array as Array
 import Data.Char.Unicode (isSpace)
@@ -16,6 +16,7 @@ import Effect.Class (liftEffect)
 import Effect.Console (log)
 import Effect.Exception (try)
 import Eval (Env)
+import Extern (externEnv)
 import IO (Input(..), io)
 import Node.Encoding (Encoding(..))
 import Node.Process (argv, stdout)
@@ -72,6 +73,6 @@ main :: Effect Unit
 main = do
   interface <- createConsoleInterface noCompletion
   args <- argv <#> Array.drop 2
-  let initialEnv = unsafePartial (special <> (io basicIO))
+  let initialEnv = unsafePartial (special <> (io basicIO) <> externEnv)
   env <- runLoadCommand args initialEnv
   evalStateT (loop interface) env
