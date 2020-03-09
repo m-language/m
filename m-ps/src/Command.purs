@@ -46,51 +46,45 @@ runCommand "load" rest env = runLoadCommand (words rest) env
 runCommand name _ env = log ("Unrecognized command " <> name) *> pure env
 
 runParseCommand :: String -> Env -> Effect Env
-runParseCommand rest env =
-  runDefault env do
-    tree <- printEither $ parseRepl rest
-    lift $ log (show tree)
-    pure env
+runParseCommand rest env = runDefault env do
+  tree <- printEither $ parseRepl rest
+  lift $ logShow tree
+  pure env
 
 runEvalCommand :: String -> Env -> Effect Env
-runEvalCommand rest env =
-  runDefault env do
-    tree <- printEither $ parseRepl rest
-    value <- printEither $ runTrampoline $ runExceptT $ runReaderT (eval (Tuple (Env Map.empty) tree)) env
-    case value of
-      ProcessValue p -> runProcess env p *> (lift $ log "") $> env
-      Define defs -> pure $ unionEnv defs env
-      x -> lift $ logShow value $> env
+runEvalCommand rest env = runDefault env do
+  tree <- printEither $ parseRepl rest
+  value <- printEither $ runTrampoline $ runExceptT $ runReaderT (eval (Tuple (Env Map.empty) tree)) env
+  case value of
+    ProcessValue p -> runProcess env p *> (lift $ log "") $> env
+    Define defs -> pure $ unionEnv defs env
+    x -> lift $ logShow value $> env
 
 runLoadParseCommand :: String -> Env -> Effect Env
-runLoadParseCommand rest env =
-  runDefault env do
-    files <- lift $ parseFiles $ fromFoldable $ words rest
-    trees <- printEither files
-    for_ trees (lift <<< logShow)
-    pure env
+runLoadParseCommand rest env = runDefault env do
+  files <- lift $ parseFiles $ fromFoldable $ words rest
+  trees <- printEither files
+  for_ trees $ lift <<< logShow
+  pure env
 
 runLoadCommand :: Array String -> Env -> Effect Env
-runLoadCommand paths env =
-  runDefault env do
-    files <- lift $ parseFiles $ fromFoldable paths
-    trees <- printEither files
-    defs <- printEither $ runTrampoline $ runExceptT $ runReaderT (evalBlock (Env Map.empty) trees) env
-    pure $ unionEnv defs env
+runLoadCommand paths env = runDefault env do
+  files <- lift $ parseFiles $ fromFoldable paths
+  trees <- printEither files
+  defs <- printEither $ runTrampoline $ runExceptT $ runReaderT (evalBlock (Env Map.empty) trees) env
+  pure $ unionEnv defs env
 
 parseFile :: String -> Effect (Either ParseError (List Tree))
-parseFile name =
-  doesDirectoryExist name
-    >>= \x -> case x of
-        true -> do
-          names <- listDirectory name
-          parseFiles $ fromFoldable $ map (\sub -> Path.concat [ name, sub ]) names
-        false -> do
-          chars <- readTextFile UTF8 name
-          pure $ parseProgram name chars
+parseFile name = doesDirectoryExist name >>= \x -> if x
+  then do
+    names <- listDirectory name
+    parseFiles $ fromFoldable $ map (\sub -> Path.concat [ name, sub ]) names
+  else do
+    chars <- readTextFile UTF8 name
+    pure $ parseProgram name chars
 
 parseFiles :: List String -> Effect (Either ParseError (List Tree))
-parseFiles names = traverse parseFile names <#> (\f -> sequence f <#> concat)
+parseFiles names = traverse parseFile names <#> \f -> sequence f <#> concat
 
 printEither :: forall a b. (Show a) => Either a b -> MaybeT Effect b
 printEither error = case error of
