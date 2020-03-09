@@ -1,8 +1,8 @@
 module Eval where
 
 import Control.Monad.Except (ExceptT, catchError, throwError)
-import Control.Monad.Trampoline (Trampoline)
 import Control.Monad.Reader (ReaderT, ask)
+import Control.Monad.Trampoline (Trampoline)
 import Data.Array as Array
 import Data.BigInt (BigInt, toString)
 import Data.List (List(..), null, (:), singleton)
