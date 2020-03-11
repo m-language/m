@@ -1,21 +1,29 @@
 module Parse where
 
+import Prelude
 import Text.Parsing.Parser.String
+
 import Control.Alternative ((<|>))
 import Data.Array (many, some)
+import Data.Bifunctor (bimap, lmap)
 import Data.BigInt (fromString)
 import Data.Either (Either)
 import Data.List (List, fromFoldable)
 import Data.Maybe (fromMaybe)
 import Data.String.CodeUnits (fromCharArray, toCharArray, singleton)
-import Prelude (Unit, bind, discard, map, pure, unit, void, ($), (*>), (<#>), (<>))
+import Prelude (Unit, bind, discard, map, pure, unit, void, ($), (*>), (<*), (<#>), (<>))
 import Text.Parsing.Parser (ParseError, runParser, fail)
 import Text.Parsing.Parser (Parser) as P
 import Text.Parsing.Parser.Combinators (option, skipMany, try)
 import Text.Parsing.Parser.Token (digit, letter, space)
 import Tree (Tree(..))
+import Data.Array as Array
 
 type Parser a = P.Parser String a
+data ParsingError = ParsingError String ParseError
+
+instance showParsingError :: Show ParsingError where
+  show (ParsingError file error) = "(" <> file <> " " <> show error <> ")"
 
 lineCommentTail :: Parser Unit
 lineCommentTail = void $ many $ noneOf [ '\n' ]
@@ -99,8 +107,8 @@ parseAtom _ =
 parseExpr :: Unit -> Parser Tree
 parseExpr _ = parseAtom unit
 
-parseProgram :: String -> String -> Either ParseError (List Tree)
-parseProgram _ input = runParser input (ignored *> many (parseAtom unit)) <#> fromFoldable
+parseProgram :: String -> String -> Either ParsingError (List Tree)
+parseProgram file input = lmap (ParsingError file) $ runParser input (((ignored *> many (parseAtom unit)) <#> fromFoldable) <* ignored <* eof)
 
 parseRepl :: String -> Either ParseError Tree
 parseRepl input = runParser input (ignored *> (parseExpr unit))

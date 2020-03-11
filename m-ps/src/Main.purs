@@ -1,8 +1,7 @@
 module Main where
 
-import Command
-
-import Control.Monad ((>>=))
+import Prelude
+import Command (runCommand, runEvalCommand, runLoadCommand)
 import Control.Monad.State (StateT, evalStateT, execStateT, get, put)
 import Data.Array as Array
 import Data.Char.Unicode (isSpace)
@@ -15,16 +14,15 @@ import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Console (log)
 import Effect.Exception (try)
-import Eval (Env)
-import Extern (externEnv)
+import Eval.Types (Env)
 import IO (Input(..), io)
 import Node.Encoding (Encoding(..))
 import Node.Process (argv, stdout)
 import Node.ReadLine (Interface, createConsoleInterface, noCompletion, question)
 import Node.Stream as Stream
 import Partial.Unsafe (unsafePartial)
-import Prelude (Unit, bind, not, otherwise, pure, show, unit, void, ($), (<#>), (<>), (==))
 import Special (special)
+import Data.List as List
 
 foreign import readInputCharImpl :: (forall a. a -> Maybe a) -> (forall a. Maybe a) -> Effect (Maybe String)
 
@@ -66,13 +64,15 @@ process line env
 basicIO :: Input
 basicIO = Input
     { getChar: readInputChar
-    , putChar: \c -> void $ Stream.writeString stdout UTF8 (singleton c) (pure unit)
+    , putChar: putChar
     }
+  where
+    putChar = \char -> void $ Stream.writeString stdout UTF8 (singleton char) (pure unit)
 
 main :: Effect Unit
 main = do
   interface <- createConsoleInterface noCompletion
   args <- argv <#> Array.drop 2
-  let initialEnv = unsafePartial (special <> (io basicIO) <> externEnv)
-  env <- runLoadCommand args initialEnv
+  let initialEnv = unsafePartial (special <> io basicIO)
+  env <- runLoadCommand (List.fromFoldable args) initialEnv
   evalStateT (loop interface) env
