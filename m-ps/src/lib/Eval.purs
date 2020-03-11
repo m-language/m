@@ -1,6 +1,6 @@
 module Eval where
 
-import Prelude
+import Prelude hiding (apply)
 
 import Control.Alt ((<|>))
 import Control.Monad.Except (Except, catchError, lift, mapExceptT, runExcept, runExceptT, throwError, withExceptT)
@@ -19,23 +19,28 @@ import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
+import Data.Nullable (Nullable)
+import Data.Nullable as Nullable
 import Data.Set (Set)
 import Data.Set as Set
 import Data.String.CodeUnits (fromCharArray)
 import Data.String.Common (joinWith)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
-import Data.Typelevel.Num (class Nat, d1, d2, toInt)
+import Data.Typelevel.Num (class Nat, d1, d2, reifyInt, toInt)
+import Data.Typelevel.Undefined (undefined)
 import Data.Vec (Vec)
 import Data.Vec as Vec
+import Debug.Trace (spy)
 import Effect.Exception (throw)
 import Effect.Unsafe (unsafePerformEffect)
 import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asDefine, asExpr, asInteger, asProcess, asString, lookupEnv, nil, unionEnv)
-import Foreign (F, Foreign, MultipleErrors, readArray, readBoolean, readNumber, readString, typeOf, unsafeToForeign)
+import Foreign (F, Foreign, MultipleErrors, readArray, readBoolean, readNumber, readString, tagOf, typeOf, unsafeToForeign)
 import Tree (Tree(..))
 import Util (except)
 
-foreign import callForeign :: Array Foreign -> Foreign -> Foreign
+foreign import callForeign :: Foreign -> Array Foreign -> Foreign -> Foreign
+foreign import arity :: (forall a. Maybe a) -> (forall a. a -> Maybe a) -> Foreign -> Maybe Int
 
 evalBlock :: Env -> List Tree -> EvalResult Env
 evalBlock env = evalBlock' env false Set.empty Nil
@@ -86,18 +91,8 @@ applyFn env (ProcessValue process) (map : args) = do
   let f = ProcessValue $ Do process \arg -> asProcess $ applyFn env evMap $ singleton $ pure arg
   applyFn env f args
 applyFn env (ExternValue value) args = do
-  foreignArgs <- traverse (\argument -> argument >>= toForeign env) $ Array.fromFoldable args
-  pure $ ExternValue $ callForeign foreignArgs value
-  where
-    toForeign :: Env -> Value -> EvalResult Foreign
-    toForeign _ (ExternValue f) = pure f
-    toForeign _ (IntValue i) = pure $ unsafeToForeign $ toNumber i
-    toForeign _ (StringValue s) = pure $ unsafeToForeign s
-    toForeign _ (CharValue c) = pure $ unsafeToForeign $ fromCharArray [c]
-    toForeign foreignEnv (Function fn) = pure $ unsafeToForeign $ \(nativeArgs :: Array Foreign) -> 
-      let result = runTrampoline $ runExceptT $ runReaderT (fn foreignEnv $ List.fromFoldable $ map (unsafeMarshall >>> pure) nativeArgs) foreignEnv in
-      unsafePerformEffect $ either pure (show >>> throw) result
-    toForeign _ arg = throwError $ Error $ "Expected primitive value, found " <> show arg
+  foreignArgs <- traverse (\argument -> argument >>= unmarshall env) $ Array.fromFoldable args
+  pure $ ExternValue $ callForeign (unsafeToForeign Nullable.null) foreignArgs value
 applyFn _ x args = throwError $ Error $ "Expected function, found " <> show x
 
 function :: Int -> (Env -> List (EvalResult Value) -> EvalResult Value) -> Value
@@ -191,10 +186,17 @@ marshallBoolean fv = liftResult $ readBoolean fv <#> \fb -> if fb then mkTrue un
 marshallObject :: Foreign -> MarshallResult Value
 marshallObject fv = do
   let isObject = typeOf fv == "object"
-  throwError $ Nel.singleton $ Generic "Unable to marshall object"
+  throwError $ Nel.singleton $ Generic "Objects cannot be marshalled"
 
 marshallFunction :: Foreign -> MarshallResult Value
-marshallFunction fv = throwError $ Nel.singleton $ Generic "Unable to marshall function"
+marshallFunction fv = if typeOf fv /= "function"
+  then throwError $ Nel.singleton $ Generic $ "Expected function, found " <> tagOf fv
+  else do
+    functionArity <- except (Nel.singleton $ Generic $ "Expected function, found " <> tagOf fv) $ arity Nothing Just fv
+    pure $ reifyInt functionArity \n -> functionN n \env -> \args -> do
+      args' <- traverse (\arg -> arg >>= unmarshall env) $ Vec.toArray args
+      let result = callForeign (unsafeToForeign Nullable.null) args' fv
+      pure $ ExternValue result
 
 marshall :: Foreign -> MarshallResult Value
 marshall fv = marshallInt fv
@@ -206,3 +208,14 @@ marshall fv = marshallInt fv
 
 unsafeMarshall :: Foreign -> Value
 unsafeMarshall fv = unsafePerformEffect $ either (map (mError >>> show) >>> Array.fromFoldable >>> joinWith ", " >>> throw) pure $ runExcept $ marshall fv
+
+unmarshall :: Env -> Value -> EvalResult Foreign
+unmarshall _ (ExternValue f) = pure f
+unmarshall _ (IntValue i) = pure $ unsafeToForeign $ toNumber i
+unmarshall _ (StringValue s) = pure $ unsafeToForeign s
+unmarshall _ (CharValue c) = pure $ unsafeToForeign $ fromCharArray [c]
+unmarshall foreignEnv p@(ProcessValue _) = unmarshall foreignEnv $ functionN d1 \env -> \args -> applyFn env p $ List.fromFoldable args
+unmarshall foreignEnv (Function fn) = pure $ unsafeToForeign $ \(nativeArgs :: Array Foreign) -> 
+  let result = runTrampoline $ runExceptT $ runReaderT (fn foreignEnv $ List.fromFoldable $ map (unsafeMarshall >>> pure) nativeArgs) foreignEnv in
+  unsafePerformEffect $ either pure (show >>> throw) result
+unmarshall _ arg = throwError $ Error $ "Expected primitive value, found " <> show arg

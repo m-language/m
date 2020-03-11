@@ -42,7 +42,7 @@ opChar :: Parser Char
 opChar = oneOf (toCharArray "~`!@$%^&*-=+\\|;:<>,.?/")
 
 symbolChar :: Parser Char
-symbolChar = letter
+symbolChar = letter <|> opChar
 
 symbolCdr :: Parser String
 symbolCdr = many (symbolChar <|> digit <|> opChar) <#> fromCharArray
