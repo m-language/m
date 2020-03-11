@@ -76,14 +76,12 @@ evalBlock' :: Env -> Boolean -> Set String -> List Tree -> List Tree -> EvalResu
 evalBlock' env found errors Nil Nil = pure $ Env Map.empty
 evalBlock' env true errors defer Nil = evalBlock' env false Set.empty Nil defer
 evalBlock' env false errors defer Nil = throwError $ Undefined errors
-evalBlock' env found errors defer (car : cdr) =
-  let result = do
-        defs <- asDefine $ eval $ Tuple env car
-        defs' <- evalBlock' (unionEnv defs env) true errors defer cdr
-        pure $ unionEnv defs defs'
-  in  catchError result \x -> case x of
-        Undefined names -> evalBlock' env found (Set.union names errors) (car : defer) cdr
-        Error string -> throwError $ Error string
+evalBlock' env found errors defer (car : cdr) = do
+  defs <- catchError (asDefine $ eval $ Tuple env car) \x -> case x of
+    Undefined names -> evalBlock' env found (Set.union names errors) (car : defer) cdr
+    Error string -> throwError $ Error string
+  defs' <- evalBlock' (unionEnv defs env) true errors defer cdr
+  pure $ unionEnv defs defs'
 
 eval :: Tuple Env Tree -> EvalResult Value
 eval (Tuple env (SymbolTree name)) = case lookupEnv name env of
