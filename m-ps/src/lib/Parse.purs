@@ -1,23 +1,21 @@
 module Parse where
 
 import Prelude
-import Text.Parsing.Parser.String
 
 import Control.Alternative ((<|>))
 import Data.Array (many, some)
-import Data.Bifunctor (bimap, lmap)
+import Data.Bifunctor (lmap)
 import Data.BigInt (fromString)
 import Data.Either (Either)
 import Data.List (List, fromFoldable)
 import Data.Maybe (fromMaybe)
 import Data.String.CodeUnits (fromCharArray, toCharArray, singleton)
-import Prelude (Unit, bind, discard, map, pure, unit, void, ($), (*>), (<*), (<#>), (<>))
 import Text.Parsing.Parser (ParseError, runParser, fail)
 import Text.Parsing.Parser (Parser) as P
 import Text.Parsing.Parser.Combinators (option, skipMany, try)
+import Text.Parsing.Parser.String (char, eof, noneOf, oneOf, string)
 import Text.Parsing.Parser.Token (digit, letter, space)
 import Tree (Tree(..))
-import Data.Array as Array
 
 type Parser a = P.Parser String a
 data ParsingError = ParsingError String ParseError

@@ -2,7 +2,7 @@ module Extern where
 
 import Prelude
 
-import Control.Monad.Except (Except, ExceptT(..), lift, mapExceptT, throwError, withExceptT)
+import Control.Monad.Except (ExceptT, mapExceptT, throwError, withExceptT)
 import Data.Foldable (foldM)
 import Data.Map as Map
 import Data.Newtype (unwrap)
