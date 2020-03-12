@@ -55,7 +55,7 @@ loadExternal paths = do
   combined <- foldM mergeWithConflicts emptyObject modules
   combinedKeys <- mapExceptT (unwrap >>> pure) $ withExceptT (Generic <<< show) $ keys combined <#> Set.fromFoldable
   pure $ Env $ Map.fromFoldable 
-    [ Tuple "extern" $ extern' \key -> do
+    [ Tuple "extern" $ pure $ extern' \key -> do
         if hasProperty combined key
           then liftMarshall $ liftResult $ combined ! key
           else throwError $ Error $ fold [ "Expected object with property "

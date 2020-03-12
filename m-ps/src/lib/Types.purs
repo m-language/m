@@ -17,11 +17,14 @@ import Data.String (joinWith)
 import Effect (Effect)
 import Foreign (Foreign, typeOf)
 import Tree (Tree(..))
-import Data.Newtype (class Newtype)
 
 data Process
   = Impure (Effect Value)
   | Do Process (Value -> EvalResult Process)
+
+data Error
+  = Error String
+  | Undefined (Set String)
 
 data Value
   = Function (Env -> List (EvalResult Value) -> EvalResult Value)
@@ -33,10 +36,6 @@ data Value
   | IntValue BigInt
   | ProcessValue Process
   | ExternValue Foreign
-
-data Error
-  = Error String
-  | Undefined (Set String)
 
 instance showValue :: Show Value where
   show (Function f) = "<function>"
@@ -56,12 +55,7 @@ instance showError :: Show Error where
 nil :: Value
 nil = Expr $ ApplyTree Nil
 
-newtype Env = Env (Map String Value)
-
-derive instance envNewtype :: Newtype Env _
-
-instance showEnv :: Show Env where
-  show (Env m) = show m
+newtype Env = Env (Map String (EvalResult Value))
 
 instance envMonoid :: Monoid Env where
   mempty = Env mempty
@@ -69,14 +63,17 @@ instance envMonoid :: Monoid Env where
 instance envSemigroup :: Semigroup Env where
   append (Env a) (Env b) = Env $ append a b
 
-insertEnv :: String -> Value -> Env -> Env
+insertEnv :: String -> EvalResult Value -> Env -> Env
 insertEnv name value (Env env) = Env $ Map.insert name value env
 
 unionEnv :: Env -> Env -> Env
 unionEnv (Env a) (Env b) = Env $ Map.union a b
 
-lookupEnv :: String -> Env -> Maybe Value
+lookupEnv :: String -> Env -> Maybe (EvalResult Value)
 lookupEnv name (Env env) = Map.lookup name env
+
+valuesEnv :: Env -> List (EvalResult Value)
+valuesEnv (Env env) = Map.values env
 
 type EvalResult = ReaderT Env (ExceptT Error Trampoline)
 

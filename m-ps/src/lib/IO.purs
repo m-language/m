@@ -21,12 +21,12 @@ newtype Input
 
 io :: Input -> Env
 io (Input input) = Env $ Map.fromFoldable
-    [ Tuple "stdout" $ functionN d1 $ stdout' input.putChar
-    , Tuple "stdin" $ stdin' $ input.getChar >>= \m -> 
+    [ Tuple "stdout" $ pure $ functionN d1 $ stdout' input.putChar
+    , Tuple "stdin" $ pure $ stdin' $ input.getChar >>= \m -> 
         case m of
           Nothing -> throwException $ error "EOF"
           Just char -> pure char
-    , Tuple "newline" newline'
+    , Tuple "newline" $ pure $ newline'
     ]
 
 stdout' :: (Char -> Effect Unit) -> Env -> Vec D1 (EvalResult Value) -> EvalResult Value

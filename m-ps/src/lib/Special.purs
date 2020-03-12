@@ -16,17 +16,17 @@ import Tree (Tree(..))
 
 special :: Partial => Env
 special = Env $ Map.fromFoldable
-    [ Tuple "fn" $ macro 2 fn'
-    , Tuple "fm" $ macro 2 fm'
-    , Tuple "def"  $ macro 2 def'
-    , Tuple "block" $ macro 1 block'
-    , Tuple "quote" $ macro 1 quote'
-    , Tuple "error" $ function 1 error'
-    , Tuple "impure" $ function 1 impure' 
-    , Tuple "expr-ops" expr'
-    , Tuple "int-ops" int'
-    , Tuple "char-ops" char'
-    , Tuple "string-ops" string'
+    [ Tuple "fn" $ pure $ macro 2 fn'
+    , Tuple "fm" $ pure $ macro 2 fm'
+    , Tuple "def"  $ pure $ macro 2 def'
+    , Tuple "block" $ pure $ macro 1 block'
+    , Tuple "quote" $ pure $ macro 1 quote'
+    , Tuple "error" $ pure $ function 1 error'
+    , Tuple "impure" $ pure $ function 1 impure' 
+    , Tuple "expr-ops" $ pure $ expr'
+    , Tuple "int-ops" $ pure $ int'
+    , Tuple "char-ops" $ pure $ char'
+    , Tuple "string-ops" $ pure $ string'
     ]
 
 getNames :: Tree -> EvalResult (List String)
@@ -47,9 +47,8 @@ fn' closure (argsNames : expr : Nil) = do
 
 fnApply :: Partial => Env -> List String -> List (EvalResult Value) -> Tree -> EvalResult Value
 fnApply closure Nil Nil tree = eval $ Tuple closure tree
-fnApply closure (name : names) (arg : args) tree = do
-  evArg <- arg
-  fnApply (insertEnv name evArg closure) names args tree
+fnApply closure (name : names) (arg : args) tree = 
+  fnApply (insertEnv name arg closure) names args tree
 
 fm' :: Partial => Env -> List Tree -> EvalResult Value
 fm' closure (argNames : expr : Nil) = do
@@ -60,13 +59,11 @@ fm' closure (argNames : expr : Nil) = do
 fmApply :: Partial => Env -> Env -> List String -> List Tree -> Tree -> EvalResult Value
 fmApply env closure Nil Nil tree = asExpr (eval (Tuple closure tree)) >>= curry eval env
 fmApply env closure (name : names) (arg : args) tree = 
-  fmApply env (insertEnv name (Expr arg) closure) names args tree
+  fmApply env (insertEnv name (pure $ Expr arg) closure) names args tree
 
 def' :: Partial => Env -> List Tree -> EvalResult Value
 def' env (names : expr : Nil) = case names of
-  SymbolTree name -> do
-    evExpr <- eval $ Tuple env expr
-    pure $ Define $ Env $ Map.singleton name evExpr
+  SymbolTree name -> pure $ Define $ Env $ Map.singleton name $ eval $ Tuple env expr
   x -> throwError $ Error $ "Expected symbol, found " <> show x
 
 block' :: Partial => Env -> List Tree -> EvalResult Value
@@ -84,7 +81,7 @@ impure' :: Partial => Env -> List (EvalResult Value) -> EvalResult Value
 impure' env (val : Nil) = ProcessValue <<< Impure <<< pure <$> val
 
 expr' :: Partial => Value
-expr' = Define $ Env $ Map.fromFoldable [ Tuple "case" $ function 4 case' ]
+expr' = Define $ Env $ Map.fromFoldable [ Tuple "case" $ pure $ function 4 case' ]
   where
     case' env (expr : sym : nil : ap : Nil) = asExpr expr >>= doCase
       where
@@ -96,12 +93,12 @@ expr' = Define $ Env $ Map.fromFoldable [ Tuple "case" $ function 4 case' ]
 
 int' :: Partial => Value
 int' = Define $ Env $ Map.fromFoldable
-    [ Tuple "add" $ function 2 add'
-    , Tuple "sub" $ function 2 sub'
-    , Tuple "mul" $ function 2 mul'
-    , Tuple "div" $ function 3 div'
-    , Tuple "lt" $ function 4 lt'
-    , Tuple "gt" $ function 4 gt'
+    [ Tuple "add" $ pure $ function 2 add'
+    , Tuple "sub" $ pure $ function 2 sub'
+    , Tuple "mul" $ pure $ function 2 mul'
+    , Tuple "div" $ pure $ function 3 div'
+    , Tuple "lt" $ pure $ function 4 lt'
+    , Tuple "gt" $ pure $ function 4 gt'
     ]
   where
     add' env (a : b : Nil) = do
@@ -135,7 +132,7 @@ int' = Define $ Env $ Map.fromFoldable
       if evA > evB then t' else f'
 
 char' :: Partial => Value
-char' = Define $ Env $ Map.fromFoldable [ Tuple "eq" $ function 4 eqChar' ]
+char' = Define $ Env $ Map.fromFoldable [ Tuple "eq" $ pure $ function 4 eqChar' ]
   where
     eqChar' env (a : b : t' : f' : Nil) = do
       evA <- asChar a
@@ -143,7 +140,7 @@ char' = Define $ Env $ Map.fromFoldable [ Tuple "eq" $ function 4 eqChar' ]
       if evA == evB then t' else f'
 
 string' :: Partial => Value
-string' = Define $ Env $ Map.fromFoldable [ Tuple "case" $ function 3 case' ]
+string' = Define $ Env $ Map.fromFoldable [ Tuple "case" $ pure $ function 3 case' ]
   where
     case' env (expr : nil : cons : Nil) = asString expr <#> (String.toCharArray >>> List.fromFoldable) >>= doCase
       where

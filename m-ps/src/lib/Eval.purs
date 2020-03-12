@@ -24,21 +24,21 @@ import Data.Set (Set)
 import Data.Set as Set
 import Data.String.CodeUnits (fromCharArray)
 import Data.String.Common (joinWith)
-import Data.Traversable (traverse)
+import Data.Traversable (sequence, traverse)
 import Data.Tuple (Tuple(..))
 import Data.Typelevel.Num (class Nat, d1, d2, reifyInt, toInt)
 import Data.Vec (Vec)
 import Data.Vec as Vec
-import Debug.Trace (spy)
 import Effect.Exception (throw)
 import Effect.Unsafe (unsafePerformEffect)
-import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asDefine, asExpr, asInteger, asProcess, asString, lookupEnv, nil, unionEnv)
+import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asDefine, asExpr, asInteger, asProcess, asString, lookupEnv, nil, unionEnv, valuesEnv)
 import Foreign (F, Foreign, MultipleErrors, readArray, readBoolean, readNumber, readString, tagOf, typeOf, unsafeToForeign)
 import Tree (Tree(..))
 import Util (except)
 
 foreign import callForeign :: Foreign -> Array Foreign -> Foreign -> Foreign
 foreign import arity :: (forall a. Maybe a) -> (forall a. a -> Maybe a) -> Foreign -> Maybe Int
+
 
 evalBlock :: Env -> List Tree -> EvalResult Env
 evalBlock env = evalBlock' env false Set.empty Nil
@@ -48,7 +48,9 @@ evalBlock' env found errors Nil Nil = pure $ Env Map.empty
 evalBlock' env true errors defer Nil = evalBlock' env false Set.empty Nil defer
 evalBlock' env false errors defer Nil = throwError $ Undefined errors
 evalBlock' env found errors defer (car : cdr) = do
-  defs <- catchError (asDefine $ eval $ Tuple env car) \x -> case x of
+  defs <- catchError (do
+      def <- asDefine $ eval $ Tuple env car
+      sequence (valuesEnv def) *> pure def) \x -> case x of
     Undefined names -> evalBlock' env found (Set.union names errors) (car : defer) cdr
     Error string -> throwError $ Error string
   defs' <- evalBlock' (unionEnv defs env) true errors defer cdr
@@ -56,11 +58,11 @@ evalBlock' env found errors defer (car : cdr) = do
 
 eval :: Tuple Env Tree -> EvalResult Value
 eval (Tuple env (SymbolTree name)) = case lookupEnv name env of
-  Just value -> pure value
+  Just value -> value
   Nothing -> do
     globals <- ask
     case lookupEnv name globals of
-      Just value -> pure value
+      Just value -> value
       Nothing -> throwError $ Undefined $ Set.singleton name
 eval (Tuple env (IntTree integer)) = pure $ IntValue integer
 eval (Tuple env (CharTree char)) = pure $ CharValue char
