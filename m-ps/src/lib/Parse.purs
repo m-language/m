@@ -109,4 +109,4 @@ parseProgram :: String -> String -> Either ParsingError (List Tree)
 parseProgram file input = lmap (ParsingError file) $ runParser input (((ignored *> many (parseAtom unit)) <#> fromFoldable) <* ignored <* eof)
 
 parseRepl :: String -> Either ParseError Tree
-parseRepl input = runParser input (ignored *> (parseExpr unit))
+parseRepl input = runParser input (ignored *> (parseExpr unit) <* ignored <* eof)
