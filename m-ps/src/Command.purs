@@ -1,39 +1,72 @@
 module Command where
 
-import Control.Monad.Except (runExceptT)
+import Prelude
+
+import Control.Monad.Except (ExceptT, except, runExceptT)
 import Control.Monad.Maybe.Trans (MaybeT, runMaybeT)
 import Control.Monad.Reader (runReaderT)
 import Control.Monad.Trampoline (runTrampoline)
 import Control.Monad.Writer.Trans (lift)
 import Control.MonadZero (empty)
+import Data.Array as Array
+import Data.Bifunctor (lmap)
 import Data.Either (Either(..))
-import Data.List (List, concat, fromFoldable)
-import Data.Map as Map
-import Data.Maybe (fromMaybe)
+import Data.List (List)
+import Data.List as List
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String (Pattern(..), split)
-import Data.Traversable (for_, sequence, traverse)
+import Data.Traversable (for_, traverse)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Class.Console (logShow)
 import Effect.Console (log)
-import Eval (Env(..), EvalResult, Process(..), Value(..), eval, evalBlock, unionEnv)
+import Effect.Exception (throw)
+import Eval (eval, evalBlock)
+import Eval.Types (Env, Error, EvalResult, Process(..), Value(..), unionEnv)
+import Extern (ExternError, loadExternal)
 import Node.Encoding (Encoding(..))
-import Node.FS.Stats (isDirectory)
+import Node.FS.Stats (isDirectory, isFile)
 import Node.FS.Sync (readTextFile, readdir, stat)
 import Node.Path (FilePath)
 import Node.Path as Path
-import Parse (parseProgram, parseRepl)
-import Prelude (class Show, bind, discard, map, pure, show, ($), ($>), (*>), (<#>), (<$>), (<<<), (<>), (>>=))
-import Text.Parsing.Parser (ParseError)
+import Parse (ParsingError, parseProgram, parseRepl)
 import Tree (Tree)
 
-listDirectory :: FilePath -> Effect (Array FilePath)
-listDirectory = readdir
+data CommandError = Parse ParsingError | RuntimeError Error | ExternError ExternError
+
+instance commandErrorShow :: Show CommandError where
+  show (Parse p) = show p
+  show (RuntimeError e) = show e
+  show (ExternError e) = show e
+
+listDirectory :: FilePath -> Effect (List FilePath)
+listDirectory root = readdir root <#> (\paths -> List.fromFoldable $ paths <#> \path -> Path.concat [root, path]) >>= \paths -> do
+  files <- List.filterM doesFileExist paths
+  directories <- List.filterM doesDirectoryExist paths
+  subFiles <- traverse listDirectory directories <#> List.concat
+  pure $ List.concat $ List.fromFoldable [files, subFiles]
+
+listFilesWithExtension :: String -> FilePath -> Effect (List FilePath)
+listFilesWithExtension end root = (listDirectory root <#> List.filter \file -> Path.extname file == end) >>= (traverse (Path.resolve []))
+
+externFile :: FilePath -> Maybe FilePath
+externFile file = 
+  if Path.extname file /= "m"
+  then Nothing
+  else do
+    let dir = Path.dirname file
+    let base = Path.basenameWithoutExt file ".m"
+    pure $ Path.concat [dir, base <> ".js"]
 
 doesDirectoryExist :: FilePath -> Effect Boolean
 doesDirectoryExist path = do
   stats <- stat path
   pure $ isDirectory stats
+
+doesFileExist :: FilePath -> Effect Boolean
+doesFileExist path = do
+  stats <- stat path
+  pure $ isFile stats
 
 words :: String -> Array String
 words = split (Pattern " ")
@@ -42,7 +75,7 @@ runCommand :: String -> String -> Env -> Effect Env
 runCommand "parse" rest env = runParseCommand rest env
 runCommand "eval" rest env = runEvalCommand rest env
 runCommand "load-parse" rest env = runLoadParseCommand rest env
-runCommand "load" rest env = runLoadCommand (words rest) env
+runCommand "load" rest env = runLoadCommand (List.fromFoldable $ words rest) env
 runCommand name _ env = log ("Unrecognized command " <> name) *> pure env
 
 runParseCommand :: String -> Env -> Effect Env
@@ -54,7 +87,7 @@ runParseCommand rest env = runDefault env do
 runEvalCommand :: String -> Env -> Effect Env
 runEvalCommand rest env = runDefault env do
   tree <- printEither $ parseRepl rest
-  value <- printEither $ runTrampoline $ runExceptT $ runReaderT (eval (Tuple (Env Map.empty) tree)) env
+  value <- printEither $ runTrampoline $ runExceptT $ runReaderT (eval (Tuple mempty tree)) env
   case value of
     ProcessValue p -> runProcess env p *> (lift $ log "") $> env
     Define defs -> pure $ unionEnv defs env
@@ -62,34 +95,41 @@ runEvalCommand rest env = runDefault env do
 
 runLoadParseCommand :: String -> Env -> Effect Env
 runLoadParseCommand rest env = runDefault env do
-  files <- lift $ parseFiles $ fromFoldable $ words rest
+  files <- lift $ runExceptT $ parseFiles $ List.fromFoldable $ words rest
   trees <- printEither files
   for_ trees $ lift <<< logShow
   pure env
 
-runLoadCommand :: Array String -> Env -> Effect Env
+runLoadCommand :: List String -> Env -> Effect Env
 runLoadCommand paths env = runDefault env do
-  files <- lift $ parseFiles $ fromFoldable paths
+  files <- lift $ runExceptT $ parseFiles paths
+  jsFiles <- lift $ traverse (listFilesWithExtension ".js") paths <#> List.concat
+  extern <- lift $ runExceptT $ loadExternal $ Array.fromFoldable jsFiles
+  externEnv <- printEither extern
   trees <- printEither files
-  defs <- printEither $ runTrampoline $ runExceptT $ runReaderT (evalBlock (Env Map.empty) trees) env
-  pure $ unionEnv defs env
+  let env' = unionEnv env externEnv
+  evaluated <- lift $ throwEffect $ runTrampoline $ runExceptT $ runReaderT (evalBlock mempty trees) env'
+  pure $ unionEnv evaluated env'
 
-parseFile :: String -> Effect (Either ParseError (List Tree))
-parseFile name = doesDirectoryExist name >>= \x -> if x
-  then do
-    names <- listDirectory name
-    parseFiles $ fromFoldable $ map (\sub -> Path.concat [ name, sub ]) names
-  else do
-    chars <- readTextFile UTF8 name
-    pure $ parseProgram name chars
+parseFile :: String -> ExceptT CommandError Effect (List Tree)
+parseFile name = do
+  chars <- lift $ readTextFile UTF8 name
+  except $ lmap Parse $ parseProgram name chars
 
-parseFiles :: List String -> Effect (Either ParseError (List Tree))
-parseFiles names = traverse parseFile names <#> \f -> sequence f <#> concat
+parseFiles :: List String -> ExceptT CommandError Effect (List Tree)
+parseFiles paths = do
+  mfiles <- lift $ traverse (listFilesWithExtension ".m") paths <#> List.concat
+  parsed <- traverse parseFile mfiles
+  pure $ List.concat parsed
 
 printEither :: forall a b. (Show a) => Either a b -> MaybeT Effect b
 printEither error = case error of
-  Left e -> lift (log (show e)) *> empty
+  Left e -> lift (logShow e) *> empty
   Right b -> pure b
+
+throwEffect :: forall e a. (Show e) => Either e a -> Effect a
+throwEffect (Left e) = throw $ show e
+throwEffect (Right a) = pure a 
 
 runDefault :: forall a. a -> MaybeT Effect a -> Effect a
 runDefault a maybeT = runMaybeT maybeT <#> fromMaybe a

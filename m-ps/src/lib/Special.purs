@@ -1,42 +1,18 @@
 module Special where
 
+import Prelude
+
 import Control.Monad.Except (throwError)
 import Data.Array as Array
 import Data.BigInt (fromInt)
-import Data.List ((:), List(..), drop, length, take)
+import Data.List ((:), List(..), length)
 import Data.List as List
 import Data.Map as Map
 import Data.String.CodeUnits as String
 import Data.Tuple (Tuple(..), curry)
-import Eval (Env(..), Error(..), EvalResult, Process(..), Value(..), apply, applyFn, asChar, asExpr, asInteger, asString, eval, evalBlock, insertEnv)
-import Prelude (bind, otherwise, pure, show, ($), (*), (+), (-), (/), (<), (<#>), (<$>), (<<<), (<>), (==), (>), (>>=), (>>>))
+import Eval (applyFn, eval, evalBlock, function, macro)
+import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asChar, asExpr, asInteger, asString, insertEnv)
 import Tree (Tree(..))
-
-function :: Int -> (Env -> List (EvalResult Value) -> EvalResult Value) -> Value
-function n f = Function fn
-  where
-    fn :: Env -> List (EvalResult Value) -> EvalResult Value
-    fn env args
-      | length args < n = 
-          pure $ function (n - length args) \env' args' -> 
-            applyFn env' (function n f) (args <> args')
-      | length args > n = 
-          applyFn env (function n f) (take n args) >>= \v ->
-            applyFn env v (drop n args)
-      | otherwise = f env args
-
-macro :: Int -> (Env -> List Tree -> EvalResult Value) -> Value
-macro n f = Macro fn
-  where
-    fn :: Env -> List Tree -> EvalResult Value
-    fn env args
-      | length args < n = 
-          pure $ macro (n - length args) \env' args' -> 
-            apply env' (macro n f) (args <> args')
-      | length args > n = 
-          apply env (macro n f) (take n args) >>= \v ->
-            apply env v (drop n args)
-      | otherwise = f env args
 
 special :: Partial => Env
 special = Env $ Map.fromFoldable

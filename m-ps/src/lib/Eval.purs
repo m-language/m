@@ -1,76 +1,44 @@
 module Eval where
 
-import Control.Monad.Except (ExceptT, catchError, throwError)
-import Control.Monad.Reader (ReaderT, ask)
-import Control.Monad.Trampoline (Trampoline)
+import Prelude hiding (apply)
+
+import Control.Alt ((<|>))
+import Control.Monad.Except (Except, catchError, lift, mapExceptT, runExcept, runExceptT, throwError, withExceptT)
+import Control.Monad.Reader (ask, runReaderT)
+import Control.Monad.Trampoline (done, runTrampoline)
+import Data.Array (index)
 import Data.Array as Array
-import Data.BigInt (BigInt, toString)
-import Data.List (List(..), null, (:), singleton)
+import Data.BigInt (fromInt, fromNumber, toNumber)
+import Data.Either (either)
+import Data.Int (fromNumber) as Int
+import Data.List (List(..), null, singleton, (:))
+import Data.List as List
+import Data.List.Lazy.NonEmpty as Nel
+import Data.List.Lazy.Types (NonEmptyList)
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
+import Data.Newtype (unwrap)
+import Data.Nullable as Nullable
 import Data.Set (Set)
 import Data.Set as Set
+import Data.String.CodeUnits (fromCharArray)
 import Data.String.Common (joinWith)
 import Data.Traversable (sequence, traverse)
 import Data.Tuple (Tuple(..))
-import Effect (Effect)
-import Prelude (class Monoid, class Semigroup, class Show, append, bind, map, mempty, pure, show, ($), (<<<), (<>), (>>=), (*>))
+import Data.Typelevel.Num (class Nat, d1, d2, reifyInt, toInt)
+import Data.Vec (Vec)
+import Data.Vec as Vec
+import Effect.Exception (throw)
+import Effect.Unsafe (unsafePerformEffect)
+import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asDefine, asExpr, asInteger, asProcess, asString, lookupEnv, nil, unionEnv, valuesEnv)
+import Foreign (F, Foreign, MultipleErrors, readArray, readBoolean, readNumber, readString, tagOf, typeOf, unsafeToForeign)
 import Tree (Tree(..))
+import Util (except)
 
-data Process
-  = Impure (Effect Value)
-  | Do Process (Value -> EvalResult Process)
+foreign import callForeign :: Foreign -> Array Foreign -> Foreign -> Foreign
+foreign import arity :: (forall a. Maybe a) -> (forall a. a -> Maybe a) -> Foreign -> Maybe Int
 
-data Value
-  = Function (Env -> List (EvalResult Value) -> EvalResult Value)
-  | Macro (Env -> List Tree -> EvalResult Value)
-  | Define Env
-  | Expr Tree
-  | CharValue Char
-  | StringValue String
-  | IntValue BigInt
-  | ProcessValue Process
-
-data Error
-  = Error String
-  | Undefined (Set String)
-
-instance showValue :: Show Value where
-  show (Function f) = "<function>"
-  show (Macro f) = "<macro>"
-  show (Expr t) = "'" <> show t
-  show (CharValue c) = show c
-  show (StringValue s) = show s
-  show (IntValue i) = toString i
-  show (Define (Env e)) = "{" <> (joinWith " " $ Array.fromFoldable $ Map.keys e) <> "}"
-  show (ProcessValue p) = "<process>"
-
-instance showError :: Show Error where
-  show (Error string) = "Error: " <> string
-  show (Undefined ns) = "Undefined: " <> (joinWith " " $ Array.fromFoldable ns)
-
-newtype Env = Env (Map String (EvalResult Value))
-
-instance envMonoid :: Monoid Env where
-  mempty = Env mempty
-
-instance envSemigroup :: Semigroup Env where
-  append (Env a) (Env b) = Env $ append a b
-
-insertEnv :: String -> EvalResult Value -> Env -> Env
-insertEnv name value (Env env) = Env $ Map.insert name value env
-
-unionEnv :: Env -> Env -> Env
-unionEnv (Env a) (Env b) = Env $ Map.union a b
-
-lookupEnv :: String -> Env -> Maybe (EvalResult Value)
-lookupEnv name (Env env) = Map.lookup name env
-
-valuesEnv :: Env -> List (EvalResult Value)
-valuesEnv (Env env) = Map.values env
-
-type EvalResult = ReaderT Env (ExceptT Error Trampoline)
 
 evalBlock :: Env -> List Tree -> EvalResult Env
 evalBlock env = evalBlock' env false Set.empty Nil
@@ -104,36 +72,6 @@ eval (Tuple env (ApplyTree (fn : args))) = do
   f <- eval $ Tuple env fn
   apply env f args
 
-asDefine :: EvalResult Value -> EvalResult Env
-asDefine tree = tree >>= \x -> case x of
-  (Define defs) -> pure defs
-  err -> throwError $ Error $ "Expected definition, found " <> show err
-
-asExpr :: EvalResult Value -> EvalResult Tree
-asExpr tree = tree >>= \x -> case x of
-  (Expr t) -> pure t
-  err -> throwError $ Error $ "Expected expression, found " <> show err
-
-asChar :: EvalResult Value -> EvalResult Char
-asChar tree = tree >>= \x -> case x of
-  (CharValue char) -> pure char
-  err -> throwError $ Error $ "Expected character, found " <> show err
-
-asString :: EvalResult Value -> EvalResult String
-asString tree = tree >>= \x -> case x of
-  (StringValue string) -> pure string
-  err -> throwError $ Error $ "Expected string, found " <> show err
-
-asInteger :: EvalResult Value -> EvalResult BigInt
-asInteger tree = tree >>= \x -> case x of
-  (IntValue i) -> pure i
-  err -> throwError $ Error $ "Expected integer, found " <> show err
-
-asProcess :: EvalResult Value -> EvalResult Process
-asProcess tree = tree >>= \x -> case x of
-  (ProcessValue p) -> pure p
-  err -> throwError $ Error $ "Expected process, found " <> show err
-
 apply :: Env -> Value -> List Tree -> EvalResult Value
 apply env f Nil = pure f
 apply env (Macro f) args = f env args
@@ -146,13 +84,139 @@ apply env (Expr tree) args = do
 apply env x args = applyFn env x $ map eval $ map (Tuple env) args
 
 applyFn :: Env -> Value -> List (EvalResult Value) -> EvalResult Value
-applyFn env f Nil = pure f
+applyFn _ f Nil = pure f
 applyFn env (Function f) args = f env args
 applyFn env (ProcessValue process) (map : args) = do
   evMap <- map
   let f = ProcessValue $ Do process \arg -> asProcess $ applyFn env evMap $ singleton $ pure arg
   applyFn env f args
-applyFn env x args = throwError $ Error $ "Expected function, found " <> show x
+applyFn env (ExternValue externFn) args = do
+  foreignArgs <- traverse (\argument -> argument >>= unmarshall env) $ Array.fromFoldable args
+  pure $ ExternValue $ callForeign (unsafeToForeign Nullable.null) foreignArgs externFn
+applyFn _ x args = throwError $ Error $ "Expected function, found " <> show x
 
-nil :: Value
-nil = Expr $ ApplyTree Nil
+function :: Int -> (Env -> List (EvalResult Value) -> EvalResult Value) -> Value
+function n f = Function fn
+  where
+    fn :: Env -> List (EvalResult Value) -> EvalResult Value
+    fn env args
+      | List.length args < n = 
+          pure $ function (n - List.length args) \env' args' -> 
+            applyFn env' (function n f) (args <> args')
+      | List.length args > n = 
+          applyFn env (function n f) (List.take n args) >>= \v ->
+            applyFn env v (List.drop n args)
+      | otherwise = f env args
+
+functionN :: forall n. Nat n => n -> (Env -> Vec n (EvalResult Value) -> EvalResult Value) -> Value
+functionN d fn = function (toInt d) func
+  where 
+    func :: Nat n => Env -> List (EvalResult Value) -> EvalResult Value
+    func env = \args -> case Vec.fromArray $ Array.fromFoldable args of
+      Just vec -> fn env vec
+      Nothing -> throwError $ Error $ "Expected " <> show (toInt d) <> " arguments, got " <> (show $ List.length args)
+
+macro :: Int -> (Env -> List Tree -> EvalResult Value) -> Value
+macro n f = Macro fn
+  where
+    fn :: Env -> List Tree -> EvalResult Value
+    fn env args
+      | List.length args < n = 
+          pure $ macro (n - List.length args) \env' args' -> 
+            apply env' (macro n f) (args <> args')
+      | List.length args > n = 
+          apply env (macro n f) (List.take n args) >>= \v ->
+            apply env v (List.drop n args)
+      | otherwise = f env args
+
+
+mkTrue :: Unit -> Value
+mkTrue _ = functionN d2 \_ -> \vec -> Vec.head vec
+
+mkFalse :: Unit -> Value
+mkFalse _ = functionN d2 \_ -> \vec -> Vec.index vec d1
+
+mkPair :: Value -> Value -> Value
+mkPair fst snd = functionN d1 $ \env -> \fn -> do
+  fnValue <- Vec.head fn
+  applyFn env fnValue $ map pure $ fst : snd : Nil
+
+data MarshallError = InvalidBigInt Number | Multiple MultipleErrors | Generic String
+type MarshallResult a = Except (NonEmptyList MarshallError) a
+
+liftMarshall :: forall a. MarshallResult a -> EvalResult a
+liftMarshall = lift <<< mapExceptT (unwrap >>> done) <<< withExceptT (map (mError >>> show) >>> Array.fromFoldable >>> joinWith "," >>> Error)
+
+liftResult :: forall a. F a -> MarshallResult a
+liftResult = withExceptT $ Multiple >>> Nel.singleton
+
+mError :: MarshallError -> Error
+mError (Generic s) = Error s
+mError (Multiple errors) = Error $ joinWith ", " $ Array.fromFoldable $ map show errors
+mError (InvalidBigInt number) = Error $ "Expected foreign big integer, got " <> show number
+
+mkObject :: Map String Value -> Value
+mkObject kv = functionN d1 $ \env -> \keySymbol -> do
+  key <- asString $ Vec.head keySymbol
+  except (Error $ "Could not find key " <> show key <> "in object") $ Map.lookup key kv
+
+marshallInt :: Foreign -> MarshallResult Value
+marshallInt fv = do
+  n <- liftResult $ readNumber fv
+  except (Nel.singleton $ InvalidBigInt n) $ fromNumber n <#> IntValue
+
+marshallString :: Foreign -> MarshallResult Value
+marshallString fv = liftResult $ readString fv <#> StringValue
+
+marshallArray :: Foreign -> MarshallResult Value
+marshallArray fv = do
+  fa <- liftResult $ readArray fv
+  mkArray fa
+    where
+      mkArray :: Array Foreign -> MarshallResult Value
+      mkArray fa = traverse marshall fa <#> \elements -> 
+        mkPair (IntValue $ fromInt $ Array.length elements) $ functionN d1 \_ -> \arrayIndex -> do
+          n <- asInteger (Vec.head arrayIndex) <#> toNumber
+          let result = Int.fromNumber n >>= index elements
+          except (Error $ "Expected number [0, " <> (show $ Array.length elements) <> "), found " <> show n) result
+
+marshallBoolean :: Foreign -> MarshallResult Value
+marshallBoolean fv = liftResult $ readBoolean fv <#> \fb -> if fb then mkTrue unit else mkFalse unit
+
+marshallObject :: Foreign -> MarshallResult Value
+marshallObject fv = do
+  let isObject = typeOf fv == "object"
+  throwError $ Nel.singleton $ Generic "Objects cannot be marshalled"
+
+marshallFunction :: Foreign -> MarshallResult Value
+marshallFunction fv = if typeOf fv /= "function"
+  then throwError $ Nel.singleton $ Generic $ "Expected function, found " <> tagOf fv
+  else do
+    functionArity <- except (Nel.singleton $ Generic $ "Expected function, found " <> tagOf fv) $ arity Nothing Just fv
+    pure $ reifyInt functionArity \n -> functionN n \env -> \args -> do
+      args' <- traverse (\arg -> arg >>= unmarshall env) $ Vec.toArray args
+      let result = callForeign (unsafeToForeign Nullable.null) args' fv
+      pure $ ExternValue result
+
+marshall :: Foreign -> MarshallResult Value
+marshall fv = marshallInt fv
+          <|> marshallString fv
+          <|> marshallArray fv  
+          <|> marshallBoolean fv
+          <|> marshallObject fv
+          <|> marshallFunction fv
+
+unsafeMarshall :: Foreign -> Value
+unsafeMarshall fv = unsafePerformEffect $ either (map (mError >>> show) >>> Array.fromFoldable >>> joinWith ", " >>> throw) pure $ runExcept $ marshall fv
+
+unmarshall :: Env -> Value -> EvalResult Foreign
+unmarshall _ (ExternValue f) = pure f
+unmarshall _ (IntValue i) = pure $ unsafeToForeign $ toNumber i
+unmarshall _ (StringValue s) = pure $ unsafeToForeign s
+unmarshall _ (CharValue c) = pure $ unsafeToForeign $ fromCharArray [c]
+unmarshall foreignEnv p@(ProcessValue _) = unmarshall foreignEnv $ functionN d1 \env -> \args -> applyFn env p $ List.fromFoldable args
+unmarshall foreignEnv (Function fn) = ask <#> \env' -> unsafeToForeign \(arg :: Foreign) ->
+  let result = runTrampoline $ runExceptT $ runReaderT (fn foreignEnv (List.singleton $ pure $ ExternValue arg)) env' in
+  let output = result >>= \returnValue -> runTrampoline $ runExceptT $ runReaderT (unmarshall foreignEnv returnValue) env' in
+  unsafePerformEffect $ either (show >>> throw) (\value -> throw $ "Unable to unmarshall " <> typeOf value) output
+unmarshall _ arg = throwError $ Error $ "Expected primitive value, found " <> show arg

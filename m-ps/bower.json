@@ -1,6 +1,11 @@
 {
   "name": "mps",
-  "ignore": ["**/.*", "node_modules", "bower_components", "output"],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
   "dependencies": {
     "purescript-prelude": "^4.1.1",
     "purescript-console": "^4.4.0",
@@ -15,7 +20,11 @@
     "purescript-node-process": "^7.0.0",
     "purescript-node-readline": "^4.0.1",
     "purescript-bigints": "^4.0.0",
-    "purescript-free": "^5.2.0"
+    "purescript-free": "^5.2.0",
+    "purescript-foreign": "^5.0.0",
+    "purescript-sized-vectors": "^5.0.0",
+    "purescript-typelevel": "^6.0.0",
+    "purescript-debug": "^4.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"
