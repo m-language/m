@@ -25,8 +25,8 @@ import Special (special)
 
 foreign import readInputCharImpl :: (forall a. a -> Maybe a) -> (forall a. Maybe a) -> Effect (Maybe String)
 
-readInputChar :: Effect (Maybe Char)
-readInputChar = readInputCharImpl Just Nothing <#> \m -> m >>= charAt 0
+getChar :: Effect (Maybe Char)
+getChar = readInputCharImpl Just Nothing <#> \m -> m >>= charAt 0
 
 break :: String -> Tuple String String
 break s = 
@@ -35,7 +35,7 @@ break s =
   in  Tuple prefix postfix
 
 more :: Interface -> ContT Unit Effect String 
-more interface = ContT $ \cont -> question ".. " cont interface
+more interface = ContT \cont -> question ".. " cont interface
 
 input :: Interface -> ContT Unit Effect String
 input interface = ContT \cont -> question "M> " cont interface
@@ -57,7 +57,7 @@ process interface line
 
 basicIO :: Input
 basicIO = Input
-    { getChar: readInputChar
+    { getChar: getChar
     , putChar: putChar
     }
   where
