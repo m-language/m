@@ -39,7 +39,7 @@ ignored :: Parser Unit
 ignored = skipMany (comment <|> void space)
 
 opChar :: Parser Char
-opChar = oneOf (toCharArray "~`!@$%^&*-=+\\|;:<>,.?/")
+opChar = oneOf (toCharArray "~`!@$%^&*-=+\\|;:<>,.?/_")
 
 symbolChar :: Parser Char
 symbolChar = letter <|> opChar

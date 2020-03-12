@@ -19,7 +19,6 @@ import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
-import Data.Nullable (Nullable)
 import Data.Nullable as Nullable
 import Data.Set (Set)
 import Data.Set as Set
@@ -28,7 +27,6 @@ import Data.String.Common (joinWith)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import Data.Typelevel.Num (class Nat, d1, d2, reifyInt, toInt)
-import Data.Typelevel.Undefined (undefined)
 import Data.Vec (Vec)
 import Data.Vec as Vec
 import Debug.Trace (spy)
@@ -90,9 +88,9 @@ applyFn env (ProcessValue process) (map : args) = do
   evMap <- map
   let f = ProcessValue $ Do process \arg -> asProcess $ applyFn env evMap $ singleton $ pure arg
   applyFn env f args
-applyFn env (ExternValue value) args = do
+applyFn env (ExternValue externFn) args = do
   foreignArgs <- traverse (\argument -> argument >>= unmarshall env) $ Array.fromFoldable args
-  pure $ ExternValue $ callForeign (unsafeToForeign Nullable.null) foreignArgs value
+  pure $ ExternValue $ callForeign (unsafeToForeign Nullable.null) foreignArgs externFn
 applyFn _ x args = throwError $ Error $ "Expected function, found " <> show x
 
 function :: Int -> (Env -> List (EvalResult Value) -> EvalResult Value) -> Value
@@ -201,7 +199,7 @@ marshallFunction fv = if typeOf fv /= "function"
 marshall :: Foreign -> MarshallResult Value
 marshall fv = marshallInt fv
           <|> marshallString fv
-          <|> marshallArray fv
+          <|> marshallArray fv  
           <|> marshallBoolean fv
           <|> marshallObject fv
           <|> marshallFunction fv
@@ -217,5 +215,6 @@ unmarshall _ (CharValue c) = pure $ unsafeToForeign $ fromCharArray [c]
 unmarshall foreignEnv p@(ProcessValue _) = unmarshall foreignEnv $ functionN d1 \env -> \args -> applyFn env p $ List.fromFoldable args
 unmarshall foreignEnv (Function fn) = ask <#> \env' -> unsafeToForeign \(arg :: Foreign) ->
   let result = runTrampoline $ runExceptT $ runReaderT (fn foreignEnv (List.singleton $ pure $ ExternValue arg)) env' in
-  unsafePerformEffect $ either (show >>> throw) pure result
+  let output = result >>= \returnValue -> runTrampoline $ runExceptT $ runReaderT (unmarshall foreignEnv returnValue) env' in
+  unsafePerformEffect $ either (show >>> throw) (\value -> throw $ "Unable to unmarshall " <> typeOf value) output
 unmarshall _ arg = throwError $ Error $ "Expected primitive value, found " <> show arg

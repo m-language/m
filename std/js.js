@@ -5,14 +5,14 @@ module.exports = {
     Function: Function,
     String: String,
     Array: Array,
+    Boolean: Boolean,
+    Object: Object,
     undefined,
     null: null,
     undefined: undefined,
-    true: true,
-    false: false,
-    empty: {},
-    call: (o, t) => o.bind(t),
-    apply: (o, fn) => {
+    bind: (a, b, c) => a.bind(b, c),
+    apply: (a, b, c) => a.call(b, c),
+    with: (o, fn) => {
       fn(o);
       return o;
     },
