@@ -2,9 +2,11 @@ module Command where
 
 import Prelude
 
+import Control.Monad.Cont (ContT)
 import Control.Monad.Except (ExceptT, except, runExceptT)
-import Control.Monad.Maybe.Trans (MaybeT, runMaybeT)
+import Control.Monad.Maybe.Trans (MaybeT(..), runMaybeT)
 import Control.Monad.Reader (runReaderT)
+import Control.Monad.State (StateT, get)
 import Control.Monad.Trampoline (runTrampoline)
 import Control.Monad.Writer.Trans (lift)
 import Control.MonadZero (empty)
@@ -14,10 +16,12 @@ import Data.Either (Either(..))
 import Data.List (List)
 import Data.List as List
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Newtype (unwrap)
 import Data.String (Pattern(..), split)
 import Data.Traversable (for_, traverse)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
+import Effect.Class (liftEffect)
 import Effect.Class.Console (logShow)
 import Effect.Console (log)
 import Effect.Exception (throw)
@@ -29,7 +33,8 @@ import Node.FS.Stats (isDirectory, isFile)
 import Node.FS.Sync (readTextFile, readdir, stat)
 import Node.Path (FilePath)
 import Node.Path as Path
-import Parse (ParsingError, parseProgram, parseRepl)
+import Parse (ParsingError, incremental, parseProgram, parseRepl, replParser)
+import Text.Parsing.Parser (hoistParserT, runParserT)
 import Tree (Tree)
 
 data CommandError = Parse ParsingError | RuntimeError Error | ExternError ExternError
@@ -86,12 +91,10 @@ runParseCommand rest env = runDefault env do
 
 runEvalCommand :: String -> Env -> Effect Env
 runEvalCommand rest env = runDefault env do
-  tree <- printEither $ parseRepl rest
+  parsedTree <- printEither $ parseRepl rest
+  tree <- MaybeT $ pure parsedTree
   value <- printEither $ runTrampoline $ runExceptT $ runReaderT (eval (Tuple mempty tree)) env
-  case value of
-    ProcessValue p -> runProcess env p *> (lift $ log "") $> env
-    Define defs -> pure $ unionEnv defs env
-    x -> lift $ logShow value $> env
+  evaluateResult env value
 
 runLoadParseCommand :: String -> Env -> Effect Env
 runLoadParseCommand rest env = runDefault env do
@@ -141,3 +144,19 @@ runProcess env (Do process fn) = do
   proc <- pure $ value >>= fn
   process' <- printEither $ runTrampoline $ runExceptT $ runReaderT proc env
   runProcess env process'
+
+evaluateResult :: Env -> Value -> MaybeT Effect Env
+evaluateResult env value = case value of
+  ProcessValue p -> runProcess env p *> lift (log "") $> env
+  Define defs -> pure $ unionEnv defs env
+  _ -> lift $ logShow value $> env
+
+parseAndEvaluate :: String -> ContT Unit Effect String -> StateT Env (ContT Unit Effect) Env
+parseAndEvaluate input moreInput = do
+  completely <- lift $ runParserT input $ incremental moreInput $ hoistParserT (unwrap >>> pure) replParser
+  env <- get
+  liftEffect $ runDefault env do
+    parsedTree <- printEither completely
+    tree <- MaybeT $ pure parsedTree
+    resultValue <- printEither $ runTrampoline $ runExceptT $ runReaderT (eval (Tuple mempty tree)) env
+    evaluateResult env resultValue

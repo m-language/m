@@ -1,4 +1,3 @@
-
 (defmodule js {
   # Access a property of an object
   (def index (extern "index"))
@@ -51,7 +50,7 @@
   (defmodule array {
     (def constructor (new (. module "Array")))
 
-    (def empty (invoke (. module "Array") "of") )
+    (def empty (invoke (. module "Array") "of"))
     (defn (copy array) (invoke array "slice" undefined))
     (defn (push array value) (with (copy array) (fn arr (bind arr "push" value))))
     (defn (of value) (push empty value))

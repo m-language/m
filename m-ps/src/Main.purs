@@ -1,19 +1,18 @@
 module Main where
 
 import Prelude
-import Command (runCommand, runEvalCommand, runLoadCommand)
-import Control.Monad.State (StateT, evalStateT, execStateT, get, put)
+
+import Command (parseAndEvaluate, runCommand, runEvalCommand, runLoadCommand)
+import Control.Monad.Cont (ContT(..), lift, runContT)
+import Control.Monad.State (StateT, put, runStateT)
 import Data.Array as Array
 import Data.Char.Unicode (isSpace)
-import Data.Either (Either(..))
+import Data.List as List
 import Data.Maybe (Maybe(..))
 import Data.String (length, drop)
 import Data.String.CodeUnits (charAt, singleton, takeWhile)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
-import Effect.Class (liftEffect)
-import Effect.Console (log)
-import Effect.Exception (try)
 import Eval.Types (Env)
 import IO (Input(..), io)
 import Node.Encoding (Encoding(..))
@@ -22,7 +21,6 @@ import Node.ReadLine (Interface, createConsoleInterface, noCompletion, question)
 import Node.Stream as Stream
 import Partial.Unsafe (unsafePartial)
 import Special (special)
-import Data.List as List
 
 foreign import readInputCharImpl :: (forall a. a -> Maybe a) -> (forall a. Maybe a) -> Effect (Maybe String)
 
@@ -35,23 +33,18 @@ break s =
       postfix = drop (length prefix) s
   in  Tuple prefix postfix
 
-loop :: Interface -> StateT Env Effect Unit
-loop interface = do
-  current <- get
-  liftEffect $ question "M> " (handleLine current) interface
-    where
-      runLine :: String -> StateT Env Effect Unit
-      runLine line = do
-        env' <- get
-        tryEnv <- liftEffect $ try $ process line env'
-        case tryEnv of
-          Left e -> liftEffect $ log $ show e
-          Right newEnv -> put newEnv
+more :: Interface -> ContT Unit Effect String 
+more interface = ContT $ \k -> question ".. " k interface
 
-      handleLine :: Env -> String -> Effect Unit
-      handleLine env line = do
-        env' <- execStateT (runLine line) env
-        evalStateT (loop interface) env'
+input :: Interface -> ContT Unit Effect String
+input interface = ContT \k -> question "M> " k interface
+
+repl :: Interface -> StateT Env (ContT Unit Effect) Unit
+repl interface = do
+  userInput <- lift $ input interface
+  env <- parseAndEvaluate userInput (more interface)
+  put env
+  repl interface
 
 process :: String -> Env -> Effect Env
 process line env
@@ -75,4 +68,4 @@ main = do
   args <- argv <#> Array.drop 2
   let initialEnv = unsafePartial (special <> io basicIO)
   env <- runLoadCommand (List.fromFoldable args) initialEnv
-  evalStateT (loop interface) env
+  runContT (runStateT (repl interface) env) (pure >>> void)

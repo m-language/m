@@ -61,6 +61,6 @@ loadExternal paths = do
           else throwError $ Error $ fold [ "Expected object with property "
                                          , key
                                          , ", got object with properties {"
-                                         , joinWith "," $ map show $ Array.fromFoldable combinedKeys
+                                         , joinWith ", " $ map show $ Array.fromFoldable combinedKeys
                                          , "}" ]
     ]
