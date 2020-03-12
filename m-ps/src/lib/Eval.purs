@@ -215,7 +215,7 @@ unmarshall _ (IntValue i) = pure $ unsafeToForeign $ toNumber i
 unmarshall _ (StringValue s) = pure $ unsafeToForeign s
 unmarshall _ (CharValue c) = pure $ unsafeToForeign $ fromCharArray [c]
 unmarshall foreignEnv p@(ProcessValue _) = unmarshall foreignEnv $ functionN d1 \env -> \args -> applyFn env p $ List.fromFoldable args
-unmarshall foreignEnv (Function fn) = pure $ unsafeToForeign $ \(nativeArgs :: Array Foreign) -> 
-  let result = runTrampoline $ runExceptT $ runReaderT (fn foreignEnv $ List.fromFoldable $ map (unsafeMarshall >>> pure) nativeArgs) foreignEnv in
-  unsafePerformEffect $ either pure (show >>> throw) result
+unmarshall foreignEnv (Function fn) = ask <#> \env' -> unsafeToForeign \(arg :: Foreign) ->
+  let result = runTrampoline $ runExceptT $ runReaderT (fn foreignEnv (List.singleton $ pure $ ExternValue arg)) env' in
+  unsafePerformEffect $ either (show >>> throw) pure result
 unmarshall _ arg = throwError $ Error $ "Expected primitive value, found " <> show arg
