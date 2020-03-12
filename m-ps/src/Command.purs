@@ -15,7 +15,7 @@ import Data.Bifunctor (lmap)
 import Data.Either (Either(..))
 import Data.List (List)
 import Data.List as List
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Newtype (unwrap)
 import Data.String (Pattern(..), split)
 import Data.Traversable (for_, traverse)
@@ -86,7 +86,7 @@ runCommand name _ env = log ("Unrecognized command " <> name) *> pure env
 runParseCommand :: String -> Env -> Effect Env
 runParseCommand rest env = runDefault env do
   tree <- printEither $ parseRepl rest
-  lift $ logShow tree
+  lift $ maybe (pure unit) logShow tree
   pure env
 
 runEvalCommand :: String -> Env -> Effect Env

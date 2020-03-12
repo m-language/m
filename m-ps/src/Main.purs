@@ -2,9 +2,9 @@ module Main where
 
 import Prelude
 
-import Command (parseAndEvaluate, runCommand, runEvalCommand, runLoadCommand)
+import Command (parseAndEvaluate, runCommand, runLoadCommand)
 import Control.Monad.Cont (ContT(..), lift, runContT)
-import Control.Monad.State (StateT, evalStateT, put)
+import Control.Monad.State (StateT, evalStateT, get, put)
 import Data.Array as Array
 import Data.Char.Unicode (isSpace)
 import Data.List as List
@@ -13,6 +13,7 @@ import Data.String (length, drop)
 import Data.String.CodeUnits (charAt, singleton, takeWhile)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
+import Effect.Class (liftEffect)
 import Eval.Types (Env)
 import IO (Input(..), io)
 import Node.Encoding (Encoding(..))
@@ -34,25 +35,25 @@ break s =
   in  Tuple prefix postfix
 
 more :: Interface -> ContT Unit Effect String 
-more interface = ContT $ \k -> question ".. " k interface
+more interface = ContT $ \cont -> question ".. " cont interface
 
 input :: Interface -> ContT Unit Effect String
-input interface = ContT \k -> question "M> " k interface
+input interface = ContT \cont -> question "M> " cont interface
 
 repl :: Interface -> StateT Env (ContT Unit Effect) Unit
 repl interface = do
   userInput <- lift $ input interface
-  env <- parseAndEvaluate userInput (more interface)
+  env <- process interface userInput
   put env
   repl interface
 
-process :: String -> Env -> Effect Env
-process line env
-  | length line == 0 = pure env
+process :: Interface -> String -> StateT Env (ContT Unit Effect) Env
+process interface line
+  | length line == 0 = get
   | charAt 0 line == Just ':' =
     let Tuple command rest = break $ drop 1 line
-    in  runCommand command rest env
-  | otherwise = runEvalCommand line env
+    in  get >>= \env -> liftEffect $ runCommand command rest env
+  | otherwise = parseAndEvaluate line $ more interface
 
 basicIO :: Input
 basicIO = Input
