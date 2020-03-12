@@ -19,12 +19,12 @@ newtype Input
 
 io :: Partial => Input -> Env
 io (Input input) = Env $ Map.fromFoldable
-    [ Tuple "stdout" $ function 1 $ stdout' input.putChar
-    , Tuple "stdin" $ stdin' $ input.getChar >>= \m -> 
+    [ Tuple "stdout" $ pure $ function 1 $ stdout' input.putChar
+    , Tuple "stdin" $ pure $ stdin' $ input.getChar >>= \m -> 
         case m of
           Nothing -> throwException $ error "EOF"
           Just char -> pure char
-    , Tuple "newline" newline'
+    , Tuple "newline" $ pure $ newline'
     ]
 
 stdout' :: Partial => (Char -> Effect Unit) -> Env -> List (EvalResult Value) -> EvalResult Value

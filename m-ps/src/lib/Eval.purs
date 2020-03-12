@@ -12,10 +12,10 @@ import Data.Maybe (Maybe(..))
 import Data.Set (Set)
 import Data.Set as Set
 import Data.String.Common (joinWith)
-import Data.Traversable (traverse)
+import Data.Traversable (sequence, traverse)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
-import Prelude (class Monoid, class Semigroup, class Show, append, bind, map, mempty, pure, show, ($), (<<<), (<>), (>>=))
+import Prelude (class Monoid, class Semigroup, class Show, append, bind, map, mempty, pure, show, ($), (<<<), (<>), (>>=), (*>))
 import Tree (Tree(..))
 
 data Process
@@ -50,7 +50,7 @@ instance showError :: Show Error where
   show (Error string) = "Error: " <> string
   show (Undefined ns) = "Undefined: " <> (joinWith " " $ Array.fromFoldable ns)
 
-newtype Env = Env (Map String Value)
+newtype Env = Env (Map String (EvalResult Value))
 
 instance envMonoid :: Monoid Env where
   mempty = Env mempty
@@ -58,14 +58,17 @@ instance envMonoid :: Monoid Env where
 instance envSemigroup :: Semigroup Env where
   append (Env a) (Env b) = Env $ append a b
 
-insertEnv :: String -> Value -> Env -> Env
+insertEnv :: String -> EvalResult Value -> Env -> Env
 insertEnv name value (Env env) = Env $ Map.insert name value env
 
 unionEnv :: Env -> Env -> Env
 unionEnv (Env a) (Env b) = Env $ Map.union a b
 
-lookupEnv :: String -> Env -> Maybe Value
+lookupEnv :: String -> Env -> Maybe (EvalResult Value)
 lookupEnv name (Env env) = Map.lookup name env
+
+valuesEnv :: Env -> List (EvalResult Value)
+valuesEnv (Env env) = Map.values env
 
 type EvalResult = ReaderT Env (ExceptT Error Trampoline)
 
@@ -77,7 +80,9 @@ evalBlock' env found errors Nil Nil = pure $ Env Map.empty
 evalBlock' env true errors defer Nil = evalBlock' env false Set.empty Nil defer
 evalBlock' env false errors defer Nil = throwError $ Undefined errors
 evalBlock' env found errors defer (car : cdr) = do
-  defs <- catchError (asDefine $ eval $ Tuple env car) \x -> case x of
+  defs <- catchError (do
+      def <- asDefine $ eval $ Tuple env car
+      sequence (valuesEnv def) *> pure def) \x -> case x of
     Undefined names -> evalBlock' env found (Set.union names errors) (car : defer) cdr
     Error string -> throwError $ Error string
   defs' <- evalBlock' (unionEnv defs env) true errors defer cdr
@@ -85,11 +90,11 @@ evalBlock' env found errors defer (car : cdr) = do
 
 eval :: Tuple Env Tree -> EvalResult Value
 eval (Tuple env (SymbolTree name)) = case lookupEnv name env of
-  Just value -> pure value
+  Just value -> value
   Nothing -> do
     globals <- ask
     case lookupEnv name globals of
-      Just value -> pure value
+      Just value -> value
       Nothing -> throwError $ Undefined $ Set.singleton name
 eval (Tuple env (IntTree integer)) = pure $ IntValue integer
 eval (Tuple env (CharTree char)) = pure $ CharValue char
