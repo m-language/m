@@ -4,7 +4,7 @@ import Prelude
 
 import Command (parseAndEvaluate, runCommand, runEvalCommand, runLoadCommand)
 import Control.Monad.Cont (ContT(..), lift, runContT)
-import Control.Monad.State (StateT, put, runStateT)
+import Control.Monad.State (StateT, evalStateT, put)
 import Data.Array as Array
 import Data.Char.Unicode (isSpace)
 import Data.List as List
@@ -68,4 +68,4 @@ main = do
   args <- argv <#> Array.drop 2
   let initialEnv = unsafePartial (special <> io basicIO)
   env <- runLoadCommand (List.fromFoldable args) initialEnv
-  runContT (runStateT (repl interface) env) (pure >>> void)
+  runContT (evalStateT (repl interface) env) pure
