@@ -72,8 +72,8 @@ unionEnv (Env a) (Env b) = Env $ Map.union a b
 lookupEnv :: String -> Env -> Maybe (EvalResult Value)
 lookupEnv name (Env env) = Map.lookup name env
 
-valuesEnv :: Env -> List (EvalResult Value)
-valuesEnv (Env env) = Map.values env
+mapEnv :: (EvalResult Value -> EvalResult Value) -> Env -> Env
+mapEnv f (Env env) = Env $ map f env
 
 type EvalResult = ReaderT Env (ExceptT Error Trampoline)
 

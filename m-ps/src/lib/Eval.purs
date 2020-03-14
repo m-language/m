@@ -4,7 +4,7 @@ import Prelude hiding (apply)
 
 import Control.Alt ((<|>))
 import Control.Monad.Except (Except, catchError, lift, mapExceptT, runExcept, runExceptT, throwError, withExceptT)
-import Control.Monad.Reader (ask, runReaderT)
+import Control.Monad.Reader (ask, local, runReaderT)
 import Control.Monad.Trampoline (done, runTrampoline)
 import Data.Array (index)
 import Data.Array as Array
@@ -24,14 +24,14 @@ import Data.Set (Set)
 import Data.Set as Set
 import Data.String.CodeUnits (fromCharArray)
 import Data.String.Common (joinWith)
-import Data.Traversable (sequence, traverse)
+import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import Data.Typelevel.Num (class Nat, d1, d2, reifyInt, toInt)
 import Data.Vec (Vec)
 import Data.Vec as Vec
 import Effect.Exception (throw)
 import Effect.Unsafe (unsafePerformEffect)
-import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asDefine, asExpr, asInteger, asProcess, asString, lookupEnv, nil, unionEnv, valuesEnv)
+import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asDefine, asExpr, asInteger, asProcess, asString, lookupEnv, nil, unionEnv, mapEnv)
 import Foreign (F, Foreign, MultipleErrors, readArray, readBoolean, readNumber, readString, tagOf, typeOf, unsafeToForeign)
 import Tree (Tree(..))
 import Util (except)
@@ -39,18 +39,15 @@ import Util (except)
 foreign import callForeign :: Foreign -> Array Foreign -> Foreign -> Foreign
 foreign import arity :: (forall a. Maybe a) -> (forall a. a -> Maybe a) -> Foreign -> Maybe Int
 
-
 evalBlock :: Env -> List Tree -> EvalResult Env
-evalBlock env = evalBlock' env false Set.empty Nil
+evalBlock env trees = evalBlock' env false Set.empty Nil trees <#> \env' -> mapEnv (local (unionEnv env')) env'
 
 evalBlock' :: Env -> Boolean -> Set String -> List Tree -> List Tree -> EvalResult Env
 evalBlock' env found errors Nil Nil = pure $ Env Map.empty
 evalBlock' env true errors defer Nil = evalBlock' env false Set.empty Nil defer
 evalBlock' env false errors defer Nil = throwError $ Undefined errors
 evalBlock' env found errors defer (car : cdr) = do
-  defs <- catchError (do
-      def <- asDefine $ eval $ Tuple env car
-      sequence (valuesEnv def) *> pure def) \x -> case x of
+  defs <- catchError (asDefine $ eval $ Tuple env car) \x -> case x of
     Undefined names -> evalBlock' env found (Set.union names errors) (car : defer) cdr
     Error string -> throwError $ Error string
   defs' <- evalBlock' (unionEnv defs env) true errors defer cdr
@@ -128,7 +125,6 @@ macro n f = Macro fn
           apply env (macro n f) (List.take n args) >>= \v ->
             apply env v (List.drop n args)
       | otherwise = f env args
-
 
 mkTrue :: Unit -> Value
 mkTrue _ = functionN d2 \_ -> \vec -> Vec.head vec
