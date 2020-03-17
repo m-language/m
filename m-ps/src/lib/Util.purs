@@ -2,15 +2,18 @@ module Util where
 
 import Prelude
 
-import Control.Monad.Error.Class (class MonadError, throwError)
+import Control.Monad.Error.Class (class MonadThrow, throwError)
 import Control.Monad.Maybe.Trans (MaybeT, runMaybeT)
 import Control.Plus (empty)
+import Data.Char.Unicode (isSpace)
 import Data.Either (Either(..), either)
 import Data.List (List)
 import Data.List as List
 import Data.Maybe (Maybe, fromMaybe, maybe)
-import Data.String (Pattern(..), split)
+import Data.String (Pattern(..), length, split)
+import Data.String.CodeUnits (drop, takeWhile)
 import Data.Traversable (traverse)
+import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Class.Console (logShow)
@@ -20,12 +23,11 @@ import Node.FS.Sync (readdir, stat)
 import Node.Path (FilePath)
 import Node.Path as Path
   
-except :: forall m e a. MonadError e m => e -> Maybe a -> m a
+except :: forall m e a. MonadThrow e m => e -> Maybe a -> m a
 except e v = maybe (throwError e) pure v
 
-exceptEither :: forall m e a. MonadError e m => Either e a -> m a
+exceptEither :: forall m e a. MonadThrow e m => Either e a -> m a
 exceptEither = either (throwError) (pure)
-
 
 words :: String -> Array String
 words = split $ Pattern " "
@@ -39,7 +41,6 @@ doesFileExist :: FilePath -> Effect Boolean
 doesFileExist path = do
   stats <- stat path
   pure $ isFile stats
-
 
 listDirectory :: FilePath -> Effect (List FilePath)
 listDirectory root = readdir root <#> (\paths -> List.fromFoldable $ paths <#> \path -> Path.concat [root, path]) >>= \paths -> do
@@ -62,3 +63,9 @@ throwEffect (Right a) = pure a
 
 runDefault :: forall m a. Monad m => a -> MaybeT m a -> m a
 runDefault a maybeT = runMaybeT maybeT <#> fromMaybe a
+
+break :: String -> Tuple String String
+break s = 
+  let prefix = takeWhile (not isSpace) s
+      postfix = drop (length prefix) s
+  in  Tuple prefix postfix
