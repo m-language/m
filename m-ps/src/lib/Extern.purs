@@ -7,6 +7,7 @@ import Data.Array (fold)
 import Data.Array as Array
 import Data.Foldable (foldM)
 import Data.Map as Map
+import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.Set as Set
 import Data.String (joinWith)
@@ -21,6 +22,8 @@ import Eval.Types (Env(..), Error(..), EvalResult, Value(..), asString)
 import Foreign (Foreign)
 import Foreign.Index ((!))
 import Foreign.Keys (keys)
+import Node.Path (FilePath)
+import Node.Path as Path
 
 foreign import externImpl :: String -> Foreign
 foreign import require :: String -> Effect Foreign
@@ -33,6 +36,15 @@ data ExternError = Conflict (Set.Set String) | Generic String
 instance showExternError :: Show ExternError where
   show (Conflict env) = "(Conflict " <> show env <> ")"
   show (Generic s) = show s
+
+externFile :: FilePath -> Maybe FilePath
+externFile file = 
+  if Path.extname file /= "m"
+  then Nothing
+  else do
+    let dir = Path.dirname file
+    let base = Path.basenameWithoutExt file ".m"
+    pure $ Path.concat [dir, base <> ".js"]
 
 extern' :: (String -> EvalResult Foreign) -> Value
 extern' impl = functionN d1 $ \env -> \symbolValue -> do
