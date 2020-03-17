@@ -5,7 +5,7 @@ import Prelude
 import Control.Monad.Cont (ContT(..), lift, runContT)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.Maybe.Trans (MaybeT)
-import Control.Monad.Reader (ReaderT, ask, runReaderT)
+import Control.Monad.Reader (class MonadAsk, class MonadReader, ReaderT, ask, runReaderT)
 import Control.Monad.State (class MonadState, StateT, evalStateT, get, modify, put)
 import Control.Monad.Trampoline (runTrampoline)
 import Data.Array as Array
@@ -14,7 +14,7 @@ import Data.Either (either)
 import Data.List (List(..))
 import Data.List as List
 import Data.Maybe (Maybe(..))
-import Data.Newtype (class Newtype, unwrap)
+import Data.Newtype (class Newtype)
 import Data.String.CodeUnits as String
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
@@ -61,25 +61,26 @@ derive newtype instance applicativeNodeRepl :: Applicative NodeRepl
 derive newtype instance monadNodeRepl :: Monad NodeRepl
 derive newtype instance monadEffectNodeRepl :: MonadEffect NodeRepl
 derive newtype instance monadStateNodeRepl :: MonadState Env NodeRepl
+derive newtype instance monadAskNodeRepl :: MonadAsk Interface NodeRepl
+derive newtype instance monadReaderNodeRepl :: MonadReader Interface NodeRepl
 
 evalNodeRepl :: forall a. NodeRepl a -> Effect Unit
 evalNodeRepl (NodeRepl n) = do
-  let env = unsafePartial (special <> io basicIO)
+  let env = unsafePartial $ special <> io basicIO
   interface <- createConsoleInterface noCompletion
   runContT (evalStateT (runReaderT n interface) env) $ const $ pure unit
 
 instance replNodeRepl :: Repl NodeRepl where
-  error err = NodeRepl $ liftEffect $ logShow err
-  query prompt = NodeRepl $ do
+  error err = liftEffect $ logShow err
+  query prompt = do
     iface <- ask
-    lift $ lift $ ContT \cont -> question prompt cont iface
-  run (Eval tree) = NodeRepl $ do
+    NodeRepl $ lift $ lift $ ContT \cont -> question prompt cont iface
+  run (Eval tree) = do
     env <- get
-    either logShow (unwrap <<< evaluateResult) $ runTrampoline $ runExceptT $ runReaderT (Eval.eval $ Tuple mempty tree) env
-  run (Print tree) = NodeRepl $ liftEffect $ logShow tree
+    either logShow evaluateResult $ runTrampoline $ runExceptT $ runReaderT (Eval.eval $ Tuple mempty tree) env
+  run (Print tree) = liftEffect $ logShow tree
   run (Load path) = loadFile path
 
-      
 runProcess :: Env -> Process -> MaybeT Effect (EvalResult Value)
 runProcess env (Impure a) = lift $ pure <$> a
 runProcess env (Do process fn) = do
@@ -89,7 +90,7 @@ runProcess env (Do process fn) = do
   runProcess env process'
 
 evaluateResult :: Value -> NodeRepl Unit
-evaluateResult value = NodeRepl $ case value of
+evaluateResult value = case value of
   ProcessValue p ->  do
     env <- get
     liftEffect $ runDefault unit $ void $ runProcess env p

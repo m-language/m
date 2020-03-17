@@ -15,6 +15,3 @@ main = do
   NodeRepl.evalNodeRepl $ do
     for_ args Repl.load
     Repl.repl
-
-
-  
