@@ -3,7 +3,7 @@ module Util where
 import Prelude
 
 import Control.Monad.Error.Class (class MonadError, throwError)
-import Control.Monad.Maybe.Trans (MaybeT, lift, runMaybeT)
+import Control.Monad.Maybe.Trans (MaybeT, runMaybeT)
 import Control.Plus (empty)
 import Data.Either (Either(..), either)
 import Data.List (List)
