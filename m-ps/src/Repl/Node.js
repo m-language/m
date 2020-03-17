@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 // Read a single character from stdin synchronously
-exports.readInputCharImpl = Just => {
+exports.getCharImpl = Just => {
   return Nothing => {
     return () => {
       const buff = Buffer.alloc(1, undefined, "utf-8");

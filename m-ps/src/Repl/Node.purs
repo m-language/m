@@ -39,10 +39,10 @@ import Special (special)
 import Tree (Tree)
 import Util (listFilesWithExtension, printEither, runDefault, throwEffect)
 
-foreign import readInputCharImpl :: (forall a. a -> Maybe a) -> (forall a. Maybe a) -> Effect (Maybe String)
+foreign import getCharImpl :: (forall a. a -> Maybe a) -> (forall a. Maybe a) -> Effect (Maybe String)
 
 getChar :: Effect (Maybe Char)
-getChar = readInputCharImpl Just Nothing <#> \m -> m >>= String.charAt 0
+getChar = getCharImpl Just Nothing <#> \m -> m >>= String.charAt 0
 
 basicIO :: Input
 basicIO = Input
