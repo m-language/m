@@ -63,7 +63,7 @@ basicIO = Input
 
 run :: Interface -> Env -> Array String -> ContT Unit Effect Unit
 run interface env args = evalStateT (do
-    mapStateT liftEffect $ runLoadCommand (List.fromFoldable args)
+    mapStateT liftEffect $ runLoadCommand $ List.fromFoldable args
     repl interface
   ) env
 

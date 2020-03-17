@@ -121,8 +121,8 @@ evaluateResult value = get >>= \env -> case value of
 parseAndEvaluate :: String -> ContT Unit Effect String -> StateT Env (ContT Unit Effect) Unit
 parseAndEvaluate input moreInput = do
   completely <- lift $ parseWithContinuation input moreInput
-  env <- get
   mapStateT liftEffect $ runDefault unit do
+    env <- get
     parsedTree <- printEither completely
     tree <- MaybeT $ pure parsedTree
     resultValue <- printEither $ runTrampoline $ runExceptT $ runReaderT (eval (Tuple mempty tree)) env
