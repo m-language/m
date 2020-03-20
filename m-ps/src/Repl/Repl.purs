@@ -45,8 +45,17 @@ process :: forall m. Repl m => String -> m Unit
 process line = case uncons line of
   Just ({ head: ':', tail: tail  }) -> do
     let (Tuple command expr) = break tail
-    tree <- parse expr
-    maybe (pure unit) (Eval >>> run) tree
+    case command of
+      "eval" -> do
+        tree <- parse expr
+        maybe (pure unit) (Eval >>> run) tree
+      "load" -> do
+        load expr
+      "parse" -> do
+        tree <- parse expr
+        maybe (pure unit) (Print >>> run) tree
+      _ -> do
+        error $ Generic $ "Unknown command " <> command
   _ -> do
     tree <- parse line
     maybe (pure unit) (Eval >>> run) tree
