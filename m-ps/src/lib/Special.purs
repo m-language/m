@@ -3,6 +3,7 @@ module Special where
 import Prelude
 
 import Control.Monad.Except (throwError)
+import Control.Monad.Reader (ask, local)
 import Data.Array as Array
 import Data.BigInt (fromInt)
 import Data.List ((:), List(..), length)
@@ -11,7 +12,7 @@ import Data.Map as Map
 import Data.String.CodeUnits as String
 import Data.Tuple (Tuple(..), curry)
 import Eval (applyFn, eval, evalBlock, function, macro)
-import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asChar, asExpr, asInteger, asString, insertEnv)
+import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asChar, asExpr, asInteger, asString, insertEnv, unionEnv)
 import Tree (Tree(..))
 
 special :: Partial => Env
@@ -42,8 +43,9 @@ getNames expr = throwError $ Error $ "Expected symbol, found " <> show expr
 fn' :: Partial => Env -> List Tree -> EvalResult Value
 fn' closure (argsNames : expr : Nil) = do
   names <- getNames argsNames
+  globalClosure <- ask
   pure $ function (length names) \env args ->
-      fnApply closure names args expr
+      local (unionEnv globalClosure) $ fnApply closure names args expr
 
 fnApply :: Partial => Env -> List String -> List (EvalResult Value) -> Tree -> EvalResult Value
 fnApply closure Nil Nil tree = eval $ Tuple closure tree
@@ -53,8 +55,9 @@ fnApply closure (name : names) (arg : args) tree =
 fm' :: Partial => Env -> List Tree -> EvalResult Value
 fm' closure (argNames : expr : Nil) = do
   names <- getNames argNames
+  globalClosure <- ask
   pure $ macro (length names) \env args ->
-      fmApply env closure names args expr
+      local (unionEnv globalClosure) $ fmApply env closure names args expr
 
 fmApply :: Partial => Env -> Env -> List String -> List Tree -> Tree -> EvalResult Value
 fmApply env closure Nil Nil tree = asExpr (eval (Tuple closure tree)) >>= curry eval env
