@@ -5,6 +5,7 @@ node_js: 12
 install:
   - npm install -g bower purescript pulp
 script:
+  - cd m-ps
   - npm install
   - bower install
   - npm test
