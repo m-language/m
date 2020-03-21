@@ -16,3 +16,18 @@
         car
         ((quote import) cdr)
       }))))
+
+#(Defines a value which is parameterized over any number of modules)
+(defm (def-generic modules name expr)
+  ((quote defn) (name modules)
+    ((quote def) name (name modules)
+      ((quote import) modules expr))))
+
+#(Defines a function which is parameterized over any number of modules)
+(defm (defn-generic modules signature expr)
+  ((expr-ops case) signature
+    ((quote def-generic) signature expr)
+    (error "Nil signature")
+    (fn [name args] 
+      ((quote def-generic) modules name 
+        ((quote fn) args expr)))))

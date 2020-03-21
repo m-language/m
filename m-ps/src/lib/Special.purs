@@ -32,12 +32,11 @@ special = Env $ Map.fromFoldable
 
 getNames :: Tree -> EvalResult (List String)
 getNames (SymbolTree name) = pure $ name : Nil
-getNames (ApplyTree args) = names args
-  where
-    names :: List Tree -> EvalResult (List String)
-    names Nil = pure Nil
-    names ((SymbolTree name) : cdr) = names cdr <#> ((:) name)
-    names expr = throwError $ Error $ "Expected symbol, found " <> show expr
+getNames (ApplyTree Nil) = pure Nil
+getNames (ApplyTree (car : cdr)) = do
+  n1 <- getNames car 
+  n2 <- getNames $ ApplyTree cdr
+  pure $ n1 <> n2
 getNames expr = throwError $ Error $ "Expected symbol, found " <> show expr
 
 fn' :: Partial => Env -> List Tree -> EvalResult Value
