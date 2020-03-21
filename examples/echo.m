@@ -1,5 +1,4 @@
 #(A process which writes stdin to stdout)
-(import process
-  (def echo
-    (cont char stdin
-      (combine (stdout char) echo))))
+(def echo
+  (let-cont char stdin
+    ((process combine) (stdout char) echo)))

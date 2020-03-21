@@ -32,12 +32,11 @@ special = Env $ Map.fromFoldable
 
 getNames :: Tree -> EvalResult (List String)
 getNames (SymbolTree name) = pure $ name : Nil
-getNames (ApplyTree args) = names args
-  where
-    names :: List Tree -> EvalResult (List String)
-    names Nil = pure Nil
-    names ((SymbolTree name) : cdr) = names cdr <#> ((:) name)
-    names expr = throwError $ Error $ "Expected symbol, found " <> show expr
+getNames (ApplyTree Nil) = pure Nil
+getNames (ApplyTree (car : cdr)) = do
+  n1 <- getNames car 
+  n2 <- getNames $ ApplyTree cdr
+  pure $ n1 <> n2
 getNames expr = throwError $ Error $ "Expected symbol, found " <> show expr
 
 fn' :: Partial => Env -> List Tree -> EvalResult Value
@@ -102,6 +101,7 @@ int' = Define $ Env $ Map.fromFoldable
     , Tuple "div" $ pure $ function 3 div'
     , Tuple "lt" $ pure $ function 4 lt'
     , Tuple "gt" $ pure $ function 4 gt'
+    , Tuple "eq" $ pure $ function 4 eq'
     ]
   where
     add' env (a : b : Nil) = do
@@ -133,6 +133,11 @@ int' = Define $ Env $ Map.fromFoldable
       evA <- asInteger a
       evB <- asInteger b
       if evA > evB then t' else f'
+    
+    eq' env (a : b : t' : f' : Nil) = do
+      evA <- asInteger a
+      evB <- asInteger b
+      if evA == evB then t' else f'
 
 char' :: Partial => Value
 char' = Define $ Env $ Map.fromFoldable [ Tuple "eq" $ pure $ function 4 eqChar' ]
