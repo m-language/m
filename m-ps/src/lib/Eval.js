@@ -1,6 +1,6 @@
 exports.callForeign = thisValue => arguments => foreignFunction => {
   if (typeof foreignFunction !== "function") {
-    throw new Error("Expected function, found extern value " + foreignFunction);
+    throw new Error("Expected function, found extern value " + JSON.stringify(foreignFunction));
   }
   return foreignFunction.apply(thisValue, arguments);
 };

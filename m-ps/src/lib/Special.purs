@@ -45,7 +45,7 @@ fn' closure (argsNames : expr : Nil) = do
   names <- getNames argsNames
   globalClosure <- ask
   pure $ function (length names) \env args ->
-      local (unionEnv globalClosure) $ fnApply closure names args expr
+      local (\global -> unionEnv global globalClosure) $ fnApply closure names args expr
 
 fnApply :: Partial => Env -> List String -> List (EvalResult Value) -> Tree -> EvalResult Value
 fnApply closure Nil Nil tree = eval $ Tuple closure tree
@@ -57,7 +57,7 @@ fm' closure (argNames : expr : Nil) = do
   names <- getNames argNames
   globalClosure <- ask
   pure $ macro (length names) \env args ->
-      local (unionEnv globalClosure) $ fmApply env closure names args expr
+      local (\global -> unionEnv global globalClosure) $ fmApply env closure names args expr
 
 fmApply :: Partial => Env -> Env -> List String -> List Tree -> Tree -> EvalResult Value
 fmApply env closure Nil Nil tree = asExpr (eval (Tuple closure tree)) >>= curry eval env

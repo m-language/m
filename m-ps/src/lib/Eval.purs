@@ -40,7 +40,7 @@ foreign import callForeign :: Foreign -> Array Foreign -> Foreign -> Foreign
 foreign import arity :: (forall a. Maybe a) -> (forall a. a -> Maybe a) -> Foreign -> Maybe Int
 
 evalBlock :: Env -> List Tree -> EvalResult Env
-evalBlock env trees = evalBlock' env false Set.empty Nil trees <#> \env' -> mapEnv (local (unionEnv env')) env'
+evalBlock env trees = evalBlock' env false Set.empty Nil trees <#> \env' -> mapEnv (local $ \global -> unionEnv global env') env'
 
 evalBlock' :: Env -> Boolean -> Set String -> List Tree -> List Tree -> EvalResult Env
 evalBlock' env found errors Nil Nil = pure $ Env Map.empty
@@ -189,10 +189,9 @@ marshallFunction fv = if typeOf fv /= "function"
   then throwError $ Nel.singleton $ Generic $ "Expected function, found " <> tagOf fv
   else do
     functionArity <- except (Nel.singleton $ Generic $ "Expected function, found " <> tagOf fv) $ arity Nothing Just fv
-    pure $ reifyInt functionArity \n -> functionN n \env -> \args -> do
+    pure $ reifyInt functionArity \n -> functionN n \env args -> do
       args' <- traverse (\arg -> arg >>= unmarshall env) $ Vec.toArray args
-      let result = callForeign (unsafeToForeign Nullable.null) args' fv
-      pure $ ExternValue result
+      pure $ ExternValue $ callForeign (unsafeToForeign Nullable.null) args' fv
 
 marshall :: Foreign -> MarshallResult Value
 marshall fv = marshallInt fv
