@@ -64,10 +64,12 @@
     
     (defn (concat a b)
       (from-entries (array concat (entries a) (entries b))))
+
+    (defn (copy a) (. (. module "Object" ) "assign" a))
     
     (defn (set o key value)
-      (with o
-        (fn obj (. (. module "Object") "defineProperty" obj key value))))
+      (with (copy o)
+        (fn obj (. (. module "Object") "defineProperty" obj key (of "value" value)))))
   })
 
   (defmodule array {

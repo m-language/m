@@ -1,8 +1,12 @@
-exports.callForeign = thisValue => arguments => foreignFunction => {
-  if (typeof foreignFunction !== "function") {
-    throw new Error("Expected function, found extern value " + JSON.stringify(foreignFunction));
+exports.callForeign = thisValue => arguments => foreignFunction => throwError => pure => {
+  try {
+    if (typeof foreignFunction !== "function") {
+      throw new Error("Expected function, found extern value " + JSON.stringify(foreignFunction));
+    }
+    return pure(foreignFunction.apply(thisValue, arguments));
+  } catch (e) {
+    return throwError(e);
   }
-  return foreignFunction.apply(thisValue, arguments);
 };
 
 exports.arity = None => Just => fn => {
