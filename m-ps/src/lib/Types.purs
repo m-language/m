@@ -48,6 +48,8 @@ instance showValue :: Show Value where
   show (ProcessValue p) = "<process>"
   show (ExternValue f) = "<extern " <> typeOf f <> ">"
 
+derive instance eqError :: Eq Error
+
 instance showError :: Show Error where
   show (Error string) = "Error: " <> string
   show (Undefined ns) = "Undefined: " <> (joinWith " " $ Array.fromFoldable ns)

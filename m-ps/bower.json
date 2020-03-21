@@ -25,7 +25,8 @@
     "purescript-sized-vectors": "^5.0.0",
     "purescript-typelevel": "^6.0.0",
     "purescript-debug": "^4.0.0",
-    "purescript-web-dom": "^4.0.1"
+    "purescript-web-dom": "^4.0.1",
+    "purescript-quickcheck": "^6.1.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"
