@@ -1,7 +1,7 @@
 M Language
 ==========
 
-![travis build](https://travis-ci.com/m-language/m-language.svg?branch=master)
+![travis build](https://travis-ci.com/m-language/m.svg?branch=master)
 
 [The M programming language](https://m-language.github.io/) is a minimal
 language primarily inspired by Lisp and Haskell, designed from the ground up to
