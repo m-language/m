@@ -19,8 +19,8 @@
       ((quote def) name 
         ((quote fn) args expr)))))
 
-#(Macro for applying a value to a continuation)
-(defm (cont names value expr)
+#(Macro for letting a value be the result of a continuation)
+(defm (let-cont names value expr)
   (value ((quote fn) names expr)))
 
 #(The identity function)
@@ -30,10 +30,13 @@
 (defn (const x y) x)
 
 #(Composes two functions)
-(defn (compose f g x) (f (g x)))
+(defn (compose f g x) 
+  (f (g x)))
 
 #(Flips the order of a function's arguments)
-(defn (flip f x y) (f y x))
+(defn (flip f x y) 
+  (f y x))
 
 #(Applies a function to an argument)
-(defn (apply f x) (f x))
+(defn (apply f x) 
+  (f x))

@@ -2,10 +2,10 @@
   applied to the left or right value)
 (defmodule either {
   #(Creates a left either)
-  (defn (left value l r)
+  (defn (left value l r) 
     (l value))
   
   #(Creates a right either)
-  (defn (right value l r)
+  (defn (right value l r) 
     (r value))
 })

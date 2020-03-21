@@ -3,14 +3,14 @@
   value of the pair)
 (defmodule pair {
   #(Creates a pair of two values)
-  (defn (pair first second f)
+  (defn (pair first second f) 
     (f first second))
 
   #(The first value of a pair)
-  (defn (first pair)
+  (defn (first pair) 
     (pair (bool true)))
 
   #(The second value of a pair)
-  (defn (second pair)
+  (defn (second pair) 
     (pair (bool false)))
 })
