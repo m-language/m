@@ -76,6 +76,6 @@
     (defn (from-n-elements n) (foldn n (fn [acc x] (concat acc (of x))) empty))
 
     (defm (from-elements elements)
-      ((quote apply-vararg) (quote (js array from-n-elements) ((quote length) ((quote quote) elements))) elements))
+      ((quote apply-vararg) ((quote from-n-elements) ((quote length) ((quote quote) elements))) elements))
   })
 })
