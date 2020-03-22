@@ -56,16 +56,18 @@ fm' closure (argNames : expr : Nil) = do
   names <- getNames argNames
   globalClosure <- ask
   pure $ macro (length names) \env args ->
-      local (\global -> unionEnv global globalClosure) $ fmApply env closure names args expr
+      (local (\global -> unionEnv global globalClosure) $ fmApply env closure names args expr) >>= curry eval env
 
-fmApply :: Partial => Env -> Env -> List String -> List Tree -> Tree -> EvalResult Value
-fmApply env closure Nil Nil tree = asExpr (eval (Tuple closure tree)) >>= curry eval env
+fmApply :: Partial => Env -> Env -> List String -> List Tree -> Tree -> EvalResult Tree
+fmApply env closure Nil Nil tree = asExpr (eval (Tuple closure tree))
 fmApply env closure (name : names) (arg : args) tree = 
   fmApply env (insertEnv name (pure $ Expr arg) closure) names args tree
 
 def' :: Partial => Env -> List Tree -> EvalResult Value
 def' env (names : expr : Nil) = case names of
-  SymbolTree name -> pure $ Define $ Env $ Map.singleton name $ eval $ Tuple env expr
+  SymbolTree name -> do
+    closure <- ask
+    pure $ Define $ Env $ Map.singleton name $ local (\global -> unionEnv global closure) $ eval $ Tuple env expr
   x -> throwError $ Error $ "Expected symbol, found " <> show x
 
 block' :: Partial => Env -> List Tree -> EvalResult Value
@@ -74,7 +76,7 @@ block' env (exprs : Nil) = case exprs of
   ApplyTree args -> Define <$> evalBlock env args
 
 quote' :: Partial => Env -> List Tree -> EvalResult Value
-quote' env (tree : Nil) = pure $ Expr tree
+quote' env (tree : Nil) = pure $ Expr tree  
 
 error' :: Partial => Env -> List (EvalResult Value) -> EvalResult Value
 error' env (expr : Nil) = asString expr >>= (throwError <<< Error)

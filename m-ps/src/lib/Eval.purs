@@ -19,7 +19,6 @@ import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
-import Data.Nullable as Nullable
 import Data.Set (Set)
 import Data.Set as Set
 import Data.String.CodeUnits (fromCharArray)
@@ -29,15 +28,15 @@ import Data.Tuple (Tuple(..))
 import Data.Typelevel.Num (class Nat, d1, d2, reifyInt, toInt)
 import Data.Vec (Vec)
 import Data.Vec as Vec
+import Effect.Exception (Error) as Js
 import Effect.Exception (message, throw)
 import Effect.Unsafe (unsafePerformEffect)
-import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asDefine, asExpr, asInteger, asProcess, asString, lookupEnv, nil, unionEnv, mapEnv)
+import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asDefine, asExpr, asInteger, asProcess, asString, lookupEnv, mapEnv, nil, unionEnv)
 import Foreign (F, Foreign, MultipleErrors, readArray, readBoolean, readNumber, readString, tagOf, typeOf, unsafeToForeign)
 import Tree (Tree(..))
 import Util (except)
-import Effect.Exception (Error) as Js
 
-foreign import callForeign :: forall m a. Foreign -> Array Foreign -> Foreign -> (Js.Error -> m a) -> (a -> m a) -> m Foreign
+foreign import callForeign :: forall m a. Array Foreign -> Foreign -> (Js.Error -> m a) -> (a -> m a) -> m Foreign
 foreign import arity :: (forall a. Maybe a) -> (forall a. a -> Maybe a) -> Foreign -> Maybe Int
 
 evalBlock :: Env -> List Tree -> EvalResult Env
@@ -90,7 +89,7 @@ applyFn env (ProcessValue process) (map : args) = do
   applyFn env f args
 applyFn env (ExternValue externFn) args = do
   foreignArgs <- traverse (\argument -> argument >>= unmarshall env) $ Array.fromFoldable args
-  result <- callForeign (unsafeToForeign Nullable.null) foreignArgs externFn (\e -> throwError $ Error $ message e) pure
+  result <- callForeign foreignArgs externFn (message >>> Error >>> throwError) pure
   pure $ ExternValue $ result
 applyFn _ x args = throwError $ Error $ "Expected function, found " <> show x
 
@@ -193,7 +192,7 @@ marshallFunction fv = if typeOf fv /= "function"
     functionArity <- except (Nel.singleton $ Generic $ "Expected function, found " <> tagOf fv) $ arity Nothing Just fv
     pure $ reifyInt functionArity \n -> functionN n \env args -> do
       args' <- traverse (\arg -> arg >>= unmarshall env) $ Vec.toArray args
-      result <- callForeign (unsafeToForeign Nullable.null) args' fv (\e -> throwError $ Error $ message e) pure
+      result <- callForeign args' fv (message >>> Error >>> throwError) pure
       pure $ ExternValue $ result
 
 marshall :: Foreign -> MarshallResult Value
@@ -216,5 +215,5 @@ unmarshall foreignEnv p@(ProcessValue _) = unmarshall foreignEnv $ functionN d1 
 unmarshall foreignEnv (Function fn) = ask <#> \env' -> unsafeToForeign \(arg :: Foreign) ->
   let result = runTrampoline $ runExceptT $ runReaderT (fn foreignEnv (List.singleton $ pure $ ExternValue arg)) env' in
   let output = result >>= \returnValue -> runTrampoline $ runExceptT $ runReaderT (unmarshall foreignEnv returnValue) env' in
-  unsafePerformEffect $ either (show >>> throw) (\value -> throw $ "Unable to unmarshall " <> typeOf value) output
+  unsafePerformEffect $ either (show >>> throw) (\v -> pure $ ExternValue v) output
 unmarshall _ arg = throwError $ Error $ "Expected primitive value, found " <> show arg

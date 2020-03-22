@@ -11,14 +11,7 @@
   (def null (. module "null"))
   (def undefined (. module "undefined"))
 
-  # Apply a function to a value, then return the value
   (def with (. module "with"))
-
-  # a.bind(b)
-  (def bind (. module "bind"))
-
-  # o.method.bind(o) 
-  (defn (invoke object method) (bind (. object method) object))
 
   # a.apply(b, c)
   (def apply (. module "apply"))
@@ -26,14 +19,14 @@
   # a.apply(b, [])
   (defn (force f this) (apply f this (array empty)))
 
+    # a.bind(b)
+  (defn (bind a b) (apply (. a "bind") a (array of b)))
+
+  # o.method.bind(o) 
+  (defn (invoke object method) (bind (. object method) object))
+
    # Create an instance of an object from a constructor
   (defn (new constructor) (bind constructor (object create (prototype constructor))))
-
-  # Make sure n arguments are supplied before invoking the function
-  (defn (partial n value)
-    (int gt n 1
-      (fn arg (partial (int sub n 1) (bind value null arg)))
-      (fn arg (apply value null (array of arg)))))
 
   (defmodule console {
     (def log (. (. module "console") "log"))
@@ -79,5 +72,10 @@
     (defn (concat a b) (invoke a "concat" b))
     (defn (copy arr) (force (invoke arr "slice") null))
     (defn (push array value) (with (copy array) (fn arr (invoke arr "push" value))))
+
+    (defn (from-n-elements n) (foldn n (fn [acc x] (concat acc (of x))) empty))
+
+    (defm (from-elements elements)
+      ((quote apply-vararg) (quote (js array from-n-elements) ((quote length) ((quote quote) elements))) elements))
   })
 })
