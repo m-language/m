@@ -33,7 +33,7 @@ class MonadError e m <= Repl e m | m -> e where
   run :: ReplCommand -> m Unit
 
 more :: forall m e. Repl e m => m String
-more = query ".. "
+more = query ".. " <#> append "\n"
 
 input :: forall m e. Repl e m => m String
 input = query "M> "
