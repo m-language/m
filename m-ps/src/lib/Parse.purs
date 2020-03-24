@@ -27,9 +27,9 @@ instance showParsingError :: Show ParsingError where
 
 incremental :: forall m s a. StringLike s => Semigroup s => Monad m => m s -> P.ParserT s m a -> P.ParserT s m a
 incremental more incrementalParser = do
-  (P.ParseState previous _ _) <- get
+  (P.ParseState previous position _) <- get
   catchError (try incrementalParser) \e -> do
-    (P.ParseState leftOver position consumed) <- get
+    (P.ParseState leftOver _ consumed) <- get
     if null leftOver
       then do
         extra <- lift $ more
