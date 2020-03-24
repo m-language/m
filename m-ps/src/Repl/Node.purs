@@ -3,7 +3,8 @@ module Repl.Node where
 import Prelude
 
 import Control.Monad.Cont (ContT(..), lift, runContT)
-import Control.Monad.Except (runExceptT)
+import Control.Monad.Error.Class (class MonadThrow, throwError, try)
+import Control.Monad.Except (class MonadError, ExceptT, runExceptT)
 import Control.Monad.Maybe.Trans (MaybeT)
 import Control.Monad.Reader (class MonadAsk, class MonadReader, ReaderT, ask, runReaderT)
 import Control.Monad.State (class MonadState, StateT, evalStateT, get, modify, put)
@@ -21,6 +22,8 @@ import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Class.Console (log, logShow)
+import Effect.Exception (Error) as Js
+import Effect.Exception (message, throwException)
 import Eval as Eval
 import Eval.Types (Env, EvalResult, Process(..), Value(..), unionEnv)
 import Extern (loadExternal)
@@ -51,7 +54,7 @@ basicIO = Input
   where
     putChar = \char -> void $ Stream.writeString stdout UTF8 (String.singleton char) (pure unit)
 
-newtype NodeRepl a = NodeRepl (ReaderT Interface (StateT Env (ContT Unit Effect)) a)
+newtype NodeRepl a = NodeRepl (ReaderT Interface (StateT Env (ExceptT Js.Error (ContT Unit Effect))) a)
 
 derive instance newtypeNodeRepl :: Newtype (NodeRepl a) _
 derive newtype instance functorNodeRepl :: Functor NodeRepl
@@ -63,18 +66,26 @@ derive newtype instance monadEffectNodeRepl :: MonadEffect NodeRepl
 derive newtype instance monadStateNodeRepl :: MonadState Env NodeRepl
 derive newtype instance monadAskNodeRepl :: MonadAsk Interface NodeRepl
 derive newtype instance monadReaderNodeRepl :: MonadReader Interface NodeRepl
+derive newtype instance monadErrorNodeRepl :: MonadError Js.Error NodeRepl
+derive newtype instance monadThrowNodeRepl :: MonadThrow Js.Error NodeRepl
+
+tryEffect :: forall a. Effect a -> NodeRepl a
+tryEffect a = do
+  action <- liftEffect $ try a
+  either throwError pure action
 
 evalNodeRepl :: forall a. NodeRepl a -> Effect Unit
 evalNodeRepl (NodeRepl n) = do
   let env = unsafePartial $ special <> io basicIO
   interface <- createConsoleInterface noCompletion
-  runContT (evalStateT (runReaderT n interface) env) $ const $ pure unit
+  runContT (runExceptT (evalStateT (runReaderT n interface) env)) $ either (throwException) (const $ pure unit)
 
-instance replNodeRepl :: Repl NodeRepl where
+instance replNodeRepl :: Repl Js.Error NodeRepl where
+  error (Native err) = liftEffect $ log $ message err
   error err = liftEffect $ logShow err
   query prompt = do
     iface <- ask
-    NodeRepl $ lift $ lift $ ContT \cont -> question prompt cont iface
+    NodeRepl $ lift $ lift $ lift $ ContT \cont -> question prompt cont iface
   run (Eval tree) = do
     env <- get
     either logShow evaluateResult $ runTrampoline $ runExceptT $ runReaderT (Eval.eval $ Tuple mempty tree) env
@@ -93,7 +104,7 @@ evaluateResult :: Value -> NodeRepl Unit
 evaluateResult value = case value of
   ProcessValue p ->  do
     env <- get
-    liftEffect $ runDefault unit $ void $ runProcess env p
+    tryEffect $ runDefault unit $ void $ runProcess env p
     log ""
     put env
   Define defs -> modify (unionEnv defs) *> pure unit
@@ -102,22 +113,22 @@ evaluateResult value = case value of
 loadFile :: FilePath -> NodeRepl Unit
 loadFile path = do
   trees <- parseFiles path
-  jsFiles <- liftEffect $ listFilesWithExtension ".js" path
-  extern <- liftEffect $ runExceptT $ loadExternal $ Array.fromFoldable jsFiles
+  jsFiles <- tryEffect $ listFilesWithExtension ".js" path
+  extern <- tryEffect $ runExceptT $ loadExternal $ Array.fromFoldable jsFiles
   either logShow (\externEnv -> do
     env <- get
     let env' = unionEnv env externEnv
-    evaluated <- liftEffect $ throwEffect $ runTrampoline $ runExceptT $ runReaderT (Eval.evalBlock mempty trees) env'
+    evaluated <- tryEffect $ throwEffect $ runTrampoline $ runExceptT $ runReaderT (Eval.evalBlock mempty trees) env'
     put $ unionEnv evaluated env'
   ) extern
 
 parseFile :: FilePath -> NodeRepl (List Tree)
 parseFile name = do
-  chars <- liftEffect $ readTextFile UTF8 name
+  chars <- tryEffect $ readTextFile UTF8 name
   Repl.handle Nil $ lmap (show >>> Generic) $ parseProgram name chars
 
 parseFiles :: FilePath -> NodeRepl (List Tree)
 parseFiles path = do
-  mfiles <- liftEffect $ listFilesWithExtension ".m" path
+  mfiles <- tryEffect $ listFilesWithExtension ".m" path
   parsed <- traverse parseFile mfiles
   pure $ List.concat parsed

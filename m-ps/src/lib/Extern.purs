@@ -34,7 +34,7 @@ foreign import hasProperty :: Foreign -> String -> Boolean
 data ExternError = Conflict (Set.Set String) | Generic String
 
 instance showExternError :: Show ExternError where
-  show (Conflict env) = "(Conflict " <> show env <> ")"
+  show (Conflict env) = "(Conflict (" <> (joinWith ", " $ Array.fromFoldable $ Set.map show env) <> "))"
   show (Generic s) = show s
 
 externFile :: FilePath -> Maybe FilePath

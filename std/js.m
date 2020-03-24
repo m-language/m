@@ -71,7 +71,7 @@
     (defn (of value) ((. (. module "Array") "of") value))
     (defn (concat a b) (invoke a "concat" b))
     (defn (copy arr) (force (invoke arr "slice") null))
-    (defn (push array value) (with (copy array) (fn arr (invoke arr "push" value))))
+    (defn (append array value) (with (copy array) (fn arr (invoke arr "push" value))))
 
     (defn (from-n-elements n) (foldn n (fn [acc x] (concat acc (of x))) empty))
 
