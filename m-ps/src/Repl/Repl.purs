@@ -54,12 +54,12 @@ process line = case uncons line of
     case command of
       "eval" -> do
         tree <- parse expr
-        maybe (pure unit) (Eval >>> run) tree
+        maybe (pure unit) (Eval >>> runCommand) tree
       "load" -> do
         load $ drop 1 expr
       "parse" -> do
         tree <- parse expr
-        maybe (pure unit) (Print >>> run) tree
+        maybe (pure unit) (Print >>> runCommand) tree
       _ -> do
         error $ Generic $ "Unknown command " <> command
   _ -> do
