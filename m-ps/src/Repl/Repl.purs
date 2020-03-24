@@ -64,7 +64,7 @@ process line = case uncons line of
         error $ Generic $ "Unknown command " <> command
   _ -> do
     tree <- parse line
-    maybe (pure unit) (Eval >>> run) tree
+    maybe (pure unit) (Eval >>> runCommand) tree
 
 handle :: forall m a e. Repl e m => a -> Either (ReplError e) a -> m a
 handle default result = either (\err -> error err *> pure default) pure result
