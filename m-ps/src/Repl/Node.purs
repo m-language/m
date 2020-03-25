@@ -11,10 +11,10 @@ import Control.Monad.State (class MonadState, StateT, evalStateT, get, modify, p
 import Control.Monad.Trampoline (runTrampoline)
 import Data.Array as Array
 import Data.Bifunctor (lmap)
-import Data.Either (either)
+import Data.Either (Either(..), either)
 import Data.List (List(..))
 import Data.List as List
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (class Newtype)
 import Data.String.CodeUnits as String
 import Data.Traversable (traverse)
@@ -26,7 +26,7 @@ import Effect.Exception (Error) as Js
 import Effect.Exception (message, throwException)
 import Eval as Eval
 import Eval.Types (Env, EvalResult, Process(..), Value(..), unionEnv)
-import Extern (loadExternal)
+import Extern (externFile, loadExternal)
 import IO (Input(..), io)
 import Node.Encoding (Encoding(..))
 import Node.FS.Sync (readTextFile)
@@ -40,7 +40,7 @@ import Repl (class Repl, ReplCommand(..), ReplError(..))
 import Repl as Repl
 import Special (special)
 import Tree (Tree)
-import Util (listFilesWithExtension, printEither, runDefault, throwEffect)
+import Util (doesFileExist, listFilesWithExtension, printEither, runDefault, throwEffect)
 
 foreign import getCharImpl :: (forall a. a -> Maybe a) -> (forall a. Maybe a) -> Effect (Maybe String)
 
@@ -70,15 +70,15 @@ derive newtype instance monadErrorNodeRepl :: MonadError Js.Error NodeRepl
 derive newtype instance monadThrowNodeRepl :: MonadThrow Js.Error NodeRepl
 
 tryEffect :: forall a. Effect a -> NodeRepl a
-tryEffect a = do
-  action <- liftEffect $ try a
-  either throwError pure action
+tryEffect eff = do
+  result <- liftEffect $ try eff
+  either throwError pure result
 
 evalNodeRepl :: forall a. NodeRepl a -> Effect Unit
 evalNodeRepl (NodeRepl n) = do
   let env = unsafePartial $ special <> io basicIO
   interface <- createConsoleInterface noCompletion
-  runContT (runExceptT (evalStateT (runReaderT n interface) env)) $ either (throwException) (const $ pure unit)
+  runContT (runExceptT (evalStateT (runReaderT n interface) env)) $ either throwException (const $ pure unit)
 
 instance replNodeRepl :: Repl Js.Error NodeRepl where
   error (Native err) = liftEffect $ log $ message err
@@ -112,15 +112,24 @@ evaluateResult value = case value of
 
 loadFile :: FilePath -> NodeRepl Unit
 loadFile path = do
-  trees <- parseFiles path
-  jsFiles <- tryEffect $ listFilesWithExtension ".js" path
-  extern <- tryEffect $ runExceptT $ loadExternal $ Array.fromFoldable jsFiles
+  isFile <- tryEffect $ doesFileExist path
+  Tuple extern trees <- if isFile
+    then do
+      tree <- parseFile path
+      extern <- tryEffect $ maybe (pure $ Right mempty) (Array.singleton >>> loadExternal >>> runExceptT) $ externFile path
+      pure $ Tuple extern tree
+    else do
+      tree <- parseFiles path
+      jsFiles <- tryEffect $ listFilesWithExtension ".js" path
+      extern <- tryEffect $ runExceptT $ loadExternal $ Array.fromFoldable jsFiles
+      pure $ Tuple extern tree
   either logShow (\externEnv -> do
     env <- get
     let env' = unionEnv env externEnv
     evaluated <- tryEffect $ throwEffect $ runTrampoline $ runExceptT $ runReaderT (Eval.evalBlock mempty trees) env'
     put $ unionEnv evaluated env'
   ) extern
+  
 
 parseFile :: FilePath -> NodeRepl (List Tree)
 parseFile name = do
