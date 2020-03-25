@@ -8,7 +8,7 @@ import Control.Monad.Reader (ReaderT)
 import Control.Monad.Trampoline (Trampoline)
 import Data.Array as Array
 import Data.BigInt (BigInt, toString)
-import Data.List (List(..))
+import Data.List (List)
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe)
@@ -16,7 +16,7 @@ import Data.Set (Set)
 import Data.String (joinWith)
 import Effect (Effect)
 import Foreign (Foreign, typeOf)
-import Tree (Tree(..))
+import Tree (Tree)
 
 data Process
   = Impure (Effect Value)
@@ -55,7 +55,7 @@ instance showError :: Show Error where
   show (Undefined ns) = "Undefined: " <> (joinWith " " $ Array.fromFoldable ns)
 
 nil :: Value
-nil = Expr $ ApplyTree Nil
+nil = Define $ Env Map.empty
 
 newtype Env = Env (Map String (EvalResult Value))
 

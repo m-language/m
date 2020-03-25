@@ -10,6 +10,7 @@ import Data.List ((:), List(..), length)
 import Data.List as List
 import Data.Map as Map
 import Data.String.CodeUnits as String
+import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..), curry)
 import Eval (applyFn, eval, evalBlock, function, macro)
 import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asChar, asExpr, asInteger, asString, insertEnv, unionEnv)
@@ -31,20 +32,18 @@ special = Env $ Map.fromFoldable
     ]
 
 getNames :: Tree -> EvalResult (List String)
-getNames (SymbolTree name) = pure $ name : Nil
-getNames (ApplyTree Nil) = pure Nil
-getNames (ApplyTree (car : cdr)) = do
-  n1 <- getNames car 
-  n2 <- getNames $ ApplyTree cdr
-  pure $ n1 <> n2
-getNames expr = throwError $ Error $ "Expected symbol, found " <> show expr
+getNames (SymbolTree name) = pure $ List.singleton name
+getNames (ListTree trees) = List.concat <$> traverse getNames trees
+getNames tree = throwError $ Error $ "Expected list, found " <> show tree
 
 fn' :: Partial => Env -> List Tree -> EvalResult Value
 fn' closure (argsNames : expr : Nil) = do
   names <- getNames argsNames
   globalClosure <- ask
-  pure $ function (length names) \env args ->
-      local (\global -> unionEnv global globalClosure) $ fnApply closure names args expr
+  case names of
+    Nil -> eval $ Tuple closure expr
+    list -> pure $ function (length names) \env args ->
+        local (\global -> unionEnv global globalClosure) $ fnApply closure names args expr
 
 fnApply :: Partial => Env -> List String -> List (EvalResult Value) -> Tree -> EvalResult Value
 fnApply closure Nil Nil tree = eval $ Tuple closure tree
@@ -55,11 +54,13 @@ fm' :: Partial => Env -> List Tree -> EvalResult Value
 fm' closure (argNames : expr : Nil) = do
   names <- getNames argNames
   globalClosure <- ask
-  pure $ macro (length names) \env args ->
-      (local (\global -> unionEnv global globalClosure) $ fmApply env closure names args expr) >>= curry eval env
+  case names of
+    Nil -> eval $ Tuple closure expr
+    list -> pure $ macro (length names) \env args ->
+        (local (\global -> unionEnv global globalClosure) $ fmApply env closure names args expr) >>= curry eval env
 
 fmApply :: Partial => Env -> Env -> List String -> List Tree -> Tree -> EvalResult Tree
-fmApply env closure Nil Nil tree = asExpr (eval (Tuple closure tree))
+fmApply env closure Nil Nil tree = asExpr $ eval $ Tuple closure tree
 fmApply env closure (name : names) (arg : args) tree = 
   fmApply env (insertEnv name (pure $ Expr arg) closure) names args tree
 
@@ -71,9 +72,8 @@ def' env (names : expr : Nil) = case names of
   x -> throwError $ Error $ "Expected symbol, found " <> show x
 
 block' :: Partial => Env -> List Tree -> EvalResult Value
-block' env (exprs : Nil) = case exprs of
-  SymbolTree name -> eval $ Tuple env $ SymbolTree name
-  ApplyTree args -> Define <$> evalBlock env args
+block' env ((ListTree trees) : Nil) = Define <$> evalBlock env trees
+block' env (tree : Nil) = throwError $ Error $ "Expected list, found " <> show tree
 
 quote' :: Partial => Env -> List Tree -> EvalResult Value
 quote' env (tree : Nil) = pure $ Expr tree  
@@ -87,12 +87,20 @@ impure' env (val : Nil) = ProcessValue <<< Impure <<< pure <$> val
 expr' :: Partial => Value
 expr' = Define $ Env $ Map.fromFoldable [ Tuple "case" $ pure $ function 4 case' ]
   where
-    case' env (expr : sym : nil : ap : Nil) = asExpr expr >>= doCase
+    case' env (expr : sym : ap : list : Nil) = asExpr expr >>= doCase
       where
-        doCase (ApplyTree Nil) = nil
-        doCase (ApplyTree (fn : args)) = do
+        doCase (ApplyTree fn arg) = do
           evAp <- ap
-          applyFn env evAp $ List.fromFoldable [ pure $ Expr fn, pure $ Expr $ ApplyTree args ]
+          applyFn env evAp $ List.fromFoldable [ pure $ Expr fn, pure $ Expr arg ]
+        doCase (ListTree trees) = do
+          evList <- list
+          applyFn env evList $ List.fromFoldable [ pure $ function 2 $ listCase' trees ]
+            where
+              listCase' :: Partial => List Tree -> Env -> List (EvalResult Value) -> EvalResult Value
+              listCase' Nil env' (nil : cons : Nil) = nil
+              listCase' (car : cdr) env' (nil : cons : Nil) = do
+                evCons <- cons
+                applyFn env' evCons $ List.fromFoldable [ pure $ Expr car, pure $ Expr $ ListTree cdr ]
         doCase _ = sym
 
 int' :: Partial => Value

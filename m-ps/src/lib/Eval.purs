@@ -6,12 +6,11 @@ import Control.Alt ((<|>))
 import Control.Monad.Except (Except, catchError, lift, mapExceptT, runExcept, runExceptT, throwError, withExceptT)
 import Control.Monad.Reader (ask, local, runReaderT)
 import Control.Monad.Trampoline (done, runTrampoline)
-import Data.Array (index)
 import Data.Array as Array
 import Data.BigInt (fromInt, fromNumber, toNumber)
 import Data.Either (either)
 import Data.Int (fromNumber) as Int
-import Data.List (List(..), null, singleton, (:))
+import Data.List (List(..), (:))
 import Data.List as List
 import Data.List.Lazy.NonEmpty as Nel
 import Data.List.Lazy.Types (NonEmptyList)
@@ -31,7 +30,7 @@ import Data.Vec as Vec
 import Effect.Exception (Error) as Js
 import Effect.Exception (message, throw)
 import Effect.Unsafe (unsafePerformEffect)
-import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asDefine, asExpr, asInteger, asProcess, asString, lookupEnv, mapEnv, nil, unionEnv)
+import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asDefine, asExpr, asInteger, asProcess, asString, lookupEnv, mapEnv, unionEnv)
 import Foreign (F, Foreign, MultipleErrors, readArray, readBoolean, readNumber, readString, tagOf, typeOf, unsafeToForeign)
 import Tree (Tree(..))
 import Util (except)
@@ -50,7 +49,7 @@ evalBlock' env found errors defer (car : cdr) = do
   defs <- catchError (asDefine $ eval $ Tuple env car) \x -> case x of
     Undefined names -> evalBlock' env found (Set.union names errors) (car : defer) cdr
     Error string -> throwError $ Error string
-  defs' <- evalBlock' (unionEnv defs env) true errors defer cdr
+  defs' <- local (\global -> unionEnv global env) $ evalBlock' (unionEnv defs env) true errors defer cdr
   pure $ unionEnv defs defs'
 
 eval :: Tuple Env Tree -> EvalResult Value
@@ -64,10 +63,12 @@ eval (Tuple env (SymbolTree name)) = case lookupEnv name env of
 eval (Tuple env (IntTree integer)) = pure $ IntValue integer
 eval (Tuple env (CharTree char)) = pure $ CharValue char
 eval (Tuple env (StringTree string)) = pure $ StringValue string
-eval (Tuple env (ApplyTree Nil)) = pure nil
-eval (Tuple env (ApplyTree (fn : args))) = do
+eval (Tuple env (ApplyTree fn arg)) = do
   f <- eval $ Tuple env fn
-  apply env f args
+  apply env f $ List.singleton arg
+eval (Tuple env (ListTree trees)) = do
+  exprs <- traverse (asExpr <<< eval <<< Tuple env) trees
+  pure $ Expr $ ListTree exprs
 
 apply :: Env -> Value -> List Tree -> EvalResult Value
 apply env f Nil = pure f
@@ -75,9 +76,9 @@ apply env (Macro f) args = f env args
 apply env (Define defs) (arg : args) = do
   f <- eval $ Tuple (unionEnv env defs) arg
   apply env f args
-apply env (Expr tree) args = do
-  evArgs <- traverse (asExpr <<< eval) $ map (Tuple env) args
-  pure $ Expr $ if null evArgs then tree else ApplyTree $ tree : evArgs
+apply env (Expr tree) (arg : args) = do
+  evArg <- asExpr $ eval $ Tuple env arg
+  apply env (Expr $ ApplyTree tree evArg) args
 apply env x args = applyFn env x $ map eval $ map (Tuple env) args
 
 applyFn :: Env -> Value -> List (EvalResult Value) -> EvalResult Value
@@ -85,7 +86,7 @@ applyFn _ f Nil = pure f
 applyFn env (Function f) args = f env args
 applyFn env (ProcessValue process) (map : args) = do
   evMap <- map
-  let f = ProcessValue $ Do process \arg -> asProcess $ applyFn env evMap $ singleton $ pure arg
+  let f = ProcessValue $ Do process \arg -> asProcess $ applyFn env evMap $ List.singleton $ pure arg
   applyFn env f args
 applyFn env (ExternValue externFn) args = do
   foreignArgs <- traverse (\argument -> argument >>= unmarshall env) $ Array.fromFoldable args
@@ -174,7 +175,7 @@ marshallArray fv = do
       mkArray fa = traverse marshall fa <#> \elements -> 
         mkPair (IntValue $ fromInt $ Array.length elements) $ functionN d1 \_ -> \arrayIndex -> do
           n <- asInteger (Vec.head arrayIndex) <#> toNumber
-          let result = Int.fromNumber n >>= index elements
+          let result = Int.fromNumber n >>= Array.index elements
           except (Error $ "Expected number [0, " <> (show $ Array.length elements) <> "), found " <> show n) result
 
 marshallBoolean :: Foreign -> MarshallResult Value

@@ -1,23 +1,39 @@
 #(Generic definitions which are standard enough to leave at the top level)
 
 #(Macro for defining macros)
-(def defm
-  (fm [signature expr]
-    ((expr-ops case) signature
-      ((quote def) signature expr)
-      (error "Nil signature")
-      (fn [name args] 
-        ((quote def) name 
-          ((quote fm) args expr))))))
+(def deffm 
+  (fm [name args expr]
+    ((quote def) name 
+      ((quote fm) args expr))))
 
 #(Macro for defining functions)
+(deffm deffn [name args expr]
+  ((quote def) name
+    ((quote fn) args expr)))
+
+#(The function of an expression)
+(deffn expr-function expr
+  ((expr-ops case) expr expr 
+    (fn [f a] (expr-function f))
+    (error "Expected apply, found list")))
+
+#(The arguments of an expression)
+(def expr-args (expr-args-acc []))
+
+(deffn expr-args-acc [acc expr]
+  ((expr-ops case) expr acc
+    (fn [f a] (expr-args-acc [a acc] f))
+    (error "Expected apply, found list")))
+
+#(Syntax sugar for deffm)
+(deffm defm [signature expr]
+  ((quote def) (expr-function signature)
+    ((quote fm) (expr-args signature) expr)))
+
+#(Syntax sugar for deffn)
 (defm (defn signature expr)
-  ((expr-ops case) signature
-    ((quote def) signature expr)
-    (error "Nil signature")
-    (fn [name args] 
-      ((quote def) name 
-        ((quote fn) args expr)))))
+  ((quote def) (expr-function signature)
+    ((quote fn) (expr-args signature) expr)))
 
 #(Macro for letting a value be the result of a continuation)
 (defm (let-cont names value expr)

@@ -1,5 +1,4 @@
-#(A simple module system which supports importing and exporting, where 
-  (defmodule) defines a module and (import) imports it)
+#(A simple module system which uses block)
 
 #(Defines a module given a signature and a list of definitions)
 (defm (defmodule signature defs)
@@ -8,26 +7,24 @@
 
 #(Imports a list of modules)
 (defm (import imports)
-  ((expr-ops case) imports
-    imports
-    ((quote block) {})
-    (fn [car cdr] 
-      ((quote block) {
-        car
-        ((quote import) cdr)
-      }))))
+  ((expr-ops case) imports imports
+    (error "Expected list, found apply")
+    (fn list
+      (list
+        ((quote block) {})
+        (fn [car cdr]
+          ((quote block) {
+            car
+            ((quote import) cdr)
+          }))))))
 
-#(Defines a value which is parameterized over any number of modules)
-(defm (def-generic modules name expr)
-  ((quote defn) (name modules)
-    ((quote def) name (name modules)
-      ((quote import) modules expr))))
+#(Defines a value which is parameterized over a module)
+(defm (def-generic module name expr)
+  ((quote defn) (name module)
+    ((quote def) name (name module)
+      ((quote import) module expr))))
 
-#(Defines a function which is parameterized over any number of modules)
-(defm (defn-generic modules signature expr)
-  ((expr-ops case) signature
-    ((quote def-generic) signature expr)
-    (error "Nil signature")
-    (fn [name args] 
-      ((quote def-generic) modules name 
-        ((quote fn) args expr)))))
+#(Defines a function which is parameterized over a module)
+(defm (defn-generic module signature expr)
+  ((quote def-generic) module (expr-function signature)
+    ((quote fn) (expr-args signature) expr)))

@@ -1,7 +1,5 @@
 module Parse where
 
-import Prelude
-
 import Control.Alternative ((<|>))
 import Control.Monad.Error.Class (catchError, throwError)
 import Control.Monad.State (get, lift, put)
@@ -9,9 +7,10 @@ import Data.Array (many, some)
 import Data.Bifunctor (lmap)
 import Data.BigInt (fromString)
 import Data.Either (Either)
-import Data.List (List, fromFoldable)
+import Data.List (List, foldl, fromFoldable)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String.CodeUnits (fromCharArray, toCharArray, singleton)
+import Prelude (class Monad, class Semigroup, class Show, Unit, bind, discard, map, pure, show, unit, void, ($), (*>), (<#>), (<*), (<>))
 import Text.Parsing.Parser (ParseError, fail, runParser)
 import Text.Parsing.Parser (ParseState(..), Parser, ParserT) as P
 import Text.Parsing.Parser.Combinators (option, skipMany, try)
@@ -44,7 +43,7 @@ lineCommentTail = void $ many $ noneOf [ '\n' ]
 blockCommentTail :: Parser Unit
 blockCommentTail = do
   void $ char '('
-  void $ many (blockCommentTail <|> void (noneOf [ '(', ')' ]))
+  void $ many $ blockCommentTail <|> void (noneOf [ '(', ')' ])
   void $ char ')'
 
 comment :: Parser Unit
@@ -95,27 +94,39 @@ parseInteger = do
   sign <- option "" $ string "-"
   number <- some digit <#> fromCharArray
   ignored
-  result <- fromMaybe (fail "Invalid number") (map pure (fromString (sign <> number)))
+  result <- fromMaybe (fail "Invalid number") $ map pure $ fromString $ sign <> number
   pure $ IntTree result
 
-parseList :: Char -> Char -> Parser Tree
-parseList open close = do
-  void $ char open
+parseApply :: Parser Tree
+parseApply = do
+  void $ char '('
   ignored
-  args <- many (parseAtom unit)
-  void $ char close
+  fn <- parseAtom unit
+  args <- many $ parseAtom unit
+  void $ char ')'
   ignored
-  pure $ ApplyTree (fromFoldable args)
+  pure $ foldl ApplyTree fn args
+
+parseList :: Parser Tree
+parseList = do
+  void $ char '['
+  ignored
+  args <- many $ parseAtom unit
+  void $ char ']'
+  ignored
+  pure $ ListTree $ fromFoldable args
+
+parseBlock :: Parser Tree
+parseBlock = do
+  void $ char '{'
+  ignored
+  args <- many $ parseAtom unit
+  void $ char '}'
+  ignored
+  pure $ ListTree $ fromFoldable args
 
 parseAtom :: Unit -> Parser Tree
-parseAtom more =
-  parseSymbol
-    <|> parseChar
-    <|> parseString
-    <|> parseInteger
-    <|> parseList '(' ')'
-    <|> parseList '[' ']'
-    <|> parseList '{' '}'
+parseAtom more = parseSymbol <|> parseChar <|> parseString <|> parseInteger <|> parseApply <|> parseList <|> parseBlock
 
 parseAll :: Parser (List Tree)
 parseAll = (((ignored *> many (parseAtom unit)) <#> fromFoldable) <* ignored <* eof)

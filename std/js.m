@@ -19,13 +19,13 @@
   # a.apply(b, [])
   (defn (force f this) (apply f this (array empty)))
 
-    # a.bind(b)
+  # a.bind(b)
   (defn (bind a b) (apply (. a "bind") a (array of b)))
 
   # o.method.bind(o) 
   (defn (invoke object method) (bind (. object method) object))
 
-   # Create an instance of an object from a constructor
+  # Create an instance of an object from a constructor
   (defn (new constructor) (bind constructor (object create (prototype constructor))))
 
   (defmodule console {
@@ -47,8 +47,7 @@
     (def empty (from-entries (array empty)))
     
     (defn (from-entries entries)
-      (. (. module "Object") 
-         "fromEntries" entries))
+      (. (. module "Object") "fromEntries" entries))
     
     (defn (entries o) (. (. module "Object") "entries" o))
     
@@ -72,10 +71,5 @@
     (defn (concat a b) (invoke a "concat" b))
     (defn (copy arr) (force (invoke arr "slice") null))
     (defn (append array value) (with (copy array) (fn arr (invoke arr "push" value))))
-
-    (defn (from-n-elements n) (foldn n (fn [acc x] (concat acc (of x))) empty))
-
-    (defm (from-elements elements)
-      ((quote apply-vararg) ((quote from-n-elements) ((quote length) ((quote quote) elements))) elements))
   })
 })
