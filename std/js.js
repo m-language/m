@@ -1,5 +1,5 @@
 module.exports = {
-  index: (o, k) => o[k],
+  index: o => k => o[k],
   js: {
     Number: Number,
     JSON: JSON,
@@ -10,10 +10,10 @@ module.exports = {
     Object: Object,
     null: null,
     undefined: undefined,
-    apply: (a, b, c) => {
+    apply: a => b => c => {
       return a.apply(b, c);
     },
-    with: (a, fn) => {
+    with: a => fn => {
       fn(a);
       return a;
     },

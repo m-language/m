@@ -50,7 +50,7 @@ extern' :: (String -> EvalResult Foreign) -> Value
 extern' impl = functionN d1 $ \env -> \symbolValue -> do
   symbol <- asString $ Vec.head symbolValue
   value <- impl symbol
-  pure $ ExternValue $ value
+  pure $ ExternValue value
 
 mergeWithConflicts :: Foreign -> Foreign -> ExceptT ExternError Effect Foreign
 mergeWithConflicts first second = do
