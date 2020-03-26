@@ -1,4 +1,4 @@
-#(A simple module system which uses block)
+#(A simple module system using block)
 
 #(Defines a module given a signature and a list of definitions)
 (defm (defmodule signature defs)

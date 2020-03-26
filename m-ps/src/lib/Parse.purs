@@ -126,7 +126,7 @@ parseBlock = do
   pure $ ListTree $ fromFoldable args
 
 parseAtom :: Unit -> Parser Tree
-parseAtom more = parseSymbol <|> parseChar <|> parseString <|> parseInteger <|> parseApply <|> parseList <|> parseBlock
+parseAtom more = parseChar <|> parseString <|> parseInteger <|> parseSymbol <|> parseApply <|> parseList <|> parseBlock
 
 parseAll :: Parser (List Tree)
 parseAll = (((ignored *> many (parseAtom unit)) <#> fromFoldable) <* ignored <* eof)

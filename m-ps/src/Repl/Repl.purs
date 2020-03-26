@@ -49,19 +49,17 @@ runCommand command = catchError (run command) (\e -> error $ Native e)
 
 process :: forall m e. Repl e m => String -> m Unit
 process line = case uncons line of
-  Just ({ head: ':', tail: tail  }) -> do
+  Just ({ head: ':', tail: tail }) -> do
     let (Tuple command expr) = break tail
     case command of
       "eval" -> do
         tree <- parse expr
         maybe (pure unit) (Eval >>> runCommand) tree
-      "load" -> do
-        load $ drop 1 expr
+      "load" -> load $ drop 1 expr
       "parse" -> do
         tree <- parse expr
         maybe (pure unit) (Print >>> runCommand) tree
-      _ -> do
-        error $ Generic $ "Unknown command " <> command
+      _ -> error $ Generic $ "Unknown command " <> command
   _ -> do
     tree <- parse line
     maybe (pure unit) (Eval >>> runCommand) tree
