@@ -3,9 +3,9 @@ module Eval where
 import Prelude hiding (apply)
 
 import Control.Alt ((<|>))
-import Control.Monad.Except (Except, catchError, lift, mapExceptT, runExcept, runExceptT, throwError, withExceptT)
-import Control.Monad.Reader (ask, local, runReaderT)
-import Control.Monad.Trampoline (done, runTrampoline)
+import Control.Monad.Except (Except, catchError, lift, mapExceptT, runExcept, throwError, withExceptT)
+import Control.Monad.Reader (ask, local)
+import Control.Monad.Trampoline (done)
 import Data.Array as Array
 import Data.BigInt (fromInt, fromNumber, toNumber)
 import Data.Either (either)
@@ -14,8 +14,7 @@ import Data.List (List(..), (:))
 import Data.List as List
 import Data.List.Lazy.NonEmpty as Nel
 import Data.List.Lazy.Types (NonEmptyList)
-import Data.Map (Map)
-import Data.Map as Map
+import Data.Map (Map, lookup, union)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.Set (Set)
@@ -30,7 +29,7 @@ import Data.Vec as Vec
 import Effect.Exception (Error) as Js
 import Effect.Exception (message, throw)
 import Effect.Unsafe (unsafePerformEffect)
-import Eval.Types (Env(..), Error(..), EvalResult, Process(..), Value(..), asDefine, asExpr, asInteger, asProcess, asString, lookupEnv, mapEnv, unionEnv)
+import Eval.Types (Env, Error(..), EvalResult(..), Process(..), Value(..), asDefine, asExpr, asInteger, asProcess, asString, runEvalResult)
 import Foreign (F, Foreign, MultipleErrors, readArray, readBoolean, readNumber, readString, tagOf, typeOf, unsafeToForeign)
 import Tree (Tree(..))
 import Util (except)
@@ -39,25 +38,25 @@ foreign import callForeign :: forall m a. Array Foreign -> Foreign -> (Js.Error 
 foreign import arity :: (forall a. Maybe a) -> (forall a. a -> Maybe a) -> Foreign -> Maybe Int
 
 evalBlock :: Env -> List Tree -> EvalResult Env
-evalBlock env trees = evalBlock' env false Set.empty Nil trees <#> \env' -> mapEnv (local $ \global -> unionEnv global env') env'
+evalBlock env trees = evalBlock' env false Set.empty Nil trees <#> \env' -> map (local $ \global -> union global env') env'
 
 evalBlock' :: Env -> Boolean -> Set String -> List Tree -> List Tree -> EvalResult Env
-evalBlock' env found errors Nil Nil = pure $ Env Map.empty
+evalBlock' env found errors Nil Nil = pure mempty
 evalBlock' env true errors defer Nil = evalBlock' env false Set.empty Nil defer
 evalBlock' env false errors defer Nil = throwError $ Undefined errors
 evalBlock' env found errors defer (car : cdr) = do
   defs <- catchError (asDefine $ eval $ Tuple env car) \x -> case x of
     Undefined names -> evalBlock' env found (Set.union names errors) (car : defer) cdr
     Error string -> throwError $ Error string
-  defs' <- local (\global -> unionEnv global env) $ evalBlock' (unionEnv defs env) true errors defer cdr
-  pure $ unionEnv defs defs'
+  defs' <- local (\global -> union global env) $ evalBlock' (union defs env) true errors defer cdr
+  pure $ union defs defs'
 
 eval :: Tuple Env Tree -> EvalResult Value
-eval (Tuple env (SymbolTree name)) = case lookupEnv name env of
+eval (Tuple env (SymbolTree name)) = case lookup name env of
   Just value -> value
   Nothing -> do
     globals <- ask
-    case lookupEnv name globals of
+    case lookup name globals of
       Just value -> value
       Nothing -> throwError $ Undefined $ Set.singleton name
 eval (Tuple env (IntTree integer)) = pure $ IntValue integer
@@ -74,7 +73,7 @@ apply :: Env -> Value -> List Tree -> EvalResult Value
 apply env f Nil = pure f
 apply env (Macro f) args = f env args
 apply env (Define defs) (arg : args) = do
-  f <- eval $ Tuple (unionEnv env defs) arg
+  f <- eval $ Tuple (union env defs) arg
   apply env f args
 apply env (Expr tree) (arg : args) = do
   evArg <- asExpr $ eval $ Tuple env arg
@@ -143,7 +142,7 @@ data MarshallError = InvalidBigInt Number | Multiple MultipleErrors | Generic St
 type MarshallResult a = Except (NonEmptyList MarshallError) a
 
 liftMarshall :: forall a. MarshallResult a -> EvalResult a
-liftMarshall = lift <<< mapExceptT (unwrap >>> done) <<< withExceptT (map (mError >>> show) >>> Array.fromFoldable >>> joinWith "," >>> Error)
+liftMarshall = EvalResult <<< lift <<< mapExceptT (unwrap >>> done) <<< withExceptT (map (mError >>> show) >>> Array.fromFoldable >>> joinWith "," >>> Error)
 
 liftResult :: forall a. F a -> MarshallResult a
 liftResult = withExceptT $ Multiple >>> Nel.singleton
@@ -156,7 +155,7 @@ mError (InvalidBigInt number) = Error $ "Expected foreign big integer, got " <> 
 mkObject :: Map String Value -> Value
 mkObject kv = functionN d1 $ \env -> \keySymbol -> do
   key <- asString $ Vec.head keySymbol
-  except (Error $ "Could not find key " <> show key <> "in object") $ Map.lookup key kv
+  except (Error $ "Could not find key " <> show key <> "in object") $ lookup key kv
 
 marshallInt :: Foreign -> MarshallResult Value
 marshallInt fv = do
@@ -214,7 +213,7 @@ unmarshall _ (StringValue s) = pure $ unsafeToForeign s
 unmarshall _ (CharValue c) = pure $ unsafeToForeign $ fromCharArray [c]
 unmarshall foreignEnv p@(ProcessValue _) = unmarshall foreignEnv $ functionN d1 \env -> \args -> applyFn env p $ List.fromFoldable args
 unmarshall foreignEnv (Function fn) = ask <#> \env' -> unsafeToForeign \(arg :: Foreign) ->
-  let result = runTrampoline $ runExceptT $ runReaderT (fn foreignEnv (List.singleton $ pure $ ExternValue arg)) env' in
-  let output = result >>= \returnValue -> runTrampoline $ runExceptT $ runReaderT (unmarshall foreignEnv returnValue) env' in
+  let result = runEvalResult (fn foreignEnv (List.singleton $ pure $ ExternValue arg)) env' in
+  let output = result >>= \returnValue -> runEvalResult (unmarshall foreignEnv returnValue) env' in
   unsafePerformEffect $ either (show >>> throw) (\v -> pure $ ExternValue v) output
 unmarshall _ arg = throwError $ Error $ "Expected primitive value, found " <> show arg

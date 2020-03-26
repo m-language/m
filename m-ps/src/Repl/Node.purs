@@ -8,12 +8,12 @@ import Control.Monad.Except (class MonadError, ExceptT, runExceptT)
 import Control.Monad.Maybe.Trans (MaybeT)
 import Control.Monad.Reader (class MonadAsk, class MonadReader, ReaderT, ask, runReaderT)
 import Control.Monad.State (class MonadState, StateT, evalStateT, get, modify, put)
-import Control.Monad.Trampoline (runTrampoline)
 import Data.Array as Array
 import Data.Bifunctor (lmap)
 import Data.Either (Either(..), either)
 import Data.List (List(..))
 import Data.List as List
+import Data.Map (Map, union)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (class Newtype)
 import Data.String.CodeUnits as String
@@ -25,7 +25,7 @@ import Effect.Class.Console (log, logShow)
 import Effect.Exception (Error) as Js
 import Effect.Exception (message, throwException)
 import Eval as Eval
-import Eval.Types (Env, EvalResult, Process(..), Value(..), unionEnv)
+import Eval.Types (Env, EvalResult, Process(..), Value(..), runEvalResult)
 import Extern (externFile, loadExternal)
 import IO (Input(..), io)
 import Node.Encoding (Encoding(..))
@@ -63,7 +63,7 @@ derive newtype instance bindNodeRepl :: Bind NodeRepl
 derive newtype instance applicativeNodeRepl :: Applicative NodeRepl
 derive newtype instance monadNodeRepl :: Monad NodeRepl
 derive newtype instance monadEffectNodeRepl :: MonadEffect NodeRepl
-derive newtype instance monadStateNodeRepl :: MonadState Env NodeRepl
+derive newtype instance monadStateNodeRepl :: MonadState (Map String (EvalResult Value)) NodeRepl
 derive newtype instance monadAskNodeRepl :: MonadAsk Interface NodeRepl
 derive newtype instance monadReaderNodeRepl :: MonadReader Interface NodeRepl
 derive newtype instance monadErrorNodeRepl :: MonadError Js.Error NodeRepl
@@ -88,7 +88,7 @@ instance replNodeRepl :: Repl Js.Error NodeRepl where
     NodeRepl $ lift $ lift $ lift $ ContT \cont -> question prompt cont iface
   run (Eval tree) = do
     env <- get
-    either logShow evaluateResult $ runTrampoline $ runExceptT $ runReaderT (Eval.eval $ Tuple mempty tree) env
+    either logShow evaluateResult $ runEvalResult (Eval.eval $ Tuple mempty tree) env
   run (Print tree) = liftEffect $ logShow tree
   run (Load path) = loadFile path
 
@@ -97,7 +97,7 @@ runProcess env (Impure a) = lift $ pure <$> a
 runProcess env (Do process fn) = do
   value <- runProcess env process
   proc <- pure $ value >>= fn
-  process' <- printEither $ runTrampoline $ runExceptT $ runReaderT proc env
+  process' <- printEither $ runEvalResult proc env
   runProcess env process'
 
 evaluateResult :: Value -> NodeRepl Unit
@@ -107,7 +107,7 @@ evaluateResult value = case value of
     tryEffect $ runDefault unit $ void $ runProcess env p
     log ""
     put env
-  Define defs -> modify (unionEnv defs) *> pure unit
+  Define defs -> modify (union defs) *> pure unit
   _ -> liftEffect $ logShow value
 
 loadFile :: FilePath -> NodeRepl Unit
@@ -125,9 +125,9 @@ loadFile path = do
       pure $ Tuple extern tree
   either logShow (\externEnv -> do
     env <- get
-    let env' = unionEnv env externEnv
-    evaluated <- tryEffect $ throwEffect $ runTrampoline $ runExceptT $ runReaderT (Eval.evalBlock mempty trees) env'
-    put $ unionEnv evaluated env'
+    let env' = union env externEnv
+    evaluated <- tryEffect $ throwEffect $ runEvalResult (Eval.evalBlock mempty trees) env'
+    put $ union evaluated env'
   ) extern
   
 parseFile :: FilePath -> NodeRepl (List Tree)

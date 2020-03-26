@@ -18,7 +18,7 @@ import Data.Vec as Vec
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Eval (functionN, liftMarshall, liftResult)
-import Eval.Types (Env(..), Error(..), EvalResult, Value(..), asString)
+import Eval.Types (Env, Error(..), EvalResult, Value(..), asString)
 import Foreign (Foreign)
 import Foreign.Index ((!))
 import Foreign.Keys (keys)
@@ -66,13 +66,14 @@ loadExternal paths = do
   modules <- liftEffect $ traverse require paths
   combined <- foldM mergeWithConflicts emptyObject modules
   combinedKeys <- mapExceptT (unwrap >>> pure) $ withExceptT (Generic <<< show) $ keys combined <#> Set.fromFoldable
-  pure $ Env $ Map.fromFoldable 
+  pure $ Map.fromFoldable 
     [ Tuple "extern" $ pure $ extern' \key -> do
         if hasProperty combined key
           then liftMarshall $ liftResult $ combined ! key
-          else throwError $ Error $ fold [ "Expected object with property "
-                                         , key
-                                         , ", got object with properties {"
-                                         , joinWith ", " $ map show $ Array.fromFoldable combinedKeys
-                                         , "}" ]
+          else throwError $ Error $ fold 
+            [ "Expected object with property "
+            , key
+            , ", got object with properties {"
+            , joinWith ", " $ map show $ Array.fromFoldable combinedKeys
+            , "}" ]
     ]

@@ -10,7 +10,7 @@ import Data.Vec as Vec
 import Effect (Effect)
 import Effect.Exception (error, throwException)
 import Eval (functionN)
-import Eval.Types (Env(..), EvalResult, Process(..), Value(..), asChar, nil)
+import Eval.Types (Env, EvalResult, Process(..), Value(..), asChar, nil)
 import Prelude (Unit, const, ($), (<#>), (<$>))
 
 newtype Input
@@ -20,7 +20,7 @@ newtype Input
   }
 
 io :: Input -> Env
-io (Input input) = Env $ Map.fromFoldable
+io (Input input) = Map.fromFoldable
     [ Tuple "stdout" $ pure $ functionN d1 $ stdout' input.putChar
     , Tuple "stdin" $ pure $ stdin' $ input.getChar >>= \m -> 
         case m of

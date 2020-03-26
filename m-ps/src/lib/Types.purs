@@ -2,16 +2,16 @@ module Eval.Types where
 
 import Prelude
 
-import Control.Monad.Error.Class (throwError)
-import Control.Monad.Except (ExceptT)
-import Control.Monad.Reader (ReaderT)
-import Control.Monad.Trampoline (Trampoline)
+import Control.Monad.Error.Class (class MonadError, class MonadThrow, throwError)
+import Control.Monad.Except (ExceptT, runExceptT)
+import Control.Monad.Reader (class MonadAsk, class MonadReader, ReaderT, runReaderT)
+import Control.Monad.Trampoline (Trampoline, runTrampoline)
 import Data.Array as Array
 import Data.BigInt (BigInt, toString)
+import Data.Either (Either)
 import Data.List (List)
 import Data.Map (Map)
 import Data.Map as Map
-import Data.Maybe (Maybe)
 import Data.Set (Set)
 import Data.String (joinWith)
 import Effect (Effect)
@@ -44,7 +44,7 @@ instance showValue :: Show Value where
   show (CharValue c) = show c
   show (StringValue s) = show s
   show (IntValue i) = toString i
-  show (Define (Env e)) = "{" <> (joinWith " " $ Array.fromFoldable $ Map.keys e) <> "}"
+  show (Define e) = "{" <> (joinWith " " $ Array.fromFoldable $ Map.keys e) <> "}"
   show (ProcessValue p) = "<process>"
   show (ExternValue f) = "<extern " <> typeOf f <> ">"
 
@@ -55,29 +55,24 @@ instance showError :: Show Error where
   show (Undefined ns) = "Undefined: " <> (joinWith " " $ Array.fromFoldable ns)
 
 nil :: Value
-nil = Define $ Env Map.empty
+nil = Define mempty
 
-newtype Env = Env (Map String (EvalResult Value))
+type Env = Map String (EvalResult Value)
 
-instance envMonoid :: Monoid Env where
-  mempty = Env mempty
+newtype EvalResult a = EvalResult (ReaderT Env (ExceptT Error Trampoline) a)
 
-instance envSemigroup :: Semigroup Env where
-  append (Env a) (Env b) = Env $ append a b
+derive newtype instance functorEvalResult :: Functor EvalResult
+derive newtype instance applyEvalResult :: Apply EvalResult
+derive newtype instance bindEvalResult :: Bind EvalResult
+derive newtype instance applicativeEvalResult :: Applicative EvalResult
+derive newtype instance monadEvalResult :: Monad EvalResult
+derive newtype instance monadThrowEvalResult :: MonadThrow Error EvalResult
+derive newtype instance monadErrorEvalResult :: MonadError Error EvalResult
+derive newtype instance monadAskEvalResult :: MonadAsk (Map String (EvalResult Value)) EvalResult
+derive newtype instance monadReaderEvalResult :: MonadReader (Map String (EvalResult Value)) EvalResult
 
-insertEnv :: String -> EvalResult Value -> Env -> Env
-insertEnv name value (Env env) = Env $ Map.insert name value env
-
-unionEnv :: Env -> Env -> Env
-unionEnv (Env a) (Env b) = Env $ Map.union a b
-
-lookupEnv :: String -> Env -> Maybe (EvalResult Value)
-lookupEnv name (Env env) = Map.lookup name env
-
-mapEnv :: (EvalResult Value -> EvalResult Value) -> Env -> Env
-mapEnv f (Env env) = Env $ map f env
-
-type EvalResult = ReaderT Env (ExceptT Error Trampoline)
+runEvalResult :: forall a. EvalResult a -> Env -> Either Error a
+runEvalResult (EvalResult r) env = runTrampoline $ runExceptT $ runReaderT r env
 
 asDefine :: EvalResult Value -> EvalResult Env
 asDefine tree = tree >>= \x -> case x of
