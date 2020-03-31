@@ -58,12 +58,12 @@ fm' closure (argNames : expr : Nil) = do
   case names of
     Nil -> eval $ Tuple closure expr
     list -> pure $ macro (length names) \env args ->
-        (local (\global -> union global globalClosure) $ fmApply env closure names args expr) >>= curry eval env
+        (local (\global -> union global globalClosure) $ fmApply closure names args expr) >>= curry eval env
 
-fmApply :: Partial => Env -> Env -> List String -> List Tree -> Tree -> EvalResult Tree
-fmApply env closure Nil Nil tree = asExpr $ eval $ Tuple closure tree
-fmApply env closure (name : names) (arg : args) tree = 
-  fmApply env (insert name (pure $ Expr arg) closure) names args tree
+fmApply :: Partial => Env -> List String -> List Tree -> Tree -> EvalResult Tree
+fmApply closure Nil Nil tree = asExpr $ eval $ Tuple closure tree
+fmApply closure (name : names) (arg : args) tree = 
+  fmApply (insert name (pure $ Expr arg) closure) names args tree
 
 def' :: Partial => Env -> List Tree -> EvalResult Value
 def' env (names : expr : Nil) = case names of
