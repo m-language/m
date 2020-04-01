@@ -110,6 +110,7 @@ int' = Define $ Map.fromFoldable
     , Tuple "sub" $ pure $ function 2 sub'
     , Tuple "mul" $ pure $ function 2 mul'
     , Tuple "div" $ pure $ function 3 div'
+    , Tuple "rem" $ pure $ function 3 rem'
     , Tuple "lt" $ pure $ function 4 lt'
     , Tuple "gt" $ pure $ function 4 gt'
     , Tuple "eq" $ pure $ function 4 eq'
@@ -134,6 +135,11 @@ int' = Define $ Map.fromFoldable
       evA <- asInteger a
       evB <- asInteger b
       if evB == fromInt 0 then zero else pure $ IntValue $ evA / evB
+    
+    rem' env (a : b : zero : Nil) = do
+      evA <- asInteger a
+      evB <- asInteger b
+      if evB == fromInt 0 then zero else pure $ IntValue $ evA `mod` evB
 
     lt' env (a : b : t' : f' : Nil) = do
       evA <- asInteger a
