@@ -51,58 +51,27 @@ their application.
 Transforming Expressions
 ========================
 
-Function macros are of the form ``(fm <args> <val>)``, where where ``args`` is a 
-list of argument names and ``val`` is the value of the function macro. When 
-applied to an expression, a function macro quotes that expression and transforms 
-it.
+Macros are of the form ``(fm <args> <val>)``, where where ``args`` is a list of 
+argument names and ``val`` is the value of the function macro. When applied to 
+an expression, a macro quotes that expression and transforms it.
 
 .. code-block:: lisp
 
     # A macro similar to defn
-    (def defn-
+    (def deffn
       (fm [name args value]
         ((quote def) name
           ((quote fn) args value))))
     
-    # The identity function defined using the defn- macro
-    (defn- id [x] x)
-
-Inspecting Expressions
-======================
-
-Case expressions are of the form ``(case <expr> <sym> <nil> <cons>)``.
-
-- When ``expr`` evaluates to a symbol, evaluates to ``sym``
-- When ``expr`` evaluates to an application with no arguments, evaluates to ``nil``
-- When ``expr`` evaluates to an application with arguments, evaluates to ``cons`` and applies cons to the car and cdr
-
-.. code-block:: lisp
-
-    # The implementation of defn
-    (def defn
-      (fm [signature value]
-        (case signature
-          ((quote def) signature expr)
-          (error "Nil signature")
-          (fn [name args] 
-            ((quote def) name 
-              ((quote fn) args expr))))))
-    
-    # In the first case, (defn name value) => (def name value)
-    (defn id (fn x x))
-
-    # In the third case, (defn (name args) value) => (def name (fn args value))
-    (defn (id x) x)
-
-    # In the second case, (defn (name) value) => (error "Nil signature")
-    (defn () (fn x x))
+    # The identity function defined using the deffn macro
+    (deffn id [x] x)
 
 Currying
 ========
 
-Internally, function macros are not curried, as they are required to return 
-expressions rather than functions. However, they can still be treated like they 
-are curried, and will work as expected.
+Internally, macros are not curried, as they are required to return expressions 
+rather than functions. However, they can still be treated like they are curried, 
+and will work as expected.
 
 .. code-block:: lisp
 

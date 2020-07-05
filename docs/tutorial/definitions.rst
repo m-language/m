@@ -7,7 +7,7 @@ Definitions
 While it is possible to introduce local variables with functions, something more
 powerful is needed to abstract in larger programs. Definitions provide a simple
 way of providing both local and global variables without worrying about includes 
-or pre-declarations.
+or forward declarations.
 
 Definition Expressions
 ======================
@@ -38,8 +38,8 @@ its first usage.
     # The increment function which adds one to its argument
     (def inc (add 1))
 
-Definitions as Expressions
-==========================
+Applying Definitions
+====================
 
 Definitions are expressions which return an environment. When an environment is
 applied, it evaluates its argument within the environment.
@@ -80,5 +80,5 @@ does not matter where the definitions are stored as long as the M compiler can
 find them.
 
 By default, the M compiler looks in the current directory for definitions. This 
-is semantically equivalent to combining every file in your project into one 
-file, though optimizations are in place to avoid compiling unused definitions.
+is semantically equivalent to combining each file in your project into one 
+file.

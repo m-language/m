@@ -4,9 +4,9 @@
 Functions
 *********
 
-Functions are the fundamental data type in M. Every type, except for a few
+Functions are the fundamental data type of M. Every type, except for a few
 primitives such as integers and expressions, is represented as a function, 
-even typically intrinsic types like structures and booleans. Functions in M are 
+even typically intrinsic types like booleans and tuples. Functions in M are 
 pure, meaning that they cannot have side effects like IO or mutation, and only 
 ever take one argument (multi-argument functions are provided as syntax sugar).
 
@@ -18,7 +18,7 @@ function to be applied and ``args`` is a list of arguments to the function.
 
 .. code-block:: lisp
 
-    # True
+    # true
     (not false)
 
     # 4
@@ -43,24 +43,19 @@ a list of argument names and ``val`` is the value of the function.
     # The increment function
     (fn x (add x 1))
 
-Note that the syntaxes ``(f x)``, ``[f x]``, and ``{f x}`` are interchangeable;
-parentheses are used when applying functions, brackets are used when passing a 
-list of expressions which will not be evaluated, and braces are used when 
-passing a list of expressions which will be evaluated.
-
 Closures
 ========
 
 Closures are a property of functions where the variables of an outside scope are
 captured by a function. The values of these variables are stored in the
-function's closure, and persists for as long as the function persists.
+function's closure, and persist for as long as the function persists.
 
 .. code-block:: lisp
 
     # The increment function expressed with closures; the variable x is bound
     # to 1, and the function of y stores this value in its closure
     ((fn x (fn y (add x y))) 
-     1)
+      1)
 
 Currying
 ========
@@ -71,20 +66,20 @@ functions are curried, including internal functions.
 
 .. code-block:: lisp
 
-    # This has the same effect as the example above due to currying.
+    # The increment function 
     (add 1)
 
 Multi-Argument Functions
 ========================
 
-Multi-argument functions in M are actually just syntax sugar for curried
-functions. Likewise, multi-argument application is just syntax sugar for 
-curried application.
+Multi-argument functions in M are just syntax sugar for curried functions.
+Likewise, multi-argument application is just syntax sugar for curried
+application.
 
 .. code-block:: lisp
 
-    # The two-argument application function with syntax sugar.
-    (fn [x y z] (x y z))
+    # The two-argument application function with syntax sugar
+    (fn [f a b] (f a b))
 
-    # The two-argument application function without syntax sugar.
-    (fn x (fn y (fn x ((x y) z))))
+    # The two-argument application function without syntax sugar
+    (fn f (fn a (fn b ((f a) b))))

@@ -4,8 +4,8 @@
 Introduction
 ************
 
-The fundamental philosophy of the M programming language is that simplicity is
-as important as expressiveness; or, put another way, that a program which cannot
+The fundamental idea behind the M programming language is that simplicity is as 
+important as expressiveness; or, put another way, that a program which cannot
 be reasoned about is little better than no program at all. Many features of
 modern programming languages complicate programs unnecessarily, and combining
 these features increases complexity exponentially. For the programmer, this
@@ -14,7 +14,7 @@ this means less support, worse performance, and more bugs.
 
 M attempts to replace these complicated language features with straightforward
 abstractions, making programs simpler and easier to reason about. While many
-of these features are still available in M, they are provided through the
+advanced features are still available in M, they are provided through the
 composition of abstractions rather than as part of the language, allowing them 
 to be programmatically modified or erased. Looking at the implementation of a 
 feature is as simple as looking at the implementation of a function, and
@@ -38,5 +38,5 @@ assume any prior knowledge, familiarity the Lambda Calculus, other Lisps, and
 functional programming in general will be useful. Though many of the topics
 covered are relatively simple, the ways in which they interact can be difficult
 to understand if you are not already familiar with them. Every concept will be
-explained at least briefly, but fully exploring concepts like monads and lazy
-evaluation is beyond the scope of this tutorial.
+explained at least briefly, but fully exploring concepts like monads is beyond 
+the scope of this tutorial.

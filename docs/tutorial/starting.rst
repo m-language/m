@@ -7,8 +7,8 @@ Getting Started
 Setting up the M Compiler
 =========================
 
-The M compiler does not need any special setup to work; simply clone
-`The M Compiler <https://github.com/m-language/m-language>`_ in the directory
+The M compiler does not need any special setup to work; simply clone M's
+`github repository <https://github.com/m-language/m-language>`_ in the directory
 of your choice, install the dependencies, and run.
 
 .. code-block:: bash
@@ -30,5 +30,5 @@ There are M plugins for several popular editors:
 - `Sublime <https://github.com/stuin/M-Sublime>`_
 - `IDEA <https://github.com/m-language/intellij-m>`_
 
-If you want to add support for your favorite editor, please 
-`create a feature request <https://github.com/m-language/m-language/issues/new?assignees=aedans&labels=&template=feature_request.md&title=%5BFEATURE%5D>`_.
+If you have written a plugin for your favorite editor, please open a pull 
+request to have it added to this list.

@@ -6,6 +6,7 @@ import Control.Alt ((<|>))
 import Control.Monad.Except (Except, catchError, lift, mapExceptT, runExcept, throwError, withExceptT)
 import Control.Monad.Reader (ask, local)
 import Control.Monad.Trampoline (done)
+import Data.Array (fold)
 import Data.Array as Array
 import Data.BigInt (fromInt, fromNumber, toNumber)
 import Data.Either (either)
@@ -91,6 +92,9 @@ applyFn env (ExternValue externFn) args = do
   foreignArgs <- traverse (\argument -> argument >>= unmarshall env) $ Array.fromFoldable args
   result <- callForeign foreignArgs externFn (message >>> Error >>> throwError) pure
   pure $ ExternValue $ result
+applyFn env (StringValue string) args = do
+  strings <- traverse asString args
+  pure $ StringValue $ string <> fold strings
 applyFn _ x args = throwError $ Error $ "Expected function, found " <> show x
 
 function :: Int -> (Env -> List (EvalResult Value) -> EvalResult Value) -> Value
